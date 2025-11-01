@@ -1,0 +1,79 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dplib"
+version = "0.1.0"
+description = "NSSDPlib: Modular CDP + LDP differential privacy library"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "ct", email = "851320384@qq.com" }]
+keywords = ["differential-privacy", "dp", "cdp", "ldp"]
+
+# 基础依赖，所有模块共用
+dependencies = [
+    "numpy>=1.24",          # 数值计算基础
+    "scipy>=1.10"           # 科学计算
+]
+
+# 可选模块依赖
+[project.optional-dependencies]
+
+# 核心模块：数据抽象、隐私模型、工具函数
+core = [
+    "pandas>=2.0",          # 数据处理
+    "tqdm>=4.65",           # 进度条显示
+]
+
+# CDP模块：中心化差分隐私功能 + 机器学习
+cdp = [
+    "scikit-learn>=1.2",    # 机器学习算法
+    "tensorflow>=2.12",     # 可选神经网络
+    "torch>=2.1",           # 可选PyTorch支持
+    "pandas>=2.0",          # 数据处理
+    "matplotlib>=3.7",      # 可视化
+]
+
+# LDP模块：本地差分隐私功能
+ldp = [
+    "bitarray>=2.5",        # Bloom filter / sketch编码
+    "xxhash>=3.2",          # 高效哈希
+    "pandas>=2.0",
+]
+
+# 全部模块：CDP + LDP + ML + examples + docs + dev
+all = [
+    # Core
+    "numpy>=1.24",
+    "scipy>=1.10",
+    "pandas>=2.0",
+    "tqdm>=4.65",
+    
+    # CDP
+    "scikit-learn>=1.2",
+    "tensorflow>=2.12",
+    "torch>=2.1",
+    "matplotlib>=3.7",
+
+    # LDP
+    "bitarray>=2.5",
+    "xxhash>=3.2",
+
+    # Docs & Examples
+    "sphinx>=5.0",
+    "sphinx-rtd-theme>=1.2",
+    "jupyter>=1.0",
+
+    # Testing & Dev
+    "pytest>=7.0",
+    "pytest-cov>=4.0",
+    "black>=23.3",
+    "isort>=6.0",
+    "pre-commit>=3.3"
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+exclude = ["tests*", "benchmarks*"]

@@ -1,0 +1,19 @@
+# 基本文档
+include README.md
+include LICENSE
+
+# docs 文件
+recursive-include docs *.rst
+recursive-include docs/_static *.png *.css
+
+# examples 示例代码
+recursive-include examples *.py
+
+# Jupyter notebooks
+recursive-include notebooks *.ipynb
+
+# 源代码
+recursive-include src/dplib *.py
+
+# 测试
+recursive-include tests *.py

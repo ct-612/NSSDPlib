@@ -1,0 +1,57 @@
+name: NSSDPlib CI
+
+# 触发条件：push 或 pull_request 到 main/master 分支
+on:
+  push:
+    branches:
+      - main
+      - master
+  pull_request:
+    branches:
+      - main
+      - master
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        module: [core, cdp, ldp, all]  # 四个可选模块依赖组合
+
+    steps:
+      # 1. Checkout 仓库代码
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. 设置 Python 环境
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'  # 可根据需要调整
+
+      # 3. 安装 pip 最新版
+      - name: Upgrade pip
+        run: python -m pip install --upgrade pip
+
+      # 4. 安装项目及模块化依赖
+      - name: Install NSSDPlib [$matrix.module]
+        run: |
+          pip install -e ".[${{ matrix.module }}]"
+          pip install pytest pytest-cov  # 确保测试依赖存在
+
+      # 5. 运行单元测试
+      - name: Run tests
+        run: |
+          echo "Testing module: ${{ matrix.module }}"
+          pytest tests/unit --maxfail=1 --disable-warnings -q
+          pytest tests/integration --maxfail=1 --disable-warnings -q
+          pytest tests/property_based --maxfail=1 --disable-warnings -q
+          pytest tests/performance --maxfail=1 --disable-warnings -q
+          pytest tests/accuracy --maxfail=1 --disable-warnings -q
+
+      # 6. 可选：收集覆盖率
+      - name: Collect coverage
+        if: matrix.module == 'all'  # 仅全套模块生成覆盖率
+        run: |
+          pytest --cov=src/dplib tests/
+          coverage report -m
