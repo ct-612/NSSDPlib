@@ -14,3 +14,33 @@ python -m venv .venv
 source .venv/bin/activate   # 或 Windows: .venv\Scripts\activate
 pip install -e ".[dev,cdp,ldp]"
 pytest -q
+```
+
+### 🔹 安装方式
+
+* 只安装核心模块：
+
+```bash
+pip install .[core]
+```
+
+* 安装 CDP 模块：
+
+```bash
+pip install .[cdp]
+```
+
+* 安装 LDP 模块：
+
+```bash
+pip install .[ldp]
+```
+
+* 安装全部模块：
+
+```bash
+pip install .[all]
+```
+
+---
+
