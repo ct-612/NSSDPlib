@@ -60,8 +60,6 @@ all = [
     # LDP
     "bitarray>=2.5",
     "xxhash>=3.2",
-    "datasketch>=1.5.2",
-    "mmh3>=3.0.0",  
 
     # Docs & Examples
     "sphinx>=5.0",
