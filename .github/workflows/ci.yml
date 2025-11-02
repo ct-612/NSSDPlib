@@ -40,7 +40,12 @@ jobs:
           pip install -e ".[${{ matrix.module }}]"
           pip install pytest pytest-cov  # 确保测试依赖存在
 
-      # 5. 运行单元测试
+      # 5.设置 PYTHONPATH 环境变量
+      - name: Set PYTHONPATH
+        run: |
+          echo "PYTHONPATH=${{ github.workspace }}/src:\$PYTHONPATH" >> $GITHUB_ENV
+
+      # 6. 运行单元测试
       - name: Run tests
         run: |
           echo "Testing module: ${{ matrix.module }}"
@@ -50,7 +55,7 @@ jobs:
           pytest tests/performance --maxfail=1 --disable-warnings -q
           pytest tests/accuracy --maxfail=1 --disable-warnings -q
 
-      # 6. 可选：收集覆盖率
+      # 7. 可选：收集覆盖率
       - name: Collect coverage
         if: matrix.module == 'all'  # 仅全套模块生成覆盖率
         run: |
