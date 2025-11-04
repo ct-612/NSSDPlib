@@ -37,8 +37,8 @@ class NotCalibratedError(MechanismError):
 # Helper for RNG
 def _make_rng(seed: Optional[Any]) -> np.random.Generator:
     """
-    Create a numpy Generator from various seed types.
-    Accepts None, int, SeedSequence, or existing Generator.
+    - 根据不同的种子类型创建numpy生成器。
+    - 可接受None、整数、SeedSequence或已有的生成器对象。
     """
     if seed is None:
         return np.random.default_rng()
@@ -49,14 +49,14 @@ def _make_rng(seed: Optional[Any]) -> np.random.Generator:
 
 class BaseMechanism(ABC):
     """
-    抽象基类。子类需实现 calibrate 和 randomise 方法。
+    - 抽象基类。子类需实现 calibrate 和 randomise 方法。
 
-    生命周期：
-      1. __init__ -> 创建机制实例（不需 calibrate）
-      2. calibrate(...) -> 计算噪声参数，设置 self._calibrated = True
-      3. randomise(value) -> 在 calibrated 状态下对值添加噪声并返回
+    - 生命周期：
+        1. __init__ -> 创建机制实例（不需 calibrate）
+        2. calibrate(...) -> 计算噪声参数，设置 self._calibrated = True
+        3. randomise(value) -> 在 calibrated 状态下对值添加噪声并返回
 
-    子类应调用 super().__init__(...) 以获得基本验证与 rng 支持。
+    - 子类应调用 super().__init__(...) 以获得基本验证与 rng 支持。
     """
 
     def __init__(
@@ -67,13 +67,13 @@ class BaseMechanism(ABC):
         name: Optional[str] = None,
     ):
         """
-        公共构造器。
+        - 公共构造器。
 
-        Args:
-            epsilon: 隐私预算 ε，必须为正数。
-            delta: 隐私参数 δ，必须 >= 0。
-            rng: 随机数种子 / np.random.Generator / SeedSequence / int / None。
-            name: 可选机制名称（用于序列化/日志）。
+        - Args:
+            - epsilon: 隐私预算 ε，必须为正数。
+            - delta: 隐私参数 δ，必须 >= 0。
+            - rng: 随机数种子 / np.random.Generator / SeedSequence / int / None。
+            - name: 可选机制名称（用于序列化/日志）。
         """
         self._validate_epsilon(epsilon)
         self._validate_delta(delta)
@@ -120,22 +120,22 @@ class BaseMechanism(ABC):
     @abstractmethod
     def calibrate(self, sensitivity: float, **kwargs) -> None:
         """
-        根据敏感度与其它参数计算噪声参数并进入已校准状态。
-        子类必须设置 self._calibrated = True。
+        - 根据敏感度与其它参数计算噪声参数并进入已校准状态。
+        - 子类必须设置 self._calibrated = True。
         """
         raise NotImplementedError
 
     @abstractmethod
     def randomise(self, value: Any) -> Any:
         """
-        对输入 value 添加噪声并返回。必须在 calibrate() 之后调用。
-        子类可直接使用 self._rng 来生成随机数。
+        - 对输入 value 添加噪声并返回。必须在 calibrate() 之后调用。
+        - 子类可直接使用 self._rng 来生成随机数。
         """
         raise NotImplementedError
 
     # alias
     def add_noise(self, value: Any) -> Any:
-        """别名，便于兼容其他实现。"""
+        """- 别名，便于兼容其他实现。"""
         return self.randomise(value)
 
     # ------------------------
@@ -143,15 +143,15 @@ class BaseMechanism(ABC):
     # ------------------------
     def serialize(self) -> Dict[str, Any]:
         """
-        将机制的可重建状态序列化为字典。
-        子类应在返回字典时包含任何必要的构造参数和校准参数。
+        - 将机制的可重建状态序列化为字典。
+        - 子类应在返回字典时包含任何必要的构造参数和校准参数。
 
-        默认包含:
+        - 默认包含:
           - class: 全类名
           - name, epsilon, delta, calibrated(bool)
           - meta: 子类可附加任意元数据（需可 JSON 序列化）
 
-        子类若需要，可 override 并调用 super().serialize() 然后扩展返回值。
+        - 子类若需要，可 override 并调用 super().serialize() 然后扩展返回值。
         """
         base = {
             "class": f"{self.__class__.__module__}.{self.__class__.__qualname__}",
@@ -166,12 +166,14 @@ class BaseMechanism(ABC):
     @classmethod
     def deserialize(cls: Type["BaseMechanism"], data: Dict[str, Any]) -> "BaseMechanism":
         """
-        从序列化字典重建机制实例。
-        默认实现尝试使用 (epsilon, delta, rng=None, name=...) 构造实例，
+        - 从序列化字典重建机制实例。
+        - 默认实现尝试使用 (epsilon, delta, rng=None, name=...) 构造实例，
         然后将 meta 恢复到 instance._meta 并在校准标记为 True 时留下未校准状态。
-        子类若有特殊参数（例如 domain），必须 override 并在自己的实现中处理。
+        - 子类若有特殊参数（例如 domain），必须 override 并在自己的实现中处理。
 
-        注意：deserialize 不会自动调用 calibrate。若需要可以由调用者负责或子类实现。
+        - 注意：
+            - deserialize 不会自动调用 calibrate。
+            - 若需要可以由调用者负责或子类实现。
         """
         if "epsilon" not in data:
             raise ValidationError("serialized data missing 'epsilon' field")

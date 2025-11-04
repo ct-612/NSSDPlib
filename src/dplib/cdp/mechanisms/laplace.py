@@ -7,7 +7,7 @@ from dplib.core.privacy.base_mechanism import BaseMechanism, MechanismError
 
 class LaplaceMechanism(BaseMechanism):
     """
-    Laplace机制，用于差分隐私。
+    - Laplace机制，用于差分隐私。
     """
 
     def __init__(self, epsilon: float = 1.0, sensitivity: float = 1.0, rng: np.random.Generator | None = None):
@@ -34,7 +34,7 @@ class LaplaceMechanism(BaseMechanism):
         return value + noise
 
     def serialize(self) -> dict:
-        """返回可序列化的配置"""
+        """- 返回可序列化的配置"""
         return {"mechanism": "laplace", "epsilon": self.epsilon, "sensitivity": self.sensitivity}
 
     @classmethod

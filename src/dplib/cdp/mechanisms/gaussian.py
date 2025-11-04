@@ -7,14 +7,14 @@ from dplib.core.privacy.base_mechanism import BaseMechanism, MechanismError
 
 class GaussianMechanism(BaseMechanism):
     """
-    Gaussian (a.k.a. Normal) mechanism for (epsilon, delta)-differential privacy.
+    - 这是一个用于 (ε, δ) 差分隐私的高斯噪声机制。
 
-    Uses the common analytic approximation for the required noise scale:
-        sigma = sensitivity * sqrt(2 * ln(1.25/delta)) / epsilon
+    - 噪声标准差公式:
+        - sigma = sensitivity * sqrt(2 * ln(1.25/delta)) / epsilon
 
-    Notes:
-    - delta must be > 0 for this simple calibration formula.
-    - This class follows the BaseMechanism contract: call calibrate(...) before randomise().
+    - 注意：
+        - 此校准公式要求 delta 必须大于 0 
+        - 该类遵循 BaseMechanism 约定：在调用 randomise() 前需先调用 calibrate() 
     """
 
     def __init__(
@@ -37,9 +37,11 @@ class GaussianMechanism(BaseMechanism):
         self.sigma: Optional[float] = None
 
     def calibrate(self, sensitivity: Optional[float] = None, delta: Optional[float] = None):
-        """Calibrate mechanism parameters and compute sigma.
-
-        Accepts optional sensitivity and delta to override stored values.
+        """
+        - 校准函数：
+            - 可选覆盖 sensitivity 或 delta
+            - 计算噪声标准差 sigma
+        - 目的是在使用 randomise() 前准备机制参数。
         """
         if sensitivity is not None:
             if sensitivity <= 0:
