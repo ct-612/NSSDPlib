@@ -13,12 +13,12 @@ on:
 
 jobs:
   test:
-    name: Test Python ${{ matrix.python-version }} / Module ${{ matrix.module }}
+    name: test (python ${{ matrix.python-version }} , ${{ matrix.module }})
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.9, 3.10, 3.11, 3.12]  # Python 版本矩阵
-        module: [core, cdp, ldp, all]  # 模块矩阵
+        python-version: ['3.9', '3.10', '3.11', '3.12']  # Python 版本矩阵
+        module: ['core', 'cdp', 'ldp', 'all']  # 模块矩阵
 
     steps:
       # 1. Checkout 仓库代码
