@@ -48,24 +48,7 @@ jobs:
       # 6. 运行单元测试
       - name: Run tests
         run: |
-          echo "Testing module: ${{ matrix.module }}"
-          pytest tests/unit --maxfail=1 --disable-warnings -q
-          rc_unit=$?
-          pytest tests/integration --maxfail=1 --disable-warnings -q
-          rc_integ=$?
-          pytest tests/property_based --maxfail=1 --disable-warnings -q
-          rc_prop=$?
-          pytest tests/performance --maxfail=1 --disable-warnings -q
-          rc_perf=$?
-          pytest tests/accuracy --maxfail=1 --disable-warnings -q
-          rc_acc=$?
-          echo "pytest return codes: unit=$rc_unit, integration=$rc_integ, property=$rc_prop, performance=$rc_perf, accuracy=$rc_acc"    
-          if [ $rc_unit -ne 0 ]; then echo "Unit tests failed."; fi
-          if [ $rc_integ -ne 0 ]; then echo "Integration tests failed."; fi
-          if [ $rc_prop -ne 0 ]; then echo "Property-based tests failed."; fi
-          if [ $rc_perf -ne 0 ]; then echo "Performance tests failed."; fi
-          if [ $rc_acc -ne 0 ]; then echo "Accuracy tests failed."; fi
-          exit $((rc_unit | rc_integ | rc_prop | rc_perf | rc_acc))
+          pytest -q
 
       # 7. 可选：收集覆盖率
       - name: Collect coverage
