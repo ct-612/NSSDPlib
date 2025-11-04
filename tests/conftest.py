@@ -33,7 +33,7 @@ def laplace_mechanism():
     return LaplaceMechanism(epsilon=1.0)
 
 # 可扩展：提供 GaussianMechanism fixture
-# from dplib.core.privacy.gaussian_mechanism import GaussianMechanism
+# from dplib.cdp.mechanisms.gaussian import GaussianMechanism
 # @pytest.fixture
 # def gaussian_mechanism():
 #     return GaussianMechanism(epsilon=1.0, delta=1e-5)
