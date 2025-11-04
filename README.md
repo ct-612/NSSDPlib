@@ -11,7 +11,7 @@
 git clone <repo>
 cd NSSDPlib
 python -m venv .venv
-source .venv/bin/activate   # 或 Windows: .venv\Scripts\activate
+.venv\Scripts\activate.ps1
 pip install -e ".[dev,cdp,ldp]"
 pytest -q
 ```
