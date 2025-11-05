@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ['3.9', '3.10', '3.11', '3.12']  # Python 版本矩阵
+        python-version: ['3.9', '3.10', '3.11', '3.12', '3.13']  # Python 版本矩阵
         module: ['core', 'cdp', 'ldp', 'all']  # 模块矩阵
 
     steps:
