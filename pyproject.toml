@@ -43,6 +43,18 @@ ldp = [
     "pandas>=2.0",          # 数据处理与结构化接口
 ]
 
+# 开发依赖
+dev = [
+    "pytest>=7.0",          # 测试框架
+    "pytest-cov>=4.0",      # 测试覆盖率报告
+    "flake8>=6.0",          # 代码风格检查
+    "black>=23.3",          # 代码格式化
+    "isort>=6.0",           # 导入排序
+    "mypy>=1.5",            # 类型检查
+    "pre-commit>=3.3",      # 提交前代码检查
+    "build>=1.0",           # 打包工具
+]
+
 # 全部模块：CDP + LDP + ML + examples + docs + dev
 all = [
     # Core
@@ -73,7 +85,10 @@ all = [
     "pytest-cov>=4.0",      # 测试覆盖率报告
     "black>=23.3",          # 代码格式化
     "isort>=6.0",           # 导入排序
-    "pre-commit>=3.3"       # 提交前代码检查
+    "pre-commit>=3.3",      # 提交前代码检查
+    "flake8>=6.0",          # 代码风格检查
+    "mypy>=1.5",            # 类型检查
+    "build>=1.0",           # 打包工具
 ]
 
 [tool.setuptools.packages.find]
