@@ -1,20 +1,30 @@
-# NSSDPlib
+# **NSSDPlib**
 
-统一差分隐私库。目标：
-- 支持 CDP（服务端）与 LDP（客户端）模块化安装。
-- 提供可扩展机制、隐私会计与测试框架。
-- 支持 PyPI 分发与 CI/CD 集成。
+### 🔹 统一差分隐私库。目标：
+* **统一架构**：提供统一的核心框架（core）、CDP 模块、LDP 模块三层结构。
+* **可复用组件**：实现机制工厂、隐私会计、敏感度分析、组合定理、聚合器等通用组件。
+* **可验证隐私**：提供形式化隐私证明与测试工具。
+* **可扩展生态**：开放接口支持第三方机制与模型插件。
+* **高效运行**：兼顾数值稳定性与计算性能，支持大规模实验与基准测试。
+---
 
-快速开始
+### 🔹 快速开始
 ```bash
 # 本地初始化
-git clone <repo>
+
+git clone https://github.com/ct-612/NSSDPlib.git
+
 cd NSSDPlib
+
 python -m venv .venv
+
 .venv\Scripts\activate.ps1
-pip install -e ".[dev,cdp,ldp]"
+
+pip install -e ".[dev,core,cdp,ldp]"
+
 pytest -q
 ```
+---
 
 ### 🔹 安装方式
 
