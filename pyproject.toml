@@ -14,8 +14,8 @@ keywords = ["differential-privacy", "dp", "cdp", "ldp"]
 
 # 基础依赖，所有模块共用
 dependencies = [
-    "numpy>=1.24",          # 数值计算基础
-    "scipy>=1.10"           # 科学计算
+    "numpy>=1.24",          # 数值计算核心
+    "scipy>=1.10"           # 概率分布与统计函数
 ]
 
 # 可选模块依赖
@@ -23,55 +23,57 @@ dependencies = [
 
 # 核心模块：数据抽象、隐私模型、工具函数
 core = [
-    "pandas>=2.0",          # 数据处理
-    "tqdm>=4.65",           # 进度条显示
+    "pandas>=2.0",          # 数据处理与结构化接口
+    "tqdm>=4.65",           # 进度条与批处理日志
 ]
 
 # CDP模块：中心化差分隐私功能 + 机器学习
 cdp = [
-    "scikit-learn>=1.2",    # 机器学习算法
-    "tensorflow>=2.12",     # 可选神经网络
-    "torch>=2.1",           # 可选PyTorch支持
-    "pandas>=2.0",          # 数据处理
-    "matplotlib>=3.7",      # 可视化
+    "scikit-learn>=1.2",    # 模型评估与基准算法
+    "tensorflow>=2.12",     # 深度学习训练接口
+    "torch>=2.1",           # 通用机器学习与 DP-SGD 支持
+    "pandas>=2.0",          # 数据处理与结构化接口
+    "matplotlib>=3.7",      # 可视化与报告输出
 ]
 
 # LDP模块：本地差分隐私功能
 ldp = [
-    "bitarray>=2.5",        # Bloom filter / sketch编码
-    "xxhash>=3.2",          # 高效哈希
-    "pandas>=2.0",
+    "bitarray>=2.5",        # 位级数据表示
+    "xxhash>=3.2",          # 高速哈希
+    "pandas>=2.0",          # 数据处理与结构化接口
 ]
 
 # 全部模块：CDP + LDP + ML + examples + docs + dev
 all = [
     # Core
-    "numpy>=1.24",
-    "scipy>=1.10",
-    "pandas>=2.0",
-    "tqdm>=4.65",
+    "numpy>=1.24",          # 数值计算核心
+    "scipy>=1.10",          # 概率分布与统计函数
+    "pandas>=2.0",          # 数据处理与结构化接口
+    "tqdm>=4.65",           # 进度条与批处理日志
     
     # CDP
-    "scikit-learn>=1.2",
-    "tensorflow>=2.12",
-    "torch>=2.1",
-    "matplotlib>=3.7",
+    "scikit-learn>=1.2",    # 模型评估与基准算法
+    "tensorflow>=2.12",     # 深度学习训练接口
+    "torch>=2.1",           # 通用机器学习与 DP-SGD 支持
+    "matplotlib>=3.7",      # 可视化与报告输出
 
     # LDP
-    "bitarray>=2.5",
-    "xxhash>=3.2",
+    "bitarray>=2.5",        # 位级数据表示
+    "xxhash>=3.2",          # 高速哈希
+    "datasketch>=1.5.2",    # LDP/聚合近似算法支持
+    "mmh3>=3.0.0",          # MurmurHash 实现，用于哈希机制
 
     # Docs & Examples
-    "sphinx>=5.0",
-    "sphinx-rtd-theme>=1.2",
-    "jupyter>=1.0",
+    "sphinx>=5.0",              # 文档生成
+    "sphinx-rtd-theme>=1.2",    # 文档主题
+    "jupyter>=1.0",             # 教程与实验交互环境
 
     # Testing & Dev
-    "pytest>=7.0",
-    "pytest-cov>=4.0",
-    "black>=23.3",
-    "isort>=6.0",
-    "pre-commit>=3.3"
+    "pytest>=7.0",          # 测试框架
+    "pytest-cov>=4.0",      # 测试覆盖率报告
+    "black>=23.3",          # 代码格式化
+    "isort>=6.0",           # 导入排序
+    "pre-commit>=3.3"       # 提交前代码检查
 ]
 
 [tool.setuptools.packages.find]
