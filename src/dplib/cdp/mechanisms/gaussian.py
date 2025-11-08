@@ -1,7 +1,7 @@
 # src\dplib\cdp\mechanisms\gaussian.py
 from __future__ import annotations
 import numpy as np
-from typing import Optional
+from typing import Sequence, Any, Dict, Optional
 from dplib.core.privacy.base_mechanism import BaseMechanism, MechanismError
 
 
@@ -67,13 +67,13 @@ class GaussianMechanism(BaseMechanism):
         noise = self._rng.normal(0.0, self.sigma)
         return float(value + noise)
 
-    def serialize(self) -> dict:
+    def serialize(self) -> Dict[str, Any]:
         base = super().serialize()
         base.update({"mechanism": "gaussian", "sensitivity": self.sensitivity, "delta": self.delta, "sigma": self.sigma})
         return base
 
     @classmethod
-    def deserialize(cls, data: dict) -> "GaussianMechanism":
+    def deserialize(cls, data: Dict[str, Any]) -> "GaussianMechanism":
         eps = data.get("epsilon")
         delta = data.get("delta", 1e-5)
         sensitivity = data.get("sensitivity", 1.0)
