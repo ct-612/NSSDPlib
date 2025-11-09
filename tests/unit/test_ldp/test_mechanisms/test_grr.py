@@ -73,6 +73,7 @@ def test_randomise_numpy_array(calibrated_grr: GRRMechanism) -> None:
     result = mech.randomise(arr)
     assert isinstance(result, np.ndarray)
     assert result.shape == arr.shape
+    assert result.dtype == object
     assert set(result.ravel()).issubset(set(mech.domain))
 
 

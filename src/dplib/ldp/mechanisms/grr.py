@@ -7,10 +7,10 @@ Responsibilities:
     * randomise scalars, Python sequences, and numpy arrays
 """
 # 说明：实现通用化随机响应机制，用于离散型本地差分隐私（LDP）域。
-# 主要职责：
-# 1) 校验任意离散域的合法性
-# 2) 根据隐私预算 ε（epsilon）计算“真实响应概率”和“非真实响应概率”
-# 3) 对标量、Python 序列以及 NumPy 数组执行随机化操作
+# 职责：
+# - 校验任意离散域的合法性
+# - 根据隐私预算 ε（epsilon）计算“真实响应概率”和“非真实响应概率”
+# - 对标量、Python 序列以及 NumPy 数组执行随机化操作
 
 from __future__ import annotations
 from typing import Sequence, Any, Dict, Optional
@@ -106,14 +106,28 @@ class GRRMechanism(BaseMechanism):
         # 保持输入类型（list 或 tuple）一致
         return tuple(mapped) if isinstance(values, tuple) else mapped
 
+    def _randomise_ndarray(self, arr: np.ndarray) -> np.ndarray:
+        """Vectorise randomisation over numpy arrays while preserving shape."""
+        # 若输入为空数组，直接返回同形状的空对象数组（元素类型为 object，便于存放任意类型的随机化结果）
+        if arr.size == 0:
+            return np.empty_like(arr, dtype=object)
+        # 将多维数组扁平化为一维视图，便于顺序遍历与逐元素处理
+        flat = arr.reshape(-1)
+        # 为输出分配与 flat 等长的对象数组，用于逐元素填充随机化后的结果
+        noisy = np.empty(flat.shape, dtype=object)
+        # 逐元素随机化：调用单值版本 _randomise_single，并写入预分配缓冲区
+        for idx, original in enumerate(flat):
+            noisy[idx] = self._randomise_single(original)
+        # 将一维结果按照原始形状还原，保证与输入的形状一致
+        return noisy.reshape(arr.shape)
+
     def randomise(self, value: Any) -> Any:
         """Add categorical noise to scalars, sequences, or numpy arrays."""
         # 确保机制已校准
         self.require_calibrated()
         # 若输入为 ndarray，则使用 np.vectorize 实现元素级随机化
         if isinstance(value, np.ndarray):
-            flat = np.vectorize(self._randomise_single, otypes=[object])(value)
-            return flat.reshape(value.shape)
+            return self._randomise_ndarray(value)
         # 若输入为 list 或 tuple，逐元素处理
         if isinstance(value, (list, tuple)):
             return self._randomise_sequence(value)
