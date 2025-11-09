@@ -1,66 +1,89 @@
-# tests\unit\test_cdp\test_mechanisms\test_laplace.py
-import pytest
+"""
+Unit tests validating the Laplace mechanism implementation.
+
+Covers:
+    * calibration of scale
+    * noise addition for scalars and arrays
+    * validation, lifecycle guardrails, and serialization roundtrip
+"""
+# 说明：对拉普拉斯机制进行单元测试。
+# 覆盖：
+# - 噪声尺度校准
+# - 标量与数组的加噪与形状保持
+# - 参数校验错误、生命周期约束（未校准禁止使用）、序列化往返一致性
+
 import numpy as np
-from dplib.cdp.mechanisms.laplace import LaplaceMechanism, MechanismError
+import pytest
+from dplib.cdp.mechanisms.laplace import LaplaceMechanism
+from dplib.core.privacy.base_mechanism import NotCalibratedError, ValidationError
 
-# -----------------------------
-# Fixture 示例
-# -----------------------------
-@pytest.fixture
-def laplace_mechanism():
-    return LaplaceMechanism(epsilon=1.0, sensitivity=1.0)
-
-@pytest.fixture(params=[0.1, 0.5, 1.0])
-def epsilon(request):
-    return request.param
-
-@pytest.fixture(params=[0.1, 1.0, 5.0])
-def sensitivity(request):
-    return request.param
 
 @pytest.fixture
-def random_array():
-    import numpy as np
-    return lambda n: np.random.rand(n)
+def laplace() -> LaplaceMechanism:
+    """Fixture returning a Laplace mechanism with non-unit parameters."""
+    # 夹具：提供一个非默认参数的 Laplace 机制实例，便于复用
+    return LaplaceMechanism(epsilon=2.0, sensitivity=3.0)
 
-# -----------------------------
-# 基本功能测试
-# -----------------------------
-def test_calibrate_and_randomise(laplace_mechanism):
-    mech = laplace_mechanism
-    mech.calibrate(2.0)
-    val = 10.0
-    noisy_val = mech.randomise(val)
-    assert isinstance(noisy_val, float)
-    assert noisy_val != val or noisy_val == val  # Laplace 随机性
 
-def test_invalid_calibrate():
-    mech = LaplaceMechanism(epsilon=1.0, sensitivity=1.0)
-    with pytest.raises(MechanismError):
-        mech.calibrate(-1)
+def test_calibrate_computes_scale(laplace: LaplaceMechanism) -> None:
+    """Calibration should update the Laplace scale using epsilon and sensitivity."""
+    # 断言：calibrate() 后 scale == sensitivity / epsilon
+    laplace.calibrate()
+    assert laplace.scale == pytest.approx(laplace.sensitivity / laplace.epsilon)
 
-def test_invalid_randomise_type(laplace_mechanism):
-    with pytest.raises(MechanismError):
-        laplace_mechanism.randomise("not_a_number")
 
-# -----------------------------
-# 统计特性测试
-# -----------------------------
-def test_laplace_statistics(laplace_mechanism):
-    mech = laplace_mechanism
-    mech.calibrate(1.0)
-    samples = [mech.randomise(0.0) for _ in range(1000)]
-    mean = np.mean(samples)
-    var = np.var(samples)
-    assert abs(mean) < 0.5
-    assert var > 0
+def test_randomise_scalar_returns_float(laplace: LaplaceMechanism) -> None:
+    """Scalar inputs produce noisy floats drawn from Laplace distribution."""
+    # 标量输入应返回 float，且在固定种子下基本不等于原值
+    laplace.calibrate()
+    laplace.reseed(0)  # 固定 RNG 以减少偶然性
+    noisy = laplace.randomise(5.0)
+    assert isinstance(noisy, float)
+    assert noisy != 5.0  # 极小概率相等，测试依赖已设定随机种子
 
-# -----------------------------
-# 序列化/反序列化
-# -----------------------------
-def test_serialize_deserialize():
-    mech = LaplaceMechanism(epsilon=0.5, sensitivity=2.0)
-    data = mech.serialize()
-    new_mech = LaplaceMechanism.deserialize(data)
-    assert new_mech.epsilon == mech.epsilon
-    assert new_mech.sensitivity == mech.sensitivity
+
+def test_randomise_vector_input_returns_list(laplace: LaplaceMechanism) -> None:
+    """Python lists are processed element-wise and type is preserved."""
+    # Python 列表逐元素加噪，且保持类型为 list
+    laplace.calibrate()
+    values = [0.0, 1.0, 2.0]
+    result = laplace.randomise(values)
+    assert isinstance(result, list)
+    assert len(result) == len(values)  # 长度不变
+
+
+def test_randomise_numpy_array_preserves_shape(laplace: LaplaceMechanism) -> None:
+    """Numpy arrays should preserve shape after adding noise."""
+    # Numpy 数组形状在加噪后应保持不变
+    laplace.calibrate()
+    array = np.zeros((2, 3))
+    result = laplace.randomise(array)
+    assert isinstance(result, np.ndarray)
+    assert result.shape == array.shape
+
+
+def test_randomise_requires_numeric(laplace: LaplaceMechanism) -> None:
+    """Non-numeric data should be rejected."""
+    # 非数值数据应触发 ValidationError
+    laplace.calibrate()
+    with pytest.raises(ValidationError):
+        laplace.randomise(["not", "numeric"])
+
+
+def test_randomise_without_calibration_raises(laplace: LaplaceMechanism) -> None:
+    """Calling randomise before calibrate should raise an error."""
+    # 未调用 calibrate() 就 randomise() 应抛出 NotCalibratedError
+    with pytest.raises(NotCalibratedError):
+        laplace.randomise(1.0)
+
+
+def test_serialize_roundtrip(laplace: LaplaceMechanism) -> None:
+    """Serialized Laplace mechanisms should roundtrip with metadata and scale intact."""
+    # 序列化→反序列化往返：应保持 sensitivity、scale 以及自定义 meta 一致
+    laplace.calibrate()
+    laplace._meta["tag"] = "unit"  # 添加自定义元数据用于校验
+    data = laplace.serialize()
+    restored = LaplaceMechanism.deserialize(data)
+    assert restored.sensitivity == laplace.sensitivity
+    assert restored.scale == laplace.scale
+    assert restored._meta == laplace._meta
