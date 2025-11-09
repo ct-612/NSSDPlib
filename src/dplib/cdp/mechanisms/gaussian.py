@@ -7,10 +7,10 @@ Responsibilities:
     * persist calibration metadata for reproducibility
 """
 # 说明：实现近似差分隐私 (ε, δ)-DP 的高斯机制。
-# 主要职责：
-# 1) 由 epsilon、delta、sensitivity 标定噪声标准差 sigma
-# 2) 对标量与数组逐元素加入独立同分布高斯噪声
-# 3) 持久化校准元数据以确保可复现性
+# 职责：
+# - 由 epsilon、delta、sensitivity 标定噪声标准差 sigma
+# - 对标量与数组逐元素加入独立同分布高斯噪声
+# - 持久化校准元数据以确保可复现性
 
 from __future__ import annotations
 from typing import Any, Dict, Optional

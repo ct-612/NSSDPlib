@@ -7,10 +7,10 @@ Responsibilities:
     * persist calibration metadata for reproducibility
 """
 # 说明：实现纯 (ε, 0)-DP 的拉普拉斯机制。
-# 主要职责：
-# 1) 由 epsilon 与全局敏感度 sensitivity 计算拉普拉斯噪声尺度 scale = sensitivity / epsilon
-# 2) 对标量、序列、NumPy 数组逐元素加噪
-# 3) 持久化校准元数据以确保可复现性
+# 职责：
+# - 由 epsilon 与全局敏感度 sensitivity 计算拉普拉斯噪声尺度 scale = sensitivity / epsilon
+# - 对标量、序列、NumPy 数组逐元素加噪
+# - 持久化校准元数据以确保可复现性
 
 from __future__ import annotations
 from typing import Any, Dict, Optional

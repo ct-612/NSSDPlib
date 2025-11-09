@@ -8,11 +8,11 @@ Responsibilities:
     * purpose specific exceptions
 """
 # 说明：定义本库所有机制共享的抽象基类与通用工具。
-# 主要职责：
-# 1) 通用参数校验与随机数生成器（RNG）管理
-# 2) 统一的校准生命周期
-# 3) 序列化辅助工具
-# 4) 特定用途的异常类型
+# 职责：
+# - 通用参数校验与随机数生成器（RNG）管理
+# - 统一的校准生命周期
+# - 序列化辅助工具
+# - 特定用途的异常类型
 
 from __future__ import annotations
 from abc import ABC, abstractmethod
