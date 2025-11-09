@@ -81,7 +81,7 @@ def test_serialize_roundtrip(laplace: LaplaceMechanism) -> None:
     """Serialized Laplace mechanisms should roundtrip with metadata and scale intact."""
     # 序列化→反序列化往返：应保持 sensitivity、scale 以及自定义 meta 一致
     laplace.calibrate()
-    laplace._meta["tag"] = "unit"  # 添加自定义元数据用于校验
+    laplace._meta["origin"] = "unit-test"  # 添加自定义元数据用于校验
     data = laplace.serialize()
     restored = LaplaceMechanism.deserialize(data)
     assert restored.sensitivity == laplace.sensitivity
