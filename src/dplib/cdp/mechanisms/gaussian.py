@@ -1,85 +1,99 @@
-# src\dplib\cdp\mechanisms\gaussian.py
+"""
+Gaussian mechanism for approximate differential privacy.
+
+Responsibilities:
+    * calibrate sigma from epsilon, delta, and sensitivity
+    * add Gaussian noise to scalars and arrays
+    * persist calibration metadata for reproducibility
+"""
+# 说明：实现近似差分隐私 (ε, δ)-DP 的高斯机制。
+# 主要职责：
+# 1) 由 epsilon、delta、sensitivity 标定噪声标准差 sigma
+# 2) 对标量与数组逐元素加入独立同分布高斯噪声
+# 3) 持久化校准元数据以确保可复现性
+
 from __future__ import annotations
+from typing import Any, Dict, Optional
+import math
 import numpy as np
-from typing import Sequence, Any, Dict, Optional
-from dplib.core.privacy.base_mechanism import BaseMechanism, MechanismError
+from dplib.core.privacy.base_mechanism import BaseMechanism, CalibrationError, MechanismError, ValidationError
 
 
 class GaussianMechanism(BaseMechanism):
-    """
-    - 这是一个用于 (ε, δ) 差分隐私的高斯噪声机制。
-
-    - 噪声标准差公式:
-        - sigma = sensitivity * sqrt(2 * ln(1.25/delta)) / epsilon
-
-    - 注意：
-        - 此校准公式要求 delta 必须大于 0 
-        - 该类遵循 BaseMechanism 约定：在调用 randomise() 前需先调用 calibrate() 
-    """
+    """Gaussian mechanism with the common 1.25 calibration constant."""
 
     def __init__(
         self,
         epsilon: float = 1.0,
         delta: float = 1e-5,
         sensitivity: float = 1.0,
-        rng: Optional[np.random.Generator] = None,
+        rng: Optional[Any] = None,
+        name: Optional[str] = None,
     ):
-        # let BaseMechanism validate epsilon/delta and set RNG
-        super().__init__(epsilon=epsilon, delta=delta, rng=rng)
+        # 初始化公共参数并注入 RNG 与可选名称
+        super().__init__(epsilon=epsilon, delta=delta, rng=rng, name=name)
+        self._validate_sensitivity(sensitivity)  # 确保敏感度为正数值
+        if delta <= 0:  # 高斯机制要求 δ>0；否则无意义
+            raise ValidationError("delta must be strictly positive for Gaussian mechanism")
+        self.sensitivity = float(sensitivity)  
+        self.delta = float(delta)              
+        self.sigma: Optional[float] = None     
 
-        if sensitivity <= 0:
-            raise MechanismError("Sensitivity must be positive")
-        if delta < 0:
-            raise MechanismError("Delta must be non-negative")
-
-        self.sensitivity = sensitivity
-        self.delta = float(delta)
-        self.sigma: Optional[float] = None
-
-    def calibrate(self, sensitivity: Optional[float] = None, delta: Optional[float] = None):
-        """
-        - 校准函数：
-            - 可选覆盖 sensitivity 或 delta
-            - 计算噪声标准差 sigma
-        - 目的是在使用 randomise() 前准备机制参数。
-        """
+    def _calibrate_parameters(
+        self,
+        *,
+        sensitivity: Optional[float],
+        delta: Optional[float] = None,
+        **kwargs: Any,
+    ) -> None:
+        """Update sensitivity/delta as needed and compute sigma for the noise."""
+        # 该方法由基类 calibrate() 调用，执行具体校准逻辑。
+        del kwargs  # 忽略未使用的可变参数
         if sensitivity is not None:
-            if sensitivity <= 0:
-                raise MechanismError("Sensitivity must be positive")
-            self.sensitivity = sensitivity
-
+            self.sensitivity = float(sensitivity)  # 若传入新敏感度则更新
         if delta is not None:
-            if delta < 0:
-                raise MechanismError("Delta must be non-negative")
+            self._validate_delta(delta)            # 使用基类校验 δ∈(0,1)
             self.delta = float(delta)
-
         if self.delta <= 0:
+            # 二次防御：确保 δ>0
             raise MechanismError("delta must be > 0 for Gaussian calibration")
+        # 计算高斯噪声标准差 σ，采用常用校准常数 1.25
+        # σ = (Δf * sqrt(2 * ln(1.25/δ))) / ε
+        self.sigma = self.sensitivity * math.sqrt(2.0 * math.log(1.25 / self.delta)) / self.epsilon
 
-        # common (non-tight) formula for (epsilon, delta)-DP Gaussian noise
-        self.sigma = self.sensitivity * np.sqrt(2.0 * np.log(1.25 / self.delta)) / self.epsilon
-        self._calibrated = True
-
-    def randomise(self, value: float) -> float:
-        if not isinstance(value, (int, float)):
-            raise MechanismError("Value must be numeric")
-        self.require_calibrated()
-        noise = self._rng.normal(0.0, self.sigma)
-        return float(value + noise)
+    def randomise(self, value: Any) -> Any:
+        """Inject i.i.d. Gaussian noise into scalars, vectors, or numpy arrays."""
+        # 加噪入口：确保校准完成并按输入形状采样 i.i.d. 高斯噪声后相加
+        self.require_calibrated()  # 未校准将抛出异常
+        if self.sigma is None:
+            # 防御式：理论上 require_calibrated 后应已有 sigma
+            raise CalibrationError("Gaussian mechanism missing sigma; call calibrate()")
+        arr, was_scalar = self._coerce_numeric(value)  # 统一为 ndarray，并记录是否原为标量
+        # 标量输入 -> size=None 采样一个数；数组输入 -> 与形状一致逐元素采样
+        size = None if was_scalar else arr.shape
+        noise = self._rng.normal(0.0, self.sigma, size=size)  # 生成 N(0, σ^2) 噪声
+        result = arr + noise
+        return self._restore_numeric_like(value, result, was_scalar)  # 还原为与原输入等价的标量/数组类型
 
     def serialize(self) -> Dict[str, Any]:
+        """Capture Gaussian-specific parameters for reproducibility."""
+        # 在基类序列化结果上，补充高斯机制特有参数，便于跨进程复现
         base = super().serialize()
-        base.update({"mechanism": "gaussian", "sensitivity": self.sensitivity, "delta": self.delta, "sigma": self.sigma})
+        base.update({"sensitivity": self.sensitivity, "delta": self.delta, "sigma": self.sigma})
         return base
 
     @classmethod
     def deserialize(cls, data: Dict[str, Any]) -> "GaussianMechanism":
-        eps = data.get("epsilon")
-        delta = data.get("delta", 1e-5)
-        sensitivity = data.get("sensitivity", 1.0)
-        inst = cls(epsilon=eps, delta=delta, sensitivity=sensitivity)
-        # restore meta and calibrated flag; sigma may be present
-        inst._meta = dict(data.get("meta", {}))
-        inst._calibrated = bool(data.get("calibrated", False))
-        inst.sigma = data.get("sigma", inst.sigma)
+        """Reinstantiate a Gaussian mechanism, including prior calibration metadata."""
+        # 根据保存的数据重建实例；rng 明确置为 None，避免跨环境 RNG 状态不一致
+        inst = cls(
+            epsilon=data.get("epsilon"),
+            delta=data.get("delta", 1e-5),
+            sensitivity=data.get("sensitivity", 1.0),
+            rng=None,
+            name=data.get("name"),
+        )
+        inst._meta = dict(data.get("meta", {}))                 
+        inst._calibrated = bool(data.get("calibrated", False))  
+        inst.sigma = data.get("sigma")                           
         return inst
