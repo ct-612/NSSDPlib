@@ -1,59 +1,120 @@
+# NSSDPlib 的 CI：包含代码规范检查、测试矩阵与依赖安全扫描
+
 name: NSSDPlib CI
 
-# 触发条件：push 或 pull_request 到 main/master 分支
 on:
+  # 触发条件：推送或 PR 指向主分支
   push:
-    branches:
-      - main
-      - master
+    branches: [main, master]
   pull_request:
-    branches:
-      - main
-      - master
+    branches: [main, master]
 
 jobs:
-  test:
-    name: test (python ${{ matrix.python-version }} , ${{ matrix.module }})
+  # ---------------- 静态检查与类型检查 ----------------
+  lint:
+    name: lint (python 3.11)
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ['3.9', '3.10', '3.11', '3.12', '3.13']  # Python 版本矩阵
-        module: ['core', 'cdp', 'ldp', 'all']  # 模块矩阵
-
     steps:
-      # 1. Checkout 仓库代码
+      # 拉取仓库代码
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # 2. 设置 Python 环境
+      # 安装 Python 3.11 作为规范检查的统一解释器
       - name: Setup Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.11'  # 可根据需要调整
+          python-version: "3.11"
 
-      # 3. 安装 pip 最新版
+      # 安装开发依赖（含 black/isort/flake8/mypy 等）
+      - name: Install lint dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      # Black：代码格式校验（不自动修复）
+      - name: Run black
+        run: black --check .
+
+      # isort：导入顺序校验
+      - name: Run isort
+        run: isort --check-only .
+
+      # flake8：语法与风格问题检查
+      - name: Run flake8
+        run: flake8 src tests
+
+      # mypy：静态类型检查
+      - name: Run mypy
+        run: mypy src
+
+  # ---------------- 测试矩阵（多 Python 版本 + 多模块可选依赖） ----------------
+  test:
+    name: test (py${{ matrix.python-version }} , ${{ matrix.module }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false  # 某一矩阵分项失败不影响其他分项继续
+      matrix:
+        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]  # 运行环境覆盖
+        module: ["core", "cdp", "ldp", "all"]                    # 可选安装的 extras
+
+    steps:
+      # 拉取代码
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 安装矩阵指定的 Python 版本
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      # 升级 pip，减少安装问题
       - name: Upgrade pip
         run: python -m pip install --upgrade pip
 
-      # 4. 安装项目及模块化依赖
-      - name: Install NSSDPlib [$matrix.module]
+      # 按矩阵安装项目（可编辑）与测试依赖
+      - name: Install project (${{ matrix.module }})
         run: |
           pip install -e ".[${{ matrix.module }}]"
-          pip install pytest pytest-cov  # 确保测试依赖存在
+          pip install pytest pytest-cov
 
-      # 5.设置 PYTHONPATH 环境变量
-      - name: Set PYTHONPATH
-        run: |
-          echo "PYTHONPATH=${{ github.workspace }}/src:\$PYTHONPATH" >> $GITHUB_ENV
+      # 设置 PYTHONPATH 以支持 src/ 布局直接导入
+      - name: Export PYTHONPATH
+        run: echo "PYTHONPATH=${{ github.workspace }}/src:\$PYTHONPATH" >> $GITHUB_ENV
 
-      # 6. 运行单元测试
-      - name: Run tests
-        run: |
-          pytest -q
+      # 运行测试：安静模式，遇到首个失败即退出该分项
+      - name: Run pytest
+        run: pytest --maxfail=1 --disable-warnings -q
 
-      # 7. 可选：收集覆盖率
-      - name: Collect coverage
-        if: matrix.module == 'all'  # 仅全套模块生成覆盖率
+      # 覆盖率：只在 Python 3.11 且安装 all extras 时生成，节省 CI 时间
+      - name: Coverage (py3.11 + all)
+        if: matrix.python-version == '3.11' && matrix.module == 'all'
+        run: pytest --cov=src/dplib --cov-report=xml --cov-report=term-missing tests/
+
+  # ---------------- 依赖安全扫描（Safety） ----------------
+  safety:
+    name: safety scan
+    runs-on: ubuntu-latest
+    steps:
+      # 拉取代码
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 安装 Python 3.11 作为扫描环境
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      # 安装项目及安全扫描工具 Safety
+      - name: Install safety dependencies
         run: |
-          pytest --cov=src/dplib tests/
-          coverage report -m
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+          pip install safety
+
+      # 冻结依赖并执行漏洞扫描，输出完整报告
+      - name: Run safety
+        run: |
+          pip freeze > requirements.lock
+          safety check --full-report --file=requirements.lock
