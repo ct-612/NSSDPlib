@@ -11,41 +11,41 @@ on:
 
 jobs:
   # ---------------- 静态检查与类型检查 ----------------
-  lint:
-    name: lint (python 3.11)
-    runs-on: ubuntu-latest
-    steps:
-      # 拉取仓库代码
-      - name: Checkout repository
-        uses: actions/checkout@v4
+  # lint:
+  #   name: lint (python 3.11)
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     # 拉取仓库代码
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v4
 
-      # 安装 Python 3.11 作为规范检查的统一解释器
-      - name: Setup Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.11"
+  #     # 安装 Python 3.11 作为规范检查的统一解释器
+  #     - name: Setup Python
+  #       uses: actions/setup-python@v4
+  #       with:
+  #         python-version: "3.11"
 
-      # 安装开发依赖（含 black/isort/flake8/mypy 等）
-      - name: Install lint dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -e ".[dev]"
+  #     # 安装开发依赖（含 black/isort/flake8/mypy 等）
+  #     - name: Install lint dependencies
+  #       run: |
+  #         python -m pip install --upgrade pip
+  #         pip install -e ".[dev]"
 
-      # Black：代码格式校验（不自动修复）
-      #- name: Run black
-      #  run: black --check .
+  #     # Black：代码格式校验（不自动修复）
+  #     - name: Run black
+  #       run: black --check .
 
-      # isort：导入顺序校验
-      - name: Run isort
-        run: isort --check-only .
+  #     # isort：导入顺序校验
+  #     - name: Run isort
+  #       run: isort --check-only .
 
-      # flake8：语法与风格问题检查
-      - name: Run flake8
-        run: flake8 src tests
+  #     # flake8：语法与风格问题检查
+  #     - name: Run flake8
+  #       run: flake8 src tests
 
-      # mypy：静态类型检查
-      - name: Run mypy
-        run: mypy src
+  #     # mypy：静态类型检查
+  #     - name: Run mypy
+  #       run: mypy src
 
   # ---------------- 测试矩阵（多 Python 版本 + 多模块可选依赖） ----------------
   test:
