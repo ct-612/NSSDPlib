@@ -160,7 +160,7 @@ class BaseMechanism(ABC):
             "epsilon": self.epsilon,
             "delta": self.delta,
             "calibrated": bool(self._calibrated),
-            "meta": self._meta,
+            "meta": dict(self._meta),
         }
 
     @classmethod
@@ -203,7 +203,11 @@ class BaseMechanism(ABC):
     def mechanism_id(self) -> str:
         """Stable identifier used in serialization/pipelines."""
         name = self.__class__.__name__
-        return name[:-10].lower() if name.lower().endswith("mechanism") else name.lower()
+        lowered = name.lower()
+        suffix = "mechanism"
+        if lowered.endswith(suffix):
+            return lowered[: -len(suffix)] or lowered
+        return lowered
 
     # Shared numeric helpers --------------------------------------------------
     # 把任意数值/序列转为 np.ndarray[float]，同时记录是否源自标量，便于还原类型。
