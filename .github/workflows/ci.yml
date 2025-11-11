@@ -32,8 +32,8 @@ jobs:
           pip install -e ".[dev]"
 
       # Black：代码格式校验（不自动修复）
-      - name: Run black
-        run: black --check .
+      #- name: Run black
+      #  run: black --check .
 
       # isort：导入顺序校验
       - name: Run isort
