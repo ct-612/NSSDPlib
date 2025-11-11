@@ -1,3 +1,16 @@
+"""
+Unit tests for the BaseMechanism abstractions.
+"""
+# 说明：使用 DummyMechanism 验证 BaseMechanism 的通用行为与约束。
+# 覆盖：
+# - 参数校验：epsilon>0、delta≥0
+# - 校准生命周期：calibrate() 置位、返回 self、scale 计算与敏感度校验
+# - 调用前置条件：未校准时 randomise() 抛 NotCalibratedError
+# - 类型与形状保持：标量、ndarray、list、tuple 的输出类型/形状不变
+# - 标识派生：mechanism_id 去除 “Mechanism” 后缀
+# - 序列化往返：serialize()/to_json()/from_json() 保留元数据与状态
+# - RNG 复现性：reseed(seed) 后随机序列可重复
+
 from typing import Optional
 
 import numpy as np

@@ -22,7 +22,7 @@ import numbers
 import numpy as np
 
 
-# Exceptions -----------------------------------------------------------------
+# ----------------------------------------------------------------- Exceptions
 # 机制相关异常类型。
 class MechanismError(Exception):
     """Base exception for mechanism errors."""
@@ -40,7 +40,7 @@ class NotCalibratedError(MechanismError):
     """Raised when an operation requires prior calibration."""
 
 
-# Helper for RNG --------------------------------------------------------------
+# -------------------------------------------------------------- Helper for RNG
 # 统一的随机数生成器工厂：支持 None、现成的 Generator、或任意可播种对象。
 def _make_rng(seed: Optional[Any]) -> np.random.Generator:
     """Create a fresh numpy Generator from diverse seed types."""
@@ -51,7 +51,7 @@ def _make_rng(seed: Optional[Any]) -> np.random.Generator:
     return np.random.default_rng(seed)
 
 
-# Base abstraction ------------------------------------------------------------
+# ------------------------------------------------------------ Base abstraction
 # 所有机制的抽象基类：
 #  - 负责 epsilon/delta 校验与 RNG 管理
 #  - 约定统一的校准生命周期（calibrate/require_calibrated）
@@ -79,7 +79,7 @@ class BaseMechanism(ABC):
         self._calibrated: bool = False
         self._meta: Dict[str, Any] = {}
 
-    # Validation helpers ------------------------------------------------------
+    # ------------------------------------------------------ Validation helpers
     # 基础参数校验：确保为 Real 且满足正性/非负性约束。
     @staticmethod
     def _validate_epsilon(eps: float) -> None:
@@ -106,7 +106,7 @@ class BaseMechanism(ABC):
         except Exception as exc:  # pragma: no cover - defensive
             raise ValidationError("value must be numeric or array-like") from exc
 
-    # Calibration lifecycle ---------------------------------------------------
+    # --------------------------------------------------- Calibration lifecycle
     # 对外统一的校准入口：可选择性传入 sensitivity 或机制特定参数。
     # 成功后会将 _calibrated 置为 True，用于运行期保护。
     def calibrate(self, sensitivity: Optional[float] = None, **kwargs: Any) -> "BaseMechanism":
@@ -149,7 +149,7 @@ class BaseMechanism(ABC):
     def calibrated(self) -> bool:   # 查询校准状态。
         return self._calibrated
 
-    # Serialization -----------------------------------------------------------
+    # ----------------------------------------------------------- Serialization
     # 生成可 JSON 化的状态快照；子类可在此基础上扩展特定字段（如 domain、p、q）。
     def serialize(self) -> Dict[str, Any]:
         """Return a JSON serialisable snapshot of the mechanism."""
@@ -188,7 +188,7 @@ class BaseMechanism(ABC):
         data = json.loads(text)
         return cls.deserialize(data)
 
-    # Utilities ---------------------------------------------------------------
+    # --------------------------------------------------------------- Utilities
     # 运行期保护：要求先完成 calibrate，否则抛出 NotCalibratedError。
     def require_calibrated(self) -> None:
         if not self._calibrated:
@@ -209,7 +209,7 @@ class BaseMechanism(ABC):
             return lowered[: -len(suffix)] or lowered
         return lowered
 
-    # Shared numeric helpers --------------------------------------------------
+    # -------------------------------------------------- Shared numeric helpers
     # 把任意数值/序列转为 np.ndarray[float]，同时记录是否源自标量，便于还原类型。
     @staticmethod
     def _coerce_numeric(value: Any) -> Tuple[np.ndarray, bool]:
@@ -235,7 +235,7 @@ class BaseMechanism(ABC):
             return value.tolist()
         return value
 
-    # Representation ----------------------------------------------------------
+    # ---------------------------------------------------------- Representation
     # 便于调试与日志的简洁 __repr__，包含名称、(ε,δ) 与校准状态。
     def __repr__(self) -> str:
         return (
