@@ -12,6 +12,16 @@ from .privacy_accountant import (
     PrivacyEvent,
     BudgetExceededError,
 )
+from .composition import (
+    CompositionResult,
+    CompositionRule,
+    SequentialCompositionRule,
+    ParallelCompositionRule,
+    HigherOrderCompositionRule,
+    CompositionError,
+    normalize_privacy_event,
+    normalize_privacy_events,
+)
 from .budget_tracker import (
     BudgetTracker,
     BudgetAlert,
@@ -29,6 +39,14 @@ __all__ = [
     "PrivacyBudget",
     "PrivacyEvent",
     "BudgetExceededError",
+    "CompositionResult",
+    "CompositionRule",
+    "SequentialCompositionRule",
+    "ParallelCompositionRule",
+    "HigherOrderCompositionRule",
+    "CompositionError",
+    "normalize_privacy_event",
+    "normalize_privacy_events",
     "BudgetTracker",
     "BudgetAlert",
     "TrackedScope",
