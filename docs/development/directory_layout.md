@@ -191,6 +191,8 @@ NSSDPlib/                              # 统一差分隐私库
 │   │   │   ├── 📄 test_composition.py
 │   │   │   ├── 📄 test_domain.py
 │   │   │   ├── 📄 test_dataset.py
+│   │   │   ├── 📄 test_sensitivity.py
+│   │   │   ├── 📄 test_statistics.py
 │   │   │   ├── 📄 test_transformers.py
 │   │   │   └── 📄 test_validation.py
 │   │   ├── 📁 test_cdp/               # CDP模块测试
@@ -202,8 +204,8 @@ NSSDPlib/                              # 统一差分隐私库
 │   │   │   │   └── 📄 test_geometric.py
 │   │   │   ├── 📁 test_composition/   # CDP组合测试
 │   │   │   │   ├── 📄 __init__.py
-│   │   │   │   ├── 📄 test_basic_composition.py
-│   │   │   │   ├── 📄 test_advanced_composition.py
+│   │   │   │   ├── 📄 test_basic.py
+│   │   │   │   ├── 📄 test_advanced.py
 │   │   │   │   └── 📄 test_moment_accounting.py
 │   │   │   ├── 📁 test_ml/            # CDP机器学习测试
 │   │   │   │   ├── 📄 __init__.py
@@ -356,3 +358,65 @@ NSSDPlib/                              # 统一差分隐私库
 └── 📄 __init__.py
 ```
 ---
+## **目录状态追踪（与 `project_plan.md`、`development_flow.md` 对齐）**
+
+下表仅覆盖需要立即关注的目录/文件。对于 **✅ 已完成** 的条目，记录了已经交付的能力；对于 **🟡 进行中** 与 **⚪ 待启动** 的条目，则列出了仍需落地的具体操作，方便在 code review 或项目例会上快速定位责任人与动作。
+
+### Stage 1 · `core/`
+
+| 目录/文件 | 状态 | 说明 |
+| --- | --- | --- |
+| `src/dplib/core/privacy/` | 🟡 进行中 | 已实现：`base_mechanism.py` 提供统一校准/序列化流程，`privacy_accountant.py` + `budget_tracker.py` 负责预算守卫，`composition.py` 输出顺序/并行/分组组合结果，并由 `tests/unit/test_core/test_{base_mechanism,privacy_accountant,composition}.py` 覆盖。待补：新增 `privacy_model.py`、`privacy_guarantee.py`，并在 `__init__.py` 中导出所有模型/保证枚举及文档字符串。 |
+| `src/dplib/core/data/` | 🟡 进行中 | 已实现：`domain.py`/`dataset.py`/`transformers.py`/`statistics.py`/`validation.py`/`sensitivity.py` 与 `tests/unit/test_core/test_data_layer.py` 覆盖了域定义、数据批处理、剪裁流水线、统计与敏感度估计。待补：在 `__init__.py` 中暴露稳定 API，拆分验证逻辑到未来的 `core/utils/validation.py`，并补一轮文档/类型测试。 |
+| `src/dplib/core/utils/` | ⚪ 待启动 | 目录仅有空壳。需新建 `math_utils.py`（softmax/logsumexp 等稳定数值函数）、`random.py`（统一 `numpy.random.Generator` 管理）、`config.py`（全局配置覆盖）、`serialization.py`、`logging.py`、`validation.py`、`performance.py`，并为这些工具编写 UT 与示例。 |
+
+### Stage 2 · `cdp/`
+
+| 目录/文件 | 状态 | 说明 |
+| --- | --- | --- |
+| `src/dplib/cdp/mechanisms/` | 🟡 进行中 | 已实现：`laplace.py`、`gaussian.py` 复用了 `BaseMechanism` 的校准生命周期，并在 `tests/unit/test_cdp/test_mechanisms/test_{laplace,gaussian}.py` 中验证。待补：`exponential.py`、`geometric.py`、`staircase.py`、`vector_mechanism.py` 及 `mechanism_{factory,registry}.py`，并附带端到端基准与示例。 |
+| `src/dplib/cdp/composition/` | ✅ 已完成 | `basic.py`、`advanced.py` 提供顺序/高级组合实现并输出 `CompositionResult`，配套 `tests/unit/test_cdp/test_composition/test_{basic,advanced}.py` 已验证在多事件输入上与 `PrivacyAccountant` 的互操作。 |
+| `src/dplib/cdp/analytics/queries/` | 🟡 进行中 | 已实现：`count.py`、`sum.py`、`mean.py` 提供裁剪+预算拆分策略并在 `tests/unit/test_cdp/test_analytics/test_queries.py` 中验证。待补：按照目录约定扩展 histogram/quantile/synthetic-data 查询、封装共享 clipping/validator 工具，并补充属性测试与端到端流水线。 |
+| `src/dplib/cdp/ml/` | ⚪ 待启动 | 仅有 `__init__.py`。需实现 DP-SGD 训练器、线性/神经网络示例、模型评估与高阶 API，确保可被 Stage 5 集成测试复用。 |
+| `src/dplib/cdp/sensitivity/` | ⚪ 待启动 | 仅有 `__init__.py`。应将 `core/data/sensitivity.py` 的通用逻辑封装为 CDP 查询专用的校准器，支持多轮流水线的预算拆分。 |
+
+### Stage 3 · `ldp/`
+
+| 目录/文件 | 状态 | 说明 |
+| --- | --- | --- |
+| `src/dplib/ldp/mechanisms/` | 🟡 进行中 | 已实现：`grr.py`、`oue.py` 以及配套的 `tests/unit/test_ldp/test_mechanisms/test_{grr,oue}.py`，包含概率校准与精度评估。待补：`olh.py`、`rappor.py`、`continuous.py` 以及统一的机制工厂/注册表和端到端示例。 |
+| `src/dplib/ldp/encoders/` | ⚪ 待启动 | 目录为空。需实现 `categorical.py`、`numerical.py`、`hashing.py`、`sketch.py` 等编码器，并附带与 `core/data/domain.py` 的互操作测试。 |
+| `src/dplib/ldp/aggregators/` | ⚪ 待启动 | 目录为空。需实现频率/均值/方差/分位数等聚合器，包含噪声组合与 Server 端抗噪策略。 |
+| `src/dplib/ldp/applications/` | ⚪ 待启动 | 目录为空。需提供 heavy-hitters、range queries、marginals 等端到端脚本，并在 `examples/ldp_examples/` 中引用。 |
+| `src/dplib/ldp/composition/` | ⚪ 待启动 | 仅有占位文件。需落地本地隐私组合规则及 API，与 `ldp/aggregators` 打通。 |
+
+### Stage 5 · `tests/`
+
+| 目录/文件 | 状态 | 说明 |
+| --- | --- | --- |
+| `tests/unit/test_core/` | 🟡 进行中 | 已实现：`test_{base_mechanism,privacy_accountant,composition,budget_tracker,data_layer}.py` 覆盖机制生命周期、会计器、组合与数据层工具。待补：统一 fixture、类型/格式化检查、以及 `core/utils` 上线后的用例。 |
+| `tests/unit/test_cdp/` | 🟡 进行中 | 已实现：`test_mechanisms`、`test_composition`、`test_analytics/test_queries.py`。待补：Exponential/Geometric/Vector 机制、ML/Sensitivity 流水线、以及更高维度的数据集案例。 |
+| `tests/unit/test_ldp/` | 🟡 进行中 | 已实现：`test_mechanisms/test_{grr,oue}.py`。待补：OLH/RAPPOR/continuous 机制、编码器/聚合器用例与多轮交互脚本。 |
+| `tests/unit/test_utils/` | ⚪ 待启动 | 目录为空；需在 `core/utils/*` 落地后补充数值工具、随机性、配置/日志的单测与基准。 |
+| `tests/integration/` | ⚪ 待启动 | 仅有空目录。需实现 `test_{cdp,ldp}_pipeline.py`、`test_cross_module.py`、`test_data_flow.py`、`test_privacy_accounting.py`，覆盖从数据→机制→记账的全链路。 |
+| `tests/property_based/` | ⚪ 待启动 | 仅有空目录。需按规划创建 `test_dp_properties.py`、`test_composition_properties.py` 等 Hypothesis 用例，校验极端参数组合。 |
+| `tests/performance/` | ⚪ 待启动 | 仅有空目录。需补充 `test_mechanism_performance.py`、`test_composition_performance.py`、`test_ml_performance.py`、`test_ldp_performance.py` 与 `benchmark_utils.py`。 |
+| `tests/accuracy/` | ⚪ 待启动 | 仅有空目录。需补 `test_mechanism_accuracy.py`、`test_bias_variance.py`、`test_utility_analysis.py` 等，用于跟踪实际误差。 |
+| `tests/fixtures/` | ⚪ 待启动 | 仅有 `__init__.py`。需沉淀 `test_data.py`、`mock_objects.py`、`privacy_configs.py`、`mechanism_fixtures.py` 以支撑其他测试目录。 |
+| `tests/regressionmkdir/` | ⚪ 待启动 | 名称与规划的 `tests/regression/` 不一致且仅有 `__init__.py`。需重命名目录并补充 `test_regression_{cdp,ldp}.py`、`test_bug_fixes.py` 以防止回归。 |
+
+### Stage 6 · 文档、示例与资产
+
+| 目录/文件 | 状态 | 说明 |
+| --- | --- | --- |
+| `docs/development/*.md` | ✅ 已完成 | `requirements.md`、`architecture.md`、`tech_stack.md`、`project_plan.md`、`development_flow.md` 与当前文件均已同步最新架构/流程约束，可直接作为评审依据。 |
+| `docs/development/contributing.rst` & `docs/development/testing.rst` | ⚪ 待启动 | 文件尚未创建；需将 README 中的贡献规范、代码风格、CI 要求迁移为 Sphinx 章节以便发布到 ReadTheDocs。 |
+| `docs/index.rst` & `docs/conf.py` | 🟡 进行中 | 文件存在但为空。需补充 toctree、项目 metadata、主题/扩展配置，以及 `myst_parser`/`autodoc` 设置以纳入 Markdown 与 API 文档。 |
+| `docs/api/` | ⚪ 待启动 | 目录为空。应新建 `core.rst`、`cdp.rst`、`ldp.rst` 与 `index.rst`，并配置 `autosummary`/`autodoc`。 |
+| `docs/examples/` & `docs/theory/` | ⚪ 待启动 | 两个目录均无文件。需根据目录树创建 `basic.rst`、`cdp.rst`、`ldp.rst`、`dp_basics.rst`、`mechanisms.rst` 等内容。 |
+| `docs/_static/` | ⚪ 待启动 | 目录为空；需补 `custom.css` 与 `logo.png`，并在 `conf.py` 中引用。 |
+| `docs/Makefile` & `docs/requirements-docs.txt` | ⚪ 待启动 | 文件未创建；需提供 `make html`/`make linkcheck` 入口与文档构建依赖说明。 |
+| `README.md` | 🟡 进行中 | 已包含项目概述与安装指引，但缺少贡献流程、分支策略与链接到 `docs/development` 资料；需按 Stage 0 要求补全。 |
+| `examples/` | ⚪ 待启动 | 目录为空。需实现 `basic/`、`cdp_examples/`、`ldp_examples/`、`advanced/` 下的脚本，并同步到文档示例章节。 |
+| `benchmarks/` | ⚪ 待启动 | 仅存在空 `__init__.py`。需落地 `performance/`、`accuracy/`、`scalability/` 下的 benchmark_* 模块与 `run_benchmarks.py`。 |
+| `notebooks/` | ⚪ 待启动 | 目录为空；需创建教程、演示与研究类 Jupyter Notebook（01~06 + demonstrations + research）并在 README/文档中挂载。 |
