@@ -1,4 +1,4 @@
-"""Core data abstractions shared across NSSDPlib."""
+"""Core data abstractions shared across the core library."""
 
 from .domain import (
     BaseDomain,
@@ -23,7 +23,7 @@ from .transformers import (
     TransformerPipeline,
     TransformationError,
 )
-from .validation import (
+from .data_validation import (
     Schema,
     SchemaField,
     SchemaValidator,

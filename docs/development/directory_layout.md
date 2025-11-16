@@ -186,15 +186,29 @@ NSSDPlib/                              # 统一差分隐私库
 │   ├── 📁 unit/                       # 单元测试
 │   │   ├── 📁 test_core/              # 核心模块测试
 │   │   │   ├── 📄 __init__.py
-│   │   │   ├── 📄 test_base_mechanism.py
-│   │   │   ├── 📄 test_privacy_accountant.py
-│   │   │   ├── 📄 test_composition.py
-│   │   │   ├── 📄 test_domain.py
-│   │   │   ├── 📄 test_dataset.py
-│   │   │   ├── 📄 test_sensitivity.py
-│   │   │   ├── 📄 test_statistics.py
-│   │   │   ├── 📄 test_transformers.py
-│   │   │   └── 📄 test_validation.py
+│   │   │   ├── 📁 test_privacy/             # 隐私抽象测试
+│   │   │   │   ├── 📄 __init__.py
+│   │   │   │   ├── 📄 test_base_mechanism.py
+│   │   │   │   ├── 📄 test_privacy_accountant.py
+│   │   │   │   ├── 📄 test_budget_tracker.py
+│   │   │   │   ├── 📄 test_composition.py
+│   │   │   ├── 📁 test_data/             # 数据抽象测试
+│   │   │   │   ├── 📄 __init__.py
+│   │   │   │   ├── 📄 test_domain.py
+│   │   │   │   ├── 📄 test_dataset.py
+│   │   │   │   ├── 📄 test_sensitivity.py
+│   │   │   │   ├── 📄 test_statistics.py
+│   │   │   │   ├── 📄 test_transformers.py
+│   │   │   │   └── 📄 test_validation.py
+│   │   │   └── 📁 test_utils/             # 工具函数测试
+│   │   │       ├── 📄 __init__.py
+│   │   │       ├── 📄 test_math_utils.py
+│   │   │       ├── 📄 test_random.py
+│   │   │       ├── 📄 test_config.py
+│   │   │       ├── 📄 test_logging.py
+│   │   │       ├── 📄 test_serialization.py
+│   │   │       ├── 📄 test_validation.py
+│   │   │       └── 📄 test_performance.py
 │   │   ├── 📁 test_cdp/               # CDP模块测试
 │   │   │   ├── 📁 test_mechanisms/    # CDP机制测试
 │   │   │   │   ├── 📄 __init__.py
@@ -219,38 +233,32 @@ NSSDPlib/                              # 统一差分隐私库
 │   │   │   │   ├── 📄 test_synthetic_data.py
 │   │   │   │   └── 📄 test_reporting.py
 │   │   │   └── 📄 __init__.py
-│   │   ├── 📁 test_ldp/               # LDP模块测试
-│   │   │   ├── 📁 test_mechanisms/    # LDP机制测试
-│   │   │   │   ├── 📄 __init__.py
-│   │   │   │   ├── 📄 test_grr.py
-│   │   │   │   ├── 📄 test_oue.py
-│   │   │   │   ├── 📄 test_olh.py
-│   │   │   │   ├── 📄 test_rappor.py
-│   │   │   │   └── 📄 test_continuous.py
-│   │   │   ├── 📁 test_encoders/      # LDP编码器测试
-│   │   │   │   ├── 📄 __init__.py
-│   │   │   │   ├── 📄 test_categorical.py
-│   │   │   │   ├── 📄 test_numerical.py
-│   │   │   │   ├── 📄 test_hashing.py
-│   │   │   │   └── 📄 test_sketch.py
-│   │   │   ├── 📁 test_aggregators/   # LDP聚合器测试
-│   │   │   │   ├── 📄 __init__.py
-│   │   │   │   ├── 📄 test_frequency.py
-│   │   │   │   ├── 📄 test_mean.py
-│   │   │   │   ├── 📄 test_variance.py
-│   │   │   │   └── 📄 test_quantile.py
-│   │   │   ├── 📁 test_applications/  # LDP应用测试
-│   │   │   │   ├── 📄 __init__.py
-│   │   │   │   ├── 📄 test_heavy_hitters.py
-│   │   │   │   ├── 📄 test_range_queries.py
-│   │   │   │   └── 📄 test_marginals.py
-│   │   │   └── 📄 __init__.py
-│   │   └── 📁 test_utils/             # 工具函数测试
-│   │       ├── 📄 __init__.py
-│   │       ├── 📄 test_math_utils.py
-│   │       ├── 📄 test_random.py
-│   │       ├── 📄 test_validation.py
-│   │       └── 📄 test_performance.py
+│   │   └── 📁 test_ldp/               # LDP模块测试
+│   │       ├── 📁 test_mechanisms/    # LDP机制测试
+│   │       │   ├── 📄 __init__.py
+│   │       │   ├── 📄 test_grr.py
+│   │       │   ├── 📄 test_oue.py
+│   │       │   ├── 📄 test_olh.py
+│   │       │   ├── 📄 test_rappor.py
+│   │       │   └── 📄 test_continuous.py
+│   │       ├── 📁 test_encoders/      # LDP编码器测试
+│   │       │   ├── 📄 __init__.py
+│   │       │   ├── 📄 test_categorical.py
+│   │       │   ├── 📄 test_numerical.py
+│   │       │   ├── 📄 test_hashing.py
+│   │       │   └── 📄 test_sketch.py
+│   │       ├── 📁 test_aggregators/   # LDP聚合器测试
+│   │       │   ├── 📄 __init__.py
+│   │       │   ├── 📄 test_frequency.py
+│   │       │   ├── 📄 test_mean.py
+│   │       │   ├── 📄 test_variance.py
+│   │       │   └── 📄 test_quantile.py
+│   │       ├── 📁 test_applications/  # LDP应用测试
+│   │       │   ├── 📄 __init__.py
+│   │       │   ├── 📄 test_heavy_hitters.py
+│   │       │   ├── 📄 test_range_queries.py
+│   │       │   └── 📄 test_marginals.py
+│   │       └── 📄 __init__.py
 │   ├── 📁 integration/                # 集成测试
 │   │   ├── 📄 __init__.py
 │   │   ├── 📄 test_cdp_pipeline.py    # CDP流水线测试
@@ -366,8 +374,8 @@ NSSDPlib/                              # 统一差分隐私库
 
 | 目录/文件 | 状态 | 说明 |
 | --- | --- | --- |
-| `src/dplib/core/privacy/` | 🟡 进行中 | 已实现：`base_mechanism.py` 提供统一校准/序列化流程，`privacy_accountant.py` + `budget_tracker.py` 负责预算守卫，`composition.py` 输出顺序/并行/分组组合结果，并由 `tests/unit/test_core/test_{base_mechanism,privacy_accountant,composition}.py` 覆盖。待补：新增 `privacy_model.py`、`privacy_guarantee.py`，并在 `__init__.py` 中导出所有模型/保证枚举及文档字符串。 |
-| `src/dplib/core/data/` | ✅ 已完成 | 已实现：`domain.py`/`dataset.py`/`transformers.py`/`validation.py`/`statistics.py`/`sensitivity.py` 及 `__init__.py` 的统一导出，提供域定义、数据集封装、裁剪流水线、Schema 校验与敏感度估计。对应测试已拆分到 `tests/unit/test_core/test_{domain,dataset,transformers,validation,statistics,sensitivity}.py`，满足 Stage 1/5 要求；后续仅待与 `core/utils/validation.py` 的共享逻辑对齐。 |
+| `src/dplib/core/privacy/` | 🟡 进行中 | 已实现：`base_mechanism.py` 提供统一校准/序列化流程，`privacy_accountant.py` + `budget_tracker.py` 负责预算守卫，`composition.py` 输出顺序/并行/分组组合结果，并由 `tests/unit/test_core/test_privacy/test_{base_mechanism,privacy_accountant,composition,budget_tracker}.py` 覆盖。待补：新增 `privacy_model.py`、`privacy_guarantee.py`，并在 `__init__.py` 中导出所有模型/保证枚举及文档字符串。 |
+| `src/dplib/core/data/` | ✅ 已完成 | 已实现：`domain.py`/`dataset.py`/`transformers.py`/`data_validation.py`/`statistics.py`/`sensitivity.py` 及 `__init__.py` 的统一导出，提供域定义、数据集封装、裁剪流水线、Schema 校验与敏感度估计。对应测试拆分到 `tests/unit/test_core/test_data/test_{domain,dataset,transformers,data_validation,statistics,sensitivity}.py`，满足 Stage 1/5 要求；后续仅待与 `core/utils/validation.py` 的共享逻辑对齐。 |
 | `src/dplib/core/utils/` | ⚪ 待启动 | 目录仅有空壳。需新建 `math_utils.py`（softmax/logsumexp 等稳定数值函数）、`random.py`（统一 `numpy.random.Generator` 管理）、`config.py`（全局配置覆盖）、`serialization.py`、`logging.py`、`validation.py`、`performance.py`，并为这些工具编写 UT 与示例。 |
 
 ### Stage 2 · `cdp/`
@@ -394,7 +402,7 @@ NSSDPlib/                              # 统一差分隐私库
 
 | 目录/文件 | 状态 | 说明 |
 | --- | --- | --- |
-| `tests/unit/test_core/` | 🟡 进行中 | 已实现：`test_{base_mechanism,privacy_accountant,composition,budget_tracker,domain,dataset,transformers,validation,statistics,sensitivity}.py` 覆盖核心机制、预算器与数据层工具链。待补：统一 fixture、`core/utils/*` 相关测试以及类型/格式化检查。 |
+| `tests/unit/test_core/` | 🟡 进行中 | 已实现：`test_privacy/test_{base_mechanism,privacy_accountant,composition,budget_tracker}.py`、`test_data/test_{domain,dataset,transformers,validation,statistics,sensitivity}.py`、`test_utils/test_{math_utils,random,config,serialization,logging,performance,validation}.py` 覆盖核心机制、预算器、数据层与工具链。待补：统一 fixture 及类型/格式化检查。 |
 | `tests/unit/test_cdp/` | 🟡 进行中 | 已实现：`test_mechanisms`、`test_composition`、`test_analytics/test_queries.py`。待补：Exponential/Geometric/Vector 机制、ML/Sensitivity 流水线、以及更高维度的数据集案例。 |
 | `tests/unit/test_ldp/` | 🟡 进行中 | 已实现：`test_mechanisms/test_{grr,oue}.py`。待补：OLH/RAPPOR/continuous 机制、编码器/聚合器用例与多轮交互脚本。 |
 | `tests/unit/test_utils/` | ⚪ 待启动 | 目录为空；需在 `core/utils/*` 落地后补充数值工具、随机性、配置/日志的单测与基准。 |

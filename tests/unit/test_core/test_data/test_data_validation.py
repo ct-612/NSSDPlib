@@ -1,4 +1,4 @@
-"""
+﻿"""
 Unit tests for schema validation utilities.
 """
 # 说明：基于 Schema / SchemaField / SchemaValidator 的数据校验工具单元测试。
@@ -6,7 +6,7 @@ Unit tests for schema validation utilities.
 # - 连续数值域 ContinuousDomain 与必填字段 required 标记的组合使用
 # - SchemaValidator 在 RAISE / IMPUTE / DROP 三种策略下对缺失字段的处理行为
 # - 自定义 imputer 函数在 IMPUTE 策略下对缺失值的填补
-# - detect_missing 对 None / 空字符串等缺失值的统计计数
+# - detect_missing 对 None / 空字符串等缺失的统计计数
 
 import pytest
 

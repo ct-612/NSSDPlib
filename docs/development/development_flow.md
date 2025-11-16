@@ -83,20 +83,20 @@
 - `1D-02 src/dplib/core/data/domain.py`（Owner：Core Team｜状态：✅ 已完成）：实现离散/连续/桶化 Domain 抽象与描述器，支撑 schema 校验与 LDP 编码需求。
 - `1D-03 src/dplib/core/data/dataset.py`（Owner：Core Team｜状态：✅ 已完成）：支持数据加载、缓存、批处理、列裁剪与切分策略，并在 `tests/unit/test_core/test_data_layer.py` 进行覆盖。
 - `1D-04 src/dplib/core/data/transformers.py`（Owner：Core Team｜状态：✅ 已完成）：提供裁剪、归一化、离散化（`DiscretizerTransformer`）、独热编码与流水线执行。
-- `1D-05 src/dplib/core/data/validation.py`（Owner：Core Team｜状态：✅ 已完成）：提供 Schema/Field/Validator 及缺失检测工具，后续与 `core/utils/validation.py` 集成即可复用。
+- `1D-05 src/dplib/core/data/data_validation.py`（Owner：Core Team｜状态：✅ 已完成）：提供 Schema/Field/Validator 及缺失检测工具，后续与 `core/utils/validation.py` 集成即可复用。
 - `1D-06 src/dplib/core/data/statistics.py`（Owner：Core Team｜状态：✅ 已完成）：实现 count/sum/mean/variance/histogram 与 `RunningStats`，满足 Stage 2/3 校准需求。
 - `1D-07 src/dplib/core/data/sensitivity.py`（Owner：Core Team｜状态：✅ 已完成）：提供 count/sum/mean 的全局/局部/平滑敏感度计算与 `SmoothSensitivityEstimate`。
 
 **utils 子模块**
 
-- `1U-01 src/dplib/core/utils/__init__.py`（Owner：Core Team｜状态：⚪ 待启动）：当前仅有空壳，尚未导出任何工具函数。
-- `1U-02 src/dplib/core/utils/math_utils.py`（Owner：Core Team｜状态：⚪ 待启动）：文件未创建，需要实现 softmax/logsumexp 等函数及测试。
-- `1U-03 src/dplib/core/utils/random.py`（Owner：Core Team｜状态：⚪ 待启动）：文件未创建，需要统一 `numpy.random.Generator` 管理。
-- `1U-04 src/dplib/core/utils/config.py`（Owner：Core Team｜状态：⚪ 待启动）：文件未创建，需要提供配置解析/覆盖机制。
-- `1U-05 src/dplib/core/utils/serialization.py`（Owner：Core Team｜状态：⚪ 待启动）：文件未创建，需要实现 JSON/MsgPack/Protobuf helper。
-- `1U-06 src/dplib/core/utils/logging.py`（Owner：Core Team｜状态：⚪ 待启动）：文件未创建，需要建立统一日志格式。
-- `1U-07 src/dplib/core/utils/validation.py`（Owner：Core Team｜状态：⚪ 待启动）：文件未创建，需要沉淀通用参数断言。
-- `1U-08 src/dplib/core/utils/performance.py`（Owner：Core Team｜状态：⚪ 待启动）：文件未创建，需要封装性能/内存度量工具。
+- `1U-01 src/dplib/core/utils/__init__.py`（Owner：Core Team｜状态：✅ 已完成）：统一导出 math_utils/random/config/serialization/logging/validation/performance，供机制与数据层共享。
+- `1U-02 src/dplib/core/utils/math_utils.py`（Owner：Core Team｜状态：✅ 已完成）：实现 logsumexp/softmax/stable_mean/stable_variance/clamp_probabilities，涵盖数值稳定运算。
+- `1U-03 src/dplib/core/utils/random.py`（Owner：Core Team｜状态：✅ 已完成）：封装 RNG 创建/重播/拆分、常用噪声采样与 RNGPool，便于机制与测试共用。
+- `1U-04 src/dplib/core/utils/config.py`（Owner：Core Team｜状态：✅ 已完成）：新增 RuntimeConfig，全局配置读取、环境变量覆写与 `configure()` API。
+- `1U-05 src/dplib/core/utils/serialization.py`（Owner：Core Team｜状态：✅ 已完成）：提供安全 JSON 序列化、敏感字段掩码、VersionedPayload 结构。
+- `1U-06 src/dplib/core/utils/logging.py`（Owner：Core Team｜状态：✅ 已完成）：构建隐私友好日志配置与 PrivacyFilter，统一日志级别与格式。
+- `1U-07 src/dplib/core/utils/validation.py`（Owner：Core Team｜状态：✅ 已完成）：沉淀 ensure/ensure_type/validate_arguments 装饰器，面向参数/返回值校验。
+- `1U-08 src/dplib/core/utils/performance.py`（Owner：Core Team｜状态：✅ 已完成）：实现 Timer、time_function、benchmark、memory_profile，为后续性能基线提供工具。
 
 **核心聚合/导出**
 
@@ -105,16 +105,17 @@
 **核心单元测试**
 
 - `1T-01 tests/unit/test_core/__init__.py`（Owner：QA｜状态：🟡 进行中）：仅作为占位符，尚未沉淀共享 fixture。
-- `1T-02 tests/unit/test_core/test_base_mechanism.py`（Owner：QA｜状态：✅ 已完成）：覆盖参数验证、随机性、release 输出。
-- `1T-03 tests/unit/test_core/test_privacy_accountant.py`（Owner：QA｜状态：✅ 已完成）：验证预算扣减、组合与多模型兼容。
-- `1T-04 tests/unit/test_core/test_composition.py`（Owner：QA｜状态：✅ 已完成）：覆盖顺序/高级组合公式及异常路径。
-- `1T-05 tests/unit/test_core/test_budget_tracker.py`（Owner：QA｜状态：✅ 已完成）：验证 `BudgetTracker`/`TrackedScope` 生命周期、告警阈值与序列化，补充 `privacy_accountant` 以外的预算场景。
-- `1T-06 tests/unit/test_core/test_domain.py`（Owner：QA｜状态：✅ 已完成）：覆盖 `DiscreteDomain/ContinuousDomain/BucketizedDomain` 的 encode/decode、clamp 与越界异常，取代旧 `test_data_layer.py` 中的混合断言。
-- `1T-07 tests/unit/test_core/test_dataset.py`（Owner：QA｜状态：✅ 已完成）：验证 Dataset 的加载、批处理、map/select/split 及列式构造，补齐惰性加载与长度检查。
-- `1T-08 tests/unit/test_core/test_transformers.py`（Owner：QA｜状态：✅ 已完成）：单测 Clipping/Normalization/DiscretizerTransformer/OneHot/Pipeline 的 fit-transform 顺序与异常处理。
-- `1T-09 tests/unit/test_core/test_validation.py`（Owner：QA｜状态：✅ 已完成）：针对 SchemaValidator 的 RAISE/DROP/IMPUTE 策略与 `detect_missing` 统计提供覆盖。
-- `1T-10 tests/unit/test_core/test_statistics.py`（Owner：QA｜状态：✅ 已完成）：验证 count/summation/mean/variance/histogram/RunningStats 的数值稳定性。
-- `1T-11 tests/unit/test_core/test_sensitivity.py`（Owner：QA｜状态：✅ 已完成）：覆盖 count/sum/mean 全局/局部/平滑敏感度的主要场景与异常路径。
+- `1T-02 tests/unit/test_core/test_privacy/test_base_mechanism.py`（Owner：QA｜状态：✅ 已完成）：覆盖参数验证、随机性、release 输出。
+- `1T-03 tests/unit/test_core/test_privacy/test_privacy_accountant.py`（Owner：QA｜状态：✅ 已完成）：验证预算扣减、组合与多模型兼容。
+- `1T-04 tests/unit/test_core/test_privacy/test_composition.py`（Owner：QA｜状态：✅ 已完成）：覆盖顺序/高级组合公式及异常路径。
+- `1T-05 tests/unit/test_core/test_privacy/test_budget_tracker.py`（Owner：QA｜状态：✅ 已完成）：验证 `BudgetTracker`/`TrackedScope` 生命周期、告警阈值与序列化，补充 `privacy_accountant` 以外的预算场景。
+- `1T-06 tests/unit/test_core/test_data/test_domain.py`（Owner：QA｜状态：✅ 已完成）：覆盖 `DiscreteDomain/ContinuousDomain/BucketizedDomain` 的 encode/decode、clamp 与越界异常，取代旧 `test_data_layer.py` 中的混合断言。
+- `1T-07 tests/unit/test_core/test_data/test_dataset.py`（Owner：QA｜状态：✅ 已完成）：验证 Dataset 的加载、批处理、map/select/split 及列式构造，补齐惰性加载与长度检查。
+- `1T-08 tests/unit/test_core/test_data/test_transformers.py`（Owner：QA｜状态：✅ 已完成）：单测 Clipping/Normalization/DiscretizerTransformer/OneHot/Pipeline 的 fit-transform 顺序与异常处理。
+- `1T-09 tests/unit/test_core/test_data/test_data_validation.py`（Owner：QA｜状态：✅ 已完成）：针对 SchemaValidator 的 RAISE/DROP/IMPUTE 策略与 `detect_missing` 统计提供覆盖。
+- `1T-10 tests/unit/test_core/test_data/test_statistics.py`（Owner：QA｜状态：✅ 已完成）：验证 count/summation/mean/variance/histogram/RunningStats 的数值稳定性。
+- `1T-11 tests/unit/test_core/test_data/test_sensitivity.py`（Owner：QA｜状态：✅ 已完成）：覆盖 count/sum/mean 全局/局部/平滑敏感度的主要场景与异常路径。
+- `1T-12 tests/unit/test_core/test_utils/test_validation.py`（Owner：QA｜状态：✅ 已完成）：验证 ensure/ensure_type 与 `validate_arguments` 装饰器对函数参数的约束能力。
 
 **核心 API 文档**
 
@@ -373,16 +374,23 @@
 **单元测试 / core（Owner：QA｜状态：🟡 进行中）**
 
 - `5U-01 tests/unit/test_core/__init__.py`（Owner：QA｜状态：🟡 进行中）：当前仅注册路径，需补充 `pytest` fixture（如 mock rng、domain 样例）供其余测试共享。
-- `5U-02 tests/unit/test_core/test_base_mechanism.py`（Owner：QA｜状态：✅ 已完成）：覆盖 epsilon/delta/sensitivity 校验、`calibrate/require_calibrated` 生命周期以及 `_coerce_numeric`，确保所有机制可复用统一基类。
-- `5U-03 tests/unit/test_core/test_privacy_accountant.py`（Owner：QA｜状态：✅ 已完成）：验证预算核减、剩余额度计算、`BudgetExceededError` 抛出及快照序列化。
-- `5U-04 tests/unit/test_core/test_budget_tracker.py`（Owner：QA｜状态：✅ 已完成）：聚焦 `BudgetTracker`/`TrackedScope` 的阈值告警、嵌套范围与持久化行为，与 Accountant 测试互补。
-- `5U-05 tests/unit/test_core/test_composition.py`（Owner：QA｜状态：✅ 已完成）：验证顺序/高级组合的 epsilon/delta 聚合以及异常路径，保证结果与 `PrivacyEvent` 规范一致。
-- `5U-06 tests/unit/test_core/test_domain.py`（Owner：QA｜状态：✅ 已完成）：已拆出独立文件验证离散/连续/桶化域的 encode-decode、clamp 与非法输入。
-- `5U-07 tests/unit/test_core/test_dataset.py`（Owner：QA｜状态：✅ 已完成）：覆盖 Dataset 的批处理、map/select、split 以及 from_records/from_arrays 异常路径。
-- `5U-08 tests/unit/test_core/test_transformers.py`（Owner：QA｜状态：✅ 已完成）：验证 Clipping、Normalization、DiscretizerTransformer、OneHotEncoder 及流水线顺序执行。
-- `5U-09 tests/unit/test_core/test_validation.py`（Owner：QA｜状态：✅ 已完成）：对 SchemaValidator 的 RAISE/DROP/IMPUTE、imputer hook 与 `detect_missing` 进行断言。
-- `5U-10 tests/unit/test_core/test_statistics.py`（Owner：QA｜状态：✅ 已完成）：新增 count/summation/mean/variance/histogram 与 RunningStats 的数值正确性测试。
-- `5U-11 tests/unit/test_core/test_sensitivity.py`（Owner：QA｜状态：✅ 已完成）：新增 count/sum/mean 全局/局部/平滑敏感度以及异常处理的单测。
+- `5U-02 tests/unit/test_core/test_privacy/test_base_mechanism.py`（Owner：QA｜状态：✅ 已完成）：覆盖 epsilon/delta/sensitivity 校验、`calibrate/require_calibrated` 生命周期以及 `_coerce_numeric`，确保所有机制可复用统一基类。
+- `5U-03 tests/unit/test_core/test_privacy/test_privacy_accountant.py`（Owner：QA｜状态：✅ 已完成）：验证预算核减、剩余额度计算、`BudgetExceededError` 抛出及快照序列化。
+- `5U-04 tests/unit/test_core/test_privacy/test_budget_tracker.py`（Owner：QA｜状态：✅ 已完成）：聚焦 `BudgetTracker`/`TrackedScope` 的阈值告警、嵌套范围与持久化行为，与 Accountant 测试互补。
+- `5U-05 tests/unit/test_core/test_privacy/test_composition.py`（Owner：QA｜状态：✅ 已完成）：验证顺序/高级组合的 epsilon/delta 聚合以及异常路径，保证结果与 `PrivacyEvent` 规范一致。
+- `5U-06 tests/unit/test_core/test_data/test_domain.py`（Owner：QA｜状态：✅ 已完成）：已拆出独立文件验证离散/连续/桶化域的 encode-decode、clamp 与非法输入。
+- `5U-07 tests/unit/test_core/test_data/test_dataset.py`（Owner：QA｜状态：✅ 已完成）：覆盖 Dataset 的批处理、map/select、split 以及 from_records/from_arrays 异常路径。
+- `5U-08 tests/unit/test_core/test_data/test_transformers.py`（Owner：QA｜状态：✅ 已完成）：验证 Clipping、Normalization、DiscretizerTransformer、OneHotEncoder 及流水线顺序执行。
+- `5U-09 tests/unit/test_core/test_data/test_data_validation.py`（Owner：QA｜状态：✅ 已完成）：对 SchemaValidator 的 RAISE/DROP/IMPUTE、imputer hook 与 `detect_missing` 进行断言。
+- `5U-10 tests/unit/test_core/test_data/test_statistics.py`（Owner：QA｜状态：✅ 已完成）：新增 count/summation/mean/variance/histogram 与 RunningStats 的数值正确性测试。
+- `5U-11 tests/unit/test_core/test_data/test_sensitivity.py`（Owner：QA｜状态：✅ 已完成）：新增 count/sum/mean 全局/局部/平滑敏感度以及异常处理的单测。
+- `5U-12 tests/unit/test_core/test_utils/test_math_utils.py`（Owner：QA｜状态：✅ 已完成）：覆盖 logsumexp/softmax/stable_mean/stable_variance 与概率裁剪的数值稳定性。
+- `5U-13 tests/unit/test_core/test_utils/test_random.py`（Owner：QA｜状态：✅ 已完成）：验证 RNG 创建/重播、split、噪声采样与 RNGPool 重置的确定性。
+- `5U-14 tests/unit/test_core/test_utils/test_config.py`（Owner：QA｜状态：✅ 已完成）：覆盖 RuntimeConfig 的 env override、`configure()` 更新与单例访问。
+- `5U-15 tests/unit/test_core/test_utils/test_serialization.py`（Owner：QA｜状态：✅ 已完成）：验证敏感字段掩码、dataclass JSON 序列化及 VersionedPayload 往返。
+- `5U-16 tests/unit/test_core/test_utils/test_logging.py`（Owner：QA｜状态：✅ 已完成）：确认 PrivacyFilter 对日志附加字段进行脱敏，并可重复配置。
+- `5U-17 tests/unit/test_core/test_utils/test_performance.py`（Owner：QA｜状态：✅ 已完成）：测试 Timer、time_function、benchmark 和 memory_profile 的输出结构。
+- `5U-18 tests/unit/test_core/test_utils/test_validation.py`（Owner：QA｜状态：✅ 已完成）：验证 ensure/ensure_type 与 `validate_arguments` 装饰器的行为与错误提示。
 
 **单元测试 / cdp（Owner：QA｜状态：🟡 进行中）**
 
