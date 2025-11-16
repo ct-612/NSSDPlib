@@ -109,12 +109,12 @@
 - `1T-03 tests/unit/test_core/test_privacy_accountant.py`（Owner：QA｜状态：✅ 已完成）：验证预算扣减、组合与多模型兼容。
 - `1T-04 tests/unit/test_core/test_composition.py`（Owner：QA｜状态：✅ 已完成）：覆盖顺序/高级组合公式及异常路径。
 - `1T-05 tests/unit/test_core/test_budget_tracker.py`（Owner：QA｜状态：✅ 已完成）：验证 `BudgetTracker`/`TrackedScope` 生命周期、告警阈值与序列化，补充 `privacy_accountant` 以外的预算场景。
-- `1T-06 tests/unit/test_core/test_domain.py`（Owner：QA｜状态：🟡 进行中）：单独文件仍缺失，但由 `test_data_layer.py` 先行验证域范围/容错，后续需拆分更细粒度断言。
-- `1T-07 tests/unit/test_core/test_dataset.py`（Owner：QA｜状态：🟡 进行中）：暂由 `test_data_layer.py` 统一覆盖加载/批处理逻辑，仍需补专用 UT 检查异常路径。
-- `1T-08 tests/unit/test_core/test_transformers.py`（Owner：QA｜状态：🟡 进行中）：依赖 `test_data_layer.py` 覆盖常规变换，待补单独文件测试边界条件与流水线组合。
-- `1T-09 tests/unit/test_core/test_validation.py`（Owner：QA｜状态：🟡 进行中）：`test_data_layer.py` 已校验 SchemaValidator 主流程，但需独立 UT 验证不同策略和错误信息。
-- `1T-10 tests/unit/test_core/test_statistics.py`（Owner：QA｜状态：⚪ 待启动）：尚未落地，需要针对 `statistics.py` 的 count/sum/mean/variance/histogram 与 `RunningStats` 提供精度与稳定性测试。
-- `1T-11 tests/unit/test_core/test_sensitivity.py`（Owner：QA｜状态：⚪ 待启动）：尚未落地，需要验证 count/sum/mean 全局/局部/平滑敏感度的界值与异常路径。
+- `1T-06 tests/unit/test_core/test_domain.py`（Owner：QA｜状态：✅ 已完成）：覆盖 `DiscreteDomain/ContinuousDomain/BucketizedDomain` 的 encode/decode、clamp 与越界异常，取代旧 `test_data_layer.py` 中的混合断言。
+- `1T-07 tests/unit/test_core/test_dataset.py`（Owner：QA｜状态：✅ 已完成）：验证 Dataset 的加载、批处理、map/select/split 及列式构造，补齐惰性加载与长度检查。
+- `1T-08 tests/unit/test_core/test_transformers.py`（Owner：QA｜状态：✅ 已完成）：单测 Clipping/Normalization/DiscretizerTransformer/OneHot/Pipeline 的 fit-transform 顺序与异常处理。
+- `1T-09 tests/unit/test_core/test_validation.py`（Owner：QA｜状态：✅ 已完成）：针对 SchemaValidator 的 RAISE/DROP/IMPUTE 策略与 `detect_missing` 统计提供覆盖。
+- `1T-10 tests/unit/test_core/test_statistics.py`（Owner：QA｜状态：✅ 已完成）：验证 count/summation/mean/variance/histogram/RunningStats 的数值稳定性。
+- `1T-11 tests/unit/test_core/test_sensitivity.py`（Owner：QA｜状态：✅ 已完成）：覆盖 count/sum/mean 全局/局部/平滑敏感度的主要场景与异常路径。
 
 **核心 API 文档**
 
@@ -377,12 +377,12 @@
 - `5U-03 tests/unit/test_core/test_privacy_accountant.py`（Owner：QA｜状态：✅ 已完成）：验证预算核减、剩余额度计算、`BudgetExceededError` 抛出及快照序列化。
 - `5U-04 tests/unit/test_core/test_budget_tracker.py`（Owner：QA｜状态：✅ 已完成）：聚焦 `BudgetTracker`/`TrackedScope` 的阈值告警、嵌套范围与持久化行为，与 Accountant 测试互补。
 - `5U-05 tests/unit/test_core/test_composition.py`（Owner：QA｜状态：✅ 已完成）：验证顺序/高级组合的 epsilon/delta 聚合以及异常路径，保证结果与 `PrivacyEvent` 规范一致。
-- `5U-06 tests/unit/test_core/test_domain.py`（Owner：QA｜状态：⚪ 待启动）：需将 `test_data_layer.py` 中对 `DiscreteDomain/ContinuousDomain/BucketizedDomain` 的断言拆分出来，补充非法输入/encode-decode 边界测试。
-- `5U-07 tests/unit/test_core/test_dataset.py`（Owner：QA｜状态：⚪ 待启动）：计划从 `test_data_layer.py` 拆出 Dataset/metadata/batching 测试，新增惰性加载与缓存策略用例。
-- `5U-08 tests/unit/test_core/test_transformers.py`（Owner：QA｜状态：⚪ 待启动）：需针对剪裁、归一化、OneHot、Pipeline 顺序执行编写独立测试，并补充异常处理、fit/transform 分离验证。
-- `5U-09 tests/unit/test_core/test_validation.py`（Owner：QA｜状态：⚪ 待启动）：需要覆盖 `Schema`/`SchemaValidator`、`ValidationStrategy`（RAISE/DROP/IMPUTE）及自定义 imputer 的行为。
-- `5U-10 tests/unit/test_core/test_statistics.py`（Owner：QA｜状态：⚪ 待启动）：待新增，验证 `statistics.py` 中数值稳定算法（Kahan 求和、Welford 统计）与 histogram 逻辑。
-- `5U-11 tests/unit/test_core/test_sensitivity.py`（Owner：QA｜状态：⚪ 待启动）：待新增，校验 count/sum/mean 的全局与局部敏感度界限、β-smooth estimator 以及异常路径。
+- `5U-06 tests/unit/test_core/test_domain.py`（Owner：QA｜状态：✅ 已完成）：已拆出独立文件验证离散/连续/桶化域的 encode-decode、clamp 与非法输入。
+- `5U-07 tests/unit/test_core/test_dataset.py`（Owner：QA｜状态：✅ 已完成）：覆盖 Dataset 的批处理、map/select、split 以及 from_records/from_arrays 异常路径。
+- `5U-08 tests/unit/test_core/test_transformers.py`（Owner：QA｜状态：✅ 已完成）：验证 Clipping、Normalization、DiscretizerTransformer、OneHotEncoder 及流水线顺序执行。
+- `5U-09 tests/unit/test_core/test_validation.py`（Owner：QA｜状态：✅ 已完成）：对 SchemaValidator 的 RAISE/DROP/IMPUTE、imputer hook 与 `detect_missing` 进行断言。
+- `5U-10 tests/unit/test_core/test_statistics.py`（Owner：QA｜状态：✅ 已完成）：新增 count/summation/mean/variance/histogram 与 RunningStats 的数值正确性测试。
+- `5U-11 tests/unit/test_core/test_sensitivity.py`（Owner：QA｜状态：✅ 已完成）：新增 count/sum/mean 全局/局部/平滑敏感度以及异常处理的单测。
 
 **单元测试 / cdp（Owner：QA｜状态：🟡 进行中）**
 
