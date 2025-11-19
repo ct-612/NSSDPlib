@@ -95,7 +95,7 @@
 - `1U-04 src/dplib/core/utils/config.py`（Owner：Core Team｜状态：✅ 已完成）：新增 RuntimeConfig，全局配置读取、环境变量覆写与 `configure()` API。
 - `1U-05 src/dplib/core/utils/serialization.py`（Owner：Core Team｜状态：✅ 已完成）：提供安全 JSON 序列化、敏感字段掩码、VersionedPayload 结构。
 - `1U-06 src/dplib/core/utils/logging.py`（Owner：Core Team｜状态：✅ 已完成）：构建隐私友好日志配置与 PrivacyFilter，统一日志级别与格式。
-- `1U-07 src/dplib/core/utils/validation.py`（Owner：Core Team｜状态：✅ 已完成）：沉淀 ensure/ensure_type/validate_arguments 装饰器，面向参数/返回值校验。
+- `1U-07 src/dplib/core/utils/param_validation.py`（Owner：Core Team｜状态：✅ 已完成）：沉淀 ensure/ensure_type/validate_arguments 装饰器（现统一抛出 `ParamValidationError`），面向参数/返回值校验。
 - `1U-08 src/dplib/core/utils/performance.py`（Owner：Core Team｜状态：✅ 已完成）：实现 Timer、time_function、benchmark、memory_profile，为后续性能基线提供工具。
 
 **核心聚合/导出**
@@ -115,7 +115,7 @@
 - `1T-09 tests/unit/test_core/test_data/test_data_validation.py`（Owner：QA｜状态：✅ 已完成）：针对 SchemaValidator 的 RAISE/DROP/IMPUTE 策略与 `detect_missing` 统计提供覆盖。
 - `1T-10 tests/unit/test_core/test_data/test_statistics.py`（Owner：QA｜状态：✅ 已完成）：验证 count/summation/mean/variance/histogram/RunningStats 的数值稳定性。
 - `1T-11 tests/unit/test_core/test_data/test_sensitivity.py`（Owner：QA｜状态：✅ 已完成）：覆盖 count/sum/mean 全局/局部/平滑敏感度的主要场景与异常路径。
-- `1T-12 tests/unit/test_core/test_utils/test_validation.py`（Owner：QA｜状态：✅ 已完成）：验证 ensure/ensure_type 与 `validate_arguments` 装饰器对函数参数的约束能力。
+
 
 **核心 API 文档**
 
@@ -390,7 +390,7 @@
 - `5U-15 tests/unit/test_core/test_utils/test_serialization.py`（Owner：QA｜状态：✅ 已完成）：验证敏感字段掩码、dataclass JSON 序列化及 VersionedPayload 往返。
 - `5U-16 tests/unit/test_core/test_utils/test_logging.py`（Owner：QA｜状态：✅ 已完成）：确认 PrivacyFilter 对日志附加字段进行脱敏，并可重复配置。
 - `5U-17 tests/unit/test_core/test_utils/test_performance.py`（Owner：QA｜状态：✅ 已完成）：测试 Timer、time_function、benchmark 和 memory_profile 的输出结构。
-- `5U-18 tests/unit/test_core/test_utils/test_validation.py`（Owner：QA｜状态：✅ 已完成）：验证 ensure/ensure_type 与 `validate_arguments` 装饰器的行为与错误提示。
+- `5U-18 tests/unit/test_core/test_utils/test_param_validation.py`（Owner：QA｜状态：✅ 已完成）：验证 ensure/ensure_type 与 `validate_arguments` 装饰器的行为与错误提示。
 
 **单元测试 / cdp（Owner：QA｜状态：🟡 进行中）**
 

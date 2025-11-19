@@ -375,8 +375,8 @@ NSSDPlib/                              # 统一差分隐私库
 | 目录/文件 | 状态 | 说明 |
 | --- | --- | --- |
 | `src/dplib/core/privacy/` | 🟡 进行中 | 已实现：`base_mechanism.py` 提供统一校准/序列化流程，`privacy_accountant.py` + `budget_tracker.py` 负责预算守卫，`composition.py` 输出顺序/并行/分组组合结果，并由 `tests/unit/test_core/test_privacy/test_{base_mechanism,privacy_accountant,composition,budget_tracker}.py` 覆盖。待补：新增 `privacy_model.py`、`privacy_guarantee.py`，并在 `__init__.py` 中导出所有模型/保证枚举及文档字符串。 |
-| `src/dplib/core/data/` | ✅ 已完成 | 已实现：`domain.py`/`dataset.py`/`transformers.py`/`data_validation.py`/`statistics.py`/`sensitivity.py` 及 `__init__.py` 的统一导出，提供域定义、数据集封装、裁剪流水线、Schema 校验与敏感度估计。对应测试拆分到 `tests/unit/test_core/test_data/test_{domain,dataset,transformers,data_validation,statistics,sensitivity}.py`，满足 Stage 1/5 要求；后续仅待与 `core/utils/validation.py` 的共享逻辑对齐。 |
-| `src/dplib/core/utils/` | ⚪ 待启动 | 目录仅有空壳。需新建 `math_utils.py`（softmax/logsumexp 等稳定数值函数）、`random.py`（统一 `numpy.random.Generator` 管理）、`config.py`（全局配置覆盖）、`serialization.py`、`logging.py`、`validation.py`、`performance.py`，并为这些工具编写 UT 与示例。 |
+| `src/dplib/core/data/` | ✅ 已完成 | 已实现：`domain.py`/`dataset.py`/`transformers.py`/`data_validation.py`/`statistics.py`/`sensitivity.py` 及 `__init__.py` 的统一导出，提供域定义、数据集封装、裁剪流水线、Schema 校验与敏感度估计。对应测试拆分到 `tests/unit/test_core/test_data/test_{domain,dataset,transformers,data_validation,statistics,sensitivity}.py`，满足 Stage 1/5 要求；后续仅待与 `core/utils/param_validation.py` 的共享逻辑对齐。 |
+| `src/dplib/core/utils/` | 🟡 进行中 | 已实现：`math_utils.py`/`random.py`/`config.py`/`serialization.py`/`logging.py`/`param_validation.py`/`performance.py` 并在 `__init__.py` 中导出；对应单测位于 `tests/unit/test_core/test_utils/*`，后续需强化文档与 `core/data/data_validation.py` 的协同策略。 |
 
 ### Stage 2 · `cdp/`
 
@@ -402,10 +402,9 @@ NSSDPlib/                              # 统一差分隐私库
 
 | 目录/文件 | 状态 | 说明 |
 | --- | --- | --- |
-| `tests/unit/test_core/` | 🟡 进行中 | 已实现：`test_privacy/test_{base_mechanism,privacy_accountant,composition,budget_tracker}.py`、`test_data/test_{domain,dataset,transformers,validation,statistics,sensitivity}.py`、`test_utils/test_{math_utils,random,config,serialization,logging,performance,validation}.py` 覆盖核心机制、预算器、数据层与工具链。待补：统一 fixture 及类型/格式化检查。 |
+| `tests/unit/test_core/` | 🟡 进行中 | 已实现：`test_privacy/test_{base_mechanism,privacy_accountant,composition,budget_tracker}.py`、`test_data/test_{domain,dataset,transformers,data_validation,statistics,sensitivity}.py`、`test_utils/test_{math_utils,random,config,serialization,logging,performance,param_validation}.py` 覆盖核心机制、预算器、数据层与工具链。待补：统一 fixture 及类型/格式化检查。 |
 | `tests/unit/test_cdp/` | 🟡 进行中 | 已实现：`test_mechanisms`、`test_composition`、`test_analytics/test_queries.py`。待补：Exponential/Geometric/Vector 机制、ML/Sensitivity 流水线、以及更高维度的数据集案例。 |
 | `tests/unit/test_ldp/` | 🟡 进行中 | 已实现：`test_mechanisms/test_{grr,oue}.py`。待补：OLH/RAPPOR/continuous 机制、编码器/聚合器用例与多轮交互脚本。 |
-| `tests/unit/test_utils/` | ⚪ 待启动 | 目录为空；需在 `core/utils/*` 落地后补充数值工具、随机性、配置/日志的单测与基准。 |
 | `tests/integration/` | ⚪ 待启动 | 仅有空目录。需实现 `test_{cdp,ldp}_pipeline.py`、`test_cross_module.py`、`test_data_flow.py`、`test_privacy_accounting.py`，覆盖从数据→机制→记账的全链路。 |
 | `tests/property_based/` | ⚪ 待启动 | 仅有空目录。需按规划创建 `test_dp_properties.py`、`test_composition_properties.py` 等 Hypothesis 用例，校验极端参数组合。 |
 | `tests/performance/` | ⚪ 待启动 | 仅有空目录。需补充 `test_mechanism_performance.py`、`test_composition_performance.py`、`test_ml_performance.py`、`test_ldp_performance.py` 与 `benchmark_utils.py`。 |
