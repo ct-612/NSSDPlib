@@ -83,13 +83,13 @@
 - `1D-02 src/dplib/core/data/domain.py`（Owner：Core Team｜状态：✅ 已完成）：实现离散/连续/桶化 Domain 抽象与描述器，支撑 schema 校验与 LDP 编码需求。
 - `1D-03 src/dplib/core/data/dataset.py`（Owner：Core Team｜状态：✅ 已完成）：支持数据加载、缓存、批处理、列裁剪与切分策略，并在 `tests/unit/test_core/test_data_layer.py` 进行覆盖。
 - `1D-04 src/dplib/core/data/transformers.py`（Owner：Core Team｜状态：✅ 已完成）：提供裁剪、归一化、离散化（`DiscretizerTransformer`）、独热编码与流水线执行。
-- `1D-05 src/dplib/core/data/data_validation.py`（Owner：Core Team｜状态：✅ 已完成）：提供 Schema/Field/Validator 及缺失检测工具，后续与 `core/utils/validation.py` 集成即可复用。
+- `1D-05 src/dplib/core/data/data_validation.py`（Owner：Core Team｜状态：✅ 已完成）：提供 Schema/Field/Validator 及缺失检测工具，内部复用 `core/utils/param_validation.py` 的 ensure/ParamValidationError，后续与 `core/utils/param_validation.py` 协同维护。
 - `1D-06 src/dplib/core/data/statistics.py`（Owner：Core Team｜状态：✅ 已完成）：实现 count/sum/mean/variance/histogram 与 `RunningStats`，满足 Stage 2/3 校准需求。
 - `1D-07 src/dplib/core/data/sensitivity.py`（Owner：Core Team｜状态：✅ 已完成）：提供 count/sum/mean 的全局/局部/平滑敏感度计算与 `SmoothSensitivityEstimate`。
 
 **utils 子模块**
 
-- `1U-01 src/dplib/core/utils/__init__.py`（Owner：Core Team｜状态：✅ 已完成）：统一导出 math_utils/random/config/serialization/logging/validation/performance，供机制与数据层共享。
+- `1U-01 src/dplib/core/utils/__init__.py`（Owner：Core Team｜状态：✅ 已完成）：统一导出 math_utils/random/config/serialization/logging/param_validation/performance，供机制与数据层共享。
 - `1U-02 src/dplib/core/utils/math_utils.py`（Owner：Core Team｜状态：✅ 已完成）：实现 logsumexp/softmax/stable_mean/stable_variance/clamp_probabilities，涵盖数值稳定运算。
 - `1U-03 src/dplib/core/utils/random.py`（Owner：Core Team｜状态：✅ 已完成）：封装 RNG 创建/重播/拆分、常用噪声采样与 RNGPool，便于机制与测试共用。
 - `1U-04 src/dplib/core/utils/config.py`（Owner：Core Team｜状态：✅ 已完成）：新增 RuntimeConfig，全局配置读取、环境变量覆写与 `configure()` API。
