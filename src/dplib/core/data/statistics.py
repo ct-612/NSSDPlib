@@ -21,8 +21,8 @@ Number = float
 
 
 def _extract(values: Iterable[Any], *, field: Optional[str]) -> List[Number]:
-    # 字段提取工具：将任意可迭代 values 规范化为 float 列表。
-    # - 若 field 为 None：直接将各元素转为 float；
+    # 字段提取工具：将任意可迭代 values 规范化为 float 列表
+    # - 若 field 为 None：直接将各元素转为 float
     # - 否则假设元素为 Mapping，从中取出指定字段并转为 float
     if field is None:
         return [float(value) for value in values]
@@ -64,7 +64,7 @@ def mean(values: Iterable[Any], *, field: Optional[str] = None) -> float:
 
 
 def variance(values: Iterable[Any], *, field: Optional[str] = None, ddof: int = 1) -> float:
-    # 方差：默认无偏估计（ddof=1 样本方差）。当样本数 ≤ ddof 时抛错。
+    # 方差：默认无偏估计（ddof=1 样本方差）。当样本数 ≤ ddof 时抛错
     extracted = _extract(values, field=field)
     n = len(extracted)
     if n <= ddof:

@@ -21,28 +21,28 @@ from dplib.core.data import (
 
 
 def test_count_and_summation() -> None:
-    # 验证简单整数序列的计数与求和结果。
+    # 验证简单整数序列的计数与求和结果
     values = [1, 2, 3]
     assert count(values) == 3
     assert summation(values) == 6.0
 
 
 def test_mean_and_variance_match_expected() -> None:
-    # 检查 mean / variance 是否与预期标量结果一致（含 ddof=1 的无偏估计）。
+    # 检查 mean / variance 是否与预期标量结果一致（含 ddof=1 的无偏估计）
     values = [1.0, 2.0, 3.0, 4.0]
     assert pytest.approx(mean(values)) == 2.5
     assert pytest.approx(variance(values, ddof=1)) == pytest.approx(1.6666666667)
 
 
 def test_histogram_counts_per_bin() -> None:
-    # 验证 histogram 在指定分箱边界下的计数，以及返回的 bins 边界是否正确。
+    # 验证 histogram 在指定分箱边界下的计数，以及返回的 bins 边界是否正确
     counts, bins = histogram([1.0, 1.5, 2.4, 4.9], bins=[1.0, 2.0, 3.0, 5.0])
     assert counts == [2, 1, 1]
     assert bins[-1] == 5.0
 
 
 def test_running_stats_matches_batch_variance() -> None:
-    # 使用 RunningStats 在线更新样本，检查其均值 / 方差与批量 variance 结果是否一致。
+    # 使用 RunningStats 在线更新样本，检查其均值 / 方差与批量 variance 结果是否一致
     stats = RunningStats()
     values = [1.0, 2.0, 3.0, 4.0]
     for value in values:
