@@ -23,7 +23,7 @@ import numpy as np
 
 
 # ----------------------------------------------------------------- Exceptions
-# 机制相关异常类型。
+# 机制相关异常类型：
 class MechanismError(Exception):
     """Base exception for mechanism errors."""
 
@@ -41,7 +41,7 @@ class NotCalibratedError(MechanismError):
 
 
 # -------------------------------------------------------------- Helper for RNG
-# 统一的随机数生成器工厂：支持 None、现成的 Generator、或任意可播种对象。
+# 统一的随机数生成器工厂：支持 None、现成的 Generator、或任意可播种对象
 def _make_rng(seed: Optional[Any]) -> np.random.Generator:
     """Create a fresh numpy Generator from diverse seed types."""
     if seed is None:
@@ -80,7 +80,7 @@ class BaseMechanism(ABC):
         self._meta: Dict[str, Any] = {}
 
     # ------------------------------------------------------ Validation helpers
-    # 基础参数校验：确保为 Real 且满足正性/非负性约束。
+    # 基础参数校验：确保为 Real 且满足正性/非负性约束
     @staticmethod
     def _validate_epsilon(eps: float) -> None:
         if not isinstance(eps, numbers.Real) or eps <= 0:
@@ -98,7 +98,7 @@ class BaseMechanism(ABC):
 
     @staticmethod
     def _validate_value(value: Any) -> None:
-        # 仅作存在性与可数组化的防御性检查；具体机制可覆盖更严格校验。
+        # 仅作存在性与可数组化的防御性检查；具体机制可覆盖更严格校验
         if isinstance(value, (str, bytes)):
             return
         try:
@@ -107,8 +107,8 @@ class BaseMechanism(ABC):
             raise ValidationError("value must be numeric or array-like") from exc
 
     # --------------------------------------------------- Calibration lifecycle
-    # 对外统一的校准入口：可选择性传入 sensitivity 或机制特定参数。
-    # 成功后会将 _calibrated 置为 True，用于运行期保护。
+    # 对外统一的校准入口：可选择性传入 sensitivity 或机制特定参数
+    # 成功后会将 _calibrated 置为 True，用于运行期保护
     def calibrate(self, sensitivity: Optional[float] = None, **kwargs: Any) -> "BaseMechanism":
         """
         Common calibration entry point.
@@ -120,37 +120,37 @@ class BaseMechanism(ABC):
         """
         if sensitivity is not None:
             self._validate_sensitivity(sensitivity)
-        # 将已校准的参数委托给子类处理，仅在子类成功应用这些参数后才切换生命周期标志位。
+        # 将已校准的参数委托给子类处理，仅在子类成功应用这些参数后才切换生命周期标志位
         self._calibrate_parameters(sensitivity=sensitivity, **kwargs)
         self._calibrated = True
         return self
 
     @abstractmethod
-    # 由子类决定如何将 ε、δ、敏感度映射到内部噪声参数。
+    # 由子类决定如何将 ε、δ、敏感度映射到内部噪声参数
     def _calibrate_parameters(self, *, sensitivity: Optional[float], **kwargs: Any) -> None:
         """Subclasses implement their own calibration logic."""
 
     @abstractmethod
-    # 由子类实现具体的噪声添加逻辑。
+    # 由子类实现具体的噪声添加逻辑
     def randomise(self, value: Any) -> Any:
         """Add mechanism specific noise to the provided value."""
 
-    # 语义别名，便于更自然的 API 使用。
+    # 语义别名，便于更自然的 API 使用
     def add_noise(self, value: Any) -> Any:
         """Alias for randomise."""
         return self.randomise(value)
 
-    # 清空校准标志，但不触碰具体机制内部参数（如已计算的 p/q 或尺度）。
+    # 清空校准标志，但不触碰具体机制内部参数（如已计算的 p/q 或尺度）
     def reset_calibration(self) -> None:
         """Reset calibrated flag without touching mechanism specific parameters."""
         self._calibrated = False
 
     @property
-    def calibrated(self) -> bool:   # 查询校准状态。
+    def calibrated(self) -> bool:   # 查询校准状态
         return self._calibrated
 
     # ----------------------------------------------------------- Serialization
-    # 生成可 JSON 化的状态快照；子类可在此基础上扩展特定字段（如 domain、p、q）。
+    # 生成可 JSON 化的状态快照；子类可在此基础上扩展特定字段（如 domain、p、q）
     def serialize(self) -> Dict[str, Any]:
         """Return a JSON serialisable snapshot of the mechanism."""
         return {
@@ -189,12 +189,12 @@ class BaseMechanism(ABC):
         return cls.deserialize(data)
 
     # --------------------------------------------------------------- Utilities
-    # 运行期保护：要求先完成 calibrate，否则抛出 NotCalibratedError。
+    # 运行期保护：要求先完成 calibrate，否则抛出 NotCalibratedError
     def require_calibrated(self) -> None:
         if not self._calibrated:
             raise NotCalibratedError("mechanism not calibrated; call calibrate() first")
 
-    # 重置 RNG，使同一 seed 可复现实验；与 serialize/deserialize 配合用于行为一致性测试。
+    # 重置 RNG，使同一 seed 可复现实验；与 serialize/deserialize 配合用于行为一致性测试
     def reseed(self, seed: Optional[Any]) -> None:
         """Replace RNG with a new generator constructed from `seed`."""
         self._rng = _make_rng(seed)
@@ -210,7 +210,7 @@ class BaseMechanism(ABC):
         return lowered
 
     # -------------------------------------------------- Shared numeric helpers
-    # 把任意数值/序列转为 np.ndarray[float]，同时记录是否源自标量，便于还原类型。
+    # 把任意数值/序列转为 np.ndarray[float]，同时记录是否源自标量，便于还原类型
     @staticmethod
     def _coerce_numeric(value: Any) -> Tuple[np.ndarray, bool]:
         if isinstance(value, (str, bytes)):
@@ -219,10 +219,10 @@ class BaseMechanism(ABC):
             arr = np.asarray(value, dtype=float)
         except Exception as exc:  # pragma: no cover - defensive
             raise ValidationError("value must be numeric, sequence, or ndarray") from exc
-        # 跟踪原始输入是否为标量，以便在后续恢复结果时能准确还原其类型。
+        # 跟踪原始输入是否为标量，以便在后续恢复结果时能准确还原其类型
         return arr, arr.ndim == 0
 
-    # 按原输入类型“还原”数值结果：标量/ndarray/tuple/list。
+    # 按原输入类型“还原”数值结果：标量/ndarray/tuple/list
     @staticmethod
     def _restore_numeric_like(original: Any, value: np.ndarray, was_scalar: bool) -> Any:
         if was_scalar:
@@ -236,7 +236,7 @@ class BaseMechanism(ABC):
         return value
 
     # ---------------------------------------------------------- Representation
-    # 便于调试与日志的简洁 __repr__，包含名称、(ε,δ) 与校准状态。
+    # 便于调试与日志的简洁 __repr__，包含名称、(ε,δ) 与校准状态
     def __repr__(self) -> str:
         return (
             f"<{self.__class__.__name__} name={self.name} "
