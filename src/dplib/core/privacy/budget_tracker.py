@@ -19,6 +19,8 @@ from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
 
 from .base_mechanism import MechanismError, ValidationError
 from .privacy_accountant import PrivacyAccountant, PrivacyBudget, PrivacyEvent
+from .privacy_model import ModelSpec
+from .privacy_guarantee import PrivacyGuarantee
 
 
 class BudgetTrackerError(MechanismError):
@@ -80,8 +82,7 @@ class BudgetTracker:
             thresholds: Fractional progress checkpoints (e.g. [0.5, 0.9, 1.0]).
             alert_handler: Optional callback invoked for newly triggered alerts.
         """
-        # 初始化阈值（去重、排序、正数校验），注册告警回调，维护作用域→记账器映射、
-        # 已触发阈值集合以及告警历史
+        # 初始化阈值（去重、排序、正数校验），注册告警回调，维护作用域→记账器映射、已触发阈值集合以及告警历史
         self._thresholds: Tuple[float, ...] = self._normalize_thresholds(thresholds)
         self._alert_handler = alert_handler
         self._accounts: Dict[TrackedScope, PrivacyAccountant] = {}
@@ -159,16 +160,28 @@ class BudgetTracker:
         delta: float = 0.0,
         *,
         description: Optional[str] = None,
-        metadata: Optional[Dict[str, str]] = None,
+        metadata: Optional[Dict[str, Any]] = None,
+        model_spec: Optional[ModelSpec] = None,
+        guarantee: Optional[PrivacyGuarantee] = None,
+        model_specs: Optional[Sequence[ModelSpec]] = None,
+        guarantees: Optional[Sequence[PrivacyGuarantee]] = None,
+        target_delta: Optional[float] = None,
+        rdp_order: Optional[float] = None,
     ) -> PrivacyEvent:
         """Record spending for the provided scope."""
-        # 在作用域上登记一次花费事件，并评估是否触发阈值告警
+        # 记录指定作用域的花费事件，并在必要时触发阈值告警
         accountant = self.get_accountant(scope)
         event = accountant.add_event(
             epsilon,
             delta,
             description=description,
             metadata=metadata,
+            model_spec=model_spec,
+            guarantee=guarantee,
+            model_specs=model_specs,
+            guarantees=guarantees,
+            target_delta=target_delta,
+            rdp_order=rdp_order,
         )
         self._evaluate_alerts(scope)
         return event
