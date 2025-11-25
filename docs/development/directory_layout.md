@@ -48,7 +48,7 @@ NSSDPlib/                              # 统一差分隐私库
 │       │   │   ├── 📄 domain.py               # 数据域抽象基类
 │       │   │   ├── 📄 dataset.py              # 数据集抽象
 │       │   │   ├── 📄 transformers.py         # 数据转换流水线
-│       │   │   ├── 📄 validation.py           # 数据验证工具
+│       │   │   ├── 📄 data_validation.py      # 数据验证工具
 │       │   │   ├── 📄 statistics.py           # 数据统计工具
 │       │   │   └── 📄 sensitivity.py          # 敏感度计算工具
 │       │   ├── 📁 utils/                      # 共享工具库
@@ -58,7 +58,7 @@ NSSDPlib/                              # 统一差分隐私库
 │       │   │   ├── 📄 config.py               # 统一配置管理
 │       │   │   ├── 📄 serialization.py        # 序列化工具
 │       │   │   ├── 📄 logging.py              # 日志系统
-│       │   │   ├── 📄 validation.py           # 参数验证装饰器
+│       │   │   ├── 📄 param_validation.py     # 参数验证装饰器
 │       │   │   └── 📄 performance.py          # 性能监控工具
 │       │   └── 📄 __init__.py
 │       ├── 📁 cdp/                            # 中心化差分隐私模块
@@ -69,7 +69,7 @@ NSSDPlib/                              # 统一差分隐私库
 │       │   │   ├── 📄 exponential.py          # 指数机制
 │       │   │   ├── 📄 geometric.py            # 几何机制
 │       │   │   ├── 📄 staircase.py            # 阶梯机制
-│       │   │   ├── 📄 vector_mechanism.py     # 向量值机制
+│       │   │   ├── 📄 vector.py               # 向量值机制
 │       │   │   ├── 📄 mechanism_factory.py    # CDP机制工厂
 │       │   │   └── 📄 mechanism_registry.py   # 机制注册表
 │       │   ├── 📁 composition/                # CDP组合定理
@@ -199,7 +199,7 @@ NSSDPlib/                              # 统一差分隐私库
 │   │   │   │   ├── 📄 test_sensitivity.py
 │   │   │   │   ├── 📄 test_statistics.py
 │   │   │   │   ├── 📄 test_transformers.py
-│   │   │   │   └── 📄 test_validation.py
+│   │   │   │   └── 📄 test_data_validation.py
 │   │   │   └── 📁 test_utils/             # 工具函数测试
 │   │   │       ├── 📄 __init__.py
 │   │   │       ├── 📄 test_math_utils.py
@@ -207,7 +207,7 @@ NSSDPlib/                              # 统一差分隐私库
 │   │   │       ├── 📄 test_config.py
 │   │   │       ├── 📄 test_logging.py
 │   │   │       ├── 📄 test_serialization.py
-│   │   │       ├── 📄 test_validation.py
+│   │   │       ├── 📄 test_param_validation.py
 │   │   │       └── 📄 test_performance.py
 │   │   ├── 📁 test_cdp/               # CDP模块测试
 │   │   │   ├── 📁 test_mechanisms/    # CDP机制测试
@@ -215,6 +215,8 @@ NSSDPlib/                              # 统一差分隐私库
 │   │   │   │   ├── 📄 test_laplace.py
 │   │   │   │   ├── 📄 test_gaussian.py
 │   │   │   │   ├── 📄 test_exponential.py
+│   │   │   │   ├── 📄 test_staircase.py
+│   │   │   │   ├── 📄 test_vector.py
 │   │   │   │   └── 📄 test_geometric.py
 │   │   │   ├── 📁 test_composition/   # CDP组合测试
 │   │   │   │   ├── 📄 __init__.py
@@ -374,9 +376,9 @@ NSSDPlib/                              # 统一差分隐私库
 
 | 目录/文件 | 状态 | 说明 |
 | --- | --- | --- |
-| `src/dplib/core/privacy/` | 🟡 进行中 | 已实现：`base_mechanism.py` 提供统一校准/序列化流程，`privacy_accountant.py` + `budget_tracker.py` 负责预算守卫，`composition.py` 输出顺序/并行/分组组合结果，并由 `tests/unit/test_core/test_privacy/test_{base_mechanism,privacy_accountant,composition,budget_tracker}.py` 覆盖。待补：新增 `privacy_model.py`、`privacy_guarantee.py`，并在 `__init__.py` 中导出所有模型/保证枚举及文档字符串。 |
-| `src/dplib/core/data/` | ✅ 已完成 | 已实现：`domain.py`/`dataset.py`/`transformers.py`/`data_validation.py`/`statistics.py`/`sensitivity.py` 及 `__init__.py` 的统一导出，提供域定义、数据集封装、裁剪流水线、Schema 校验与敏感度估计。对应测试拆分到 `tests/unit/test_core/test_data/test_{domain,dataset,transformers,data_validation,statistics,sensitivity}.py`，满足 Stage 1/5 要求；后续仅待与 `core/utils/param_validation.py` 的共享逻辑对齐。 |
-| `src/dplib/core/utils/` | 🟡 进行中 | 已实现：`math_utils.py`/`random.py`/`config.py`/`serialization.py`/`logging.py`/`param_validation.py`/`performance.py` 并在 `__init__.py` 中导出；对应单测位于 `tests/unit/test_core/test_utils/*`，后续需强化文档与 `core/data/data_validation.py` 的协同策略。 |
+| `src/dplib/core/privacy/` | ✅ 已完成 | 已实现：`base_mechanism.py`、`privacy_accountant.py`、`budget_tracker.py`、`composition.py`、`privacy_model.py`、`privacy_guarantee.py`，并在 `__init__.py` 中统一导出；测试覆盖 `tests/unit/test_core/test_privacy/test_{base_mechanism,privacy_accountant,budget_tracker,composition,privacy_model,privacy_guarantee}.py`。 |
+| `src/dplib/core/data/` | ✅ 已完成 | 已实现：`domain.py`/`dataset.py`/`transformers.py`/`data_validation.py`/`statistics.py`/`sensitivity.py` 及 `__init__.py`，提供域定义、数据集封装、裁剪流水线、Schema 校验与敏感度估计；测试拆分到 `tests/unit/test_core/test_data/test_{domain,dataset,transformers,data_validation,statistics,sensitivity}.py`。 |
+| `src/dplib/core/utils/` | ✅ 已完成 | 已实现：`math_utils.py`、`random.py`、`config.py`、`serialization.py`、`logging.py`、`param_validation.py`、`performance.py` 并在 `__init__.py` 中导出；对应单测位于 `tests/unit/test_core/test_utils/test_{math_utils,random,config,serialization,logging,param_validation,performance}.py`。 |
 
 ### Stage 2 · `cdp/`
 
@@ -402,7 +404,7 @@ NSSDPlib/                              # 统一差分隐私库
 
 | 目录/文件 | 状态 | 说明 |
 | --- | --- | --- |
-| `tests/unit/test_core/` | 🟡 进行中 | 已实现：`test_privacy/test_{base_mechanism,privacy_accountant,composition,budget_tracker}.py`、`test_data/test_{domain,dataset,transformers,data_validation,statistics,sensitivity}.py`、`test_utils/test_{math_utils,random,config,serialization,logging,performance,param_validation}.py` 覆盖核心机制、预算器、数据层与工具链。待补：统一 fixture 及类型/格式化检查。 |
+| `tests/unit/test_core/` | 🟡 进行中 | 已实现：`test_privacy/test_{base_mechanism,privacy_accountant,budget_tracker,composition,privacy_model,privacy_guarantee}.py`、`test_data/test_{domain,dataset,transformers,data_validation,statistics,sensitivity}.py`、`test_utils/test_{math_utils,random,config,serialization,logging,performance,param_validation}.py` 覆盖核心机制、预算器、数据层与工具链。待补：统一 fixture 及类型/格式化检查。 |
 | `tests/unit/test_cdp/` | 🟡 进行中 | 已实现：`test_mechanisms`、`test_composition`、`test_analytics/test_queries.py`。待补：Exponential/Geometric/Vector 机制、ML/Sensitivity 流水线、以及更高维度的数据集案例。 |
 | `tests/unit/test_ldp/` | 🟡 进行中 | 已实现：`test_mechanisms/test_{grr,oue}.py`。待补：OLH/RAPPOR/continuous 机制、编码器/聚合器用例与多轮交互脚本。 |
 | `tests/integration/` | ⚪ 待启动 | 仅有空目录。需实现 `test_{cdp,ldp}_pipeline.py`、`test_cross_module.py`、`test_data_flow.py`、`test_privacy_accounting.py`，覆盖从数据→机制→记账的全链路。 |
