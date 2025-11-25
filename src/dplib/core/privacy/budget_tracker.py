@@ -17,7 +17,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple
 
-from .base_mechanism import MechanismError, ValidationError
+from .base_mechanism import MechanismError
+from dplib.core.utils.param_validation import ParamValidationError
 from .privacy_accountant import PrivacyAccountant, PrivacyBudget, PrivacyEvent
 from .privacy_model import ModelSpec
 from .privacy_guarantee import PrivacyGuarantee
@@ -44,9 +45,9 @@ class TrackedScope:
     def __post_init__(self) -> None:
         # 基础校验：必须为非空字符串
         if not self.kind or not isinstance(self.kind, str):
-            raise ValidationError("scope kind must be a non-empty string")
+            raise ParamValidationError("scope kind must be a non-empty string")
         if not self.identifier or not isinstance(self.identifier, str):
-            raise ValidationError("scope identifier must be a non-empty string")
+            raise ParamValidationError("scope identifier must be a non-empty string")
 
 
 @dataclass
@@ -98,7 +99,7 @@ class BudgetTracker:
         unique = sorted({float(value) for value in thresholds})
         for value in unique:
             if value <= 0:
-                raise ValidationError("thresholds must be positive floating point values")
+                raise ParamValidationError("thresholds must be positive floating point values")
         return tuple(unique)
 
     def register_scope(

@@ -27,7 +27,8 @@ from typing import (
     Union,
 )
 
-from .base_mechanism import MechanismError, ValidationError
+from .base_mechanism import MechanismError
+from dplib.core.utils.param_validation import ParamValidationError
 from .privacy_accountant import PrivacyEvent
 
 
@@ -49,9 +50,9 @@ def _coerce_non_negative(value: Any, label: str) -> float:
     try:
         numeric = float(value)
     except (TypeError, ValueError) as exc:  # pragma: no cover - defensive
-        raise ValidationError(f"{label} must be convertible to float") from exc
+        raise ParamValidationError(f"{label} must be convertible to float") from exc
     if numeric < 0:
-        raise ValidationError(f"{label} must be non-negative")
+        raise ParamValidationError(f"{label} must be non-negative")
     return numeric
 
 
@@ -68,12 +69,12 @@ def normalize_privacy_event(event: PrivacyEventLike) -> PrivacyEvent:
         return PrivacyEvent(epsilon=epsilon, delta=delta, description=description, metadata=metadata)
     if isinstance(event, (tuple, list)):
         if len(event) not in (2, 3):
-            raise ValidationError("tuple/list privacy events must have 2 or 3 elements")
+            raise ParamValidationError("tuple/list privacy events must have 2 or 3 elements")
         epsilon = _coerce_non_negative(event[0], "epsilon")
         delta = _coerce_non_negative(event[1], "delta")
         description = event[2] if len(event) == 3 else None
         return PrivacyEvent(epsilon=epsilon, delta=delta, description=description)
-    raise ValidationError(f"unsupported privacy event type: {type(event)!r}")
+    raise ParamValidationError(f"unsupported privacy event type: {type(event)!r}")
 
 
 def normalize_privacy_events(events: Iterable[PrivacyEventLike]) -> Tuple[PrivacyEvent, ...]:
@@ -221,9 +222,9 @@ class HigherOrderCompositionRule(CompositionRule):
         name: Optional[str] = None,
     ):
         if not isinstance(order, int): 
-            raise ValidationError("order must be an integer")
+            raise ParamValidationError("order must be an integer")
         if order <= 0:
-            raise ValidationError("order must be positive")
+            raise ParamValidationError("order must be positive")
         super().__init__(name)
         self.order = int(order)
         self.base_rule = base_rule or SequentialCompositionRule(name=f"{self.name}BaseSequential")
@@ -248,9 +249,9 @@ class HigherOrderCompositionRule(CompositionRule):
         # 获取阶数与基础/变换策略，先计算 base_result，再进行自定义或默认变换
         order = int(kwargs.get("order", self.order))
         if not isinstance(order, int): 
-            raise ValidationError("order must be an integer")
+            raise ParamValidationError("order must be an integer")
         if order <= 0:
-            raise ValidationError("order must be positive")
+            raise ParamValidationError("order must be positive")
         base_rule: CompositionRule = kwargs.get("base_rule", self.base_rule)
         transform = kwargs.get("transform", self._transform)
         base_result = base_rule.apply(events)

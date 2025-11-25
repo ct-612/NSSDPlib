@@ -16,9 +16,10 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Dict, Iterable, List, Optional, Sequence, Tuple
 
-from .base_mechanism import MechanismError, ValidationError
+from .base_mechanism import MechanismError
 from .privacy_model import ModelSpec
 from .privacy_guarantee import PrivacyGuarantee
+from dplib.core.utils.param_validation import ParamValidationError
 
 
 class BudgetExceededError(MechanismError):
@@ -32,11 +33,11 @@ def _validate_budget_value(value: float, label: str) -> float:
     try:
         numeric = float(value)
     except (TypeError, ValueError) as exc:  # pragma: no cover - defensive
-        raise ValidationError(f"{label} must be convertible to float") from exc
+        raise ParamValidationError(f"{label} must be convertible to float") from exc
     if label == "epsilon" and numeric < 0:
-        raise ValidationError("epsilon must be non-negative")
+        raise ParamValidationError("epsilon must be non-negative")
     if label == "delta" and numeric < 0:
-        raise ValidationError("delta must be non-negative")
+        raise ParamValidationError("delta must be non-negative")
     return numeric
 
 
@@ -121,7 +122,7 @@ class PrivacyAccountant:
         """
         # 只有提供了 ε 总预算时才允许设置 δ 总预算
         if total_epsilon is None and total_delta is not None:
-            raise ValidationError("delta budget requires an epsilon budget as well")
+            raise ParamValidationError("delta budget requires an epsilon budget as well")
         self.name = name or "PrivacyAccountant"
         # total_budget 为 None 表示不设上限；否则为有界预算
         self.total_budget: Optional[PrivacyBudget] = (
@@ -129,7 +130,7 @@ class PrivacyAccountant:
         )
         self.slack = float(slack)  # 容差，用于比较时避免浮点误差导致的误判
         if self.slack < 0:
-            raise ValidationError("slack must be non-negative")
+            raise ParamValidationError("slack must be non-negative")
         self._events: List[PrivacyEvent] = []  # 历史事件
         self._spent = PrivacyBudget(0.0, 0.0)  # 已花费累计
 
@@ -179,7 +180,7 @@ class PrivacyAccountant:
         try:
             epsilon = _validate_budget_value(epsilon, "epsilon")
             delta = _validate_budget_value(delta, "delta")
-        except ValidationError:
+        except ParamValidationError:
             return False
         if self.total_budget is None:
             return True
