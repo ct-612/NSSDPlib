@@ -81,7 +81,7 @@ def test_calibrate_records_distribution_meta(laplace: LaplaceMechanism) -> None:
     """Calibration should record distribution metadata for auditing."""
     # 校准后应在元数据 _meta 中记录分布名称（"laplace"），便于审计检查
     laplace.calibrate()
-    assert laplace._meta.get("distribution") == "laplace"  # noqa: SLF001
+    assert laplace._meta.get("distribution") == "laplace"   # noqa: SLF001
 
 
 def test_serialize_roundtrip(laplace: LaplaceMechanism) -> None:
