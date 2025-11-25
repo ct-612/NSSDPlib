@@ -72,9 +72,16 @@ def test_randomise_requires_numeric(laplace: LaplaceMechanism) -> None:
 
 def test_randomise_without_calibration_raises(laplace: LaplaceMechanism) -> None:
     """Calling randomise before calibrate should raise an error."""
-    # 未调用 calibrate() 就 randomise() 应抛出 NotCalibratedError
+    # 未调用 calibrate() 直接 randomise() 应抛出 NotCalibratedError
     with pytest.raises(NotCalibratedError):
         laplace.randomise(1.0)
+
+
+def test_calibrate_records_distribution_meta(laplace: LaplaceMechanism) -> None:
+    """Calibration should record distribution metadata for auditing."""
+    # 校准后应在元数据 _meta 中记录分布名称（"laplace"），便于审计检查
+    laplace.calibrate()
+    assert laplace._meta.get("distribution") == "laplace"
 
 
 def test_serialize_roundtrip(laplace: LaplaceMechanism) -> None:
