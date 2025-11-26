@@ -47,6 +47,7 @@ class GaussianMechanism(BaseMechanism):
         self.delta = float(delta)
         self.sigma: Optional[float] = None
 
+    # pylint: disable=arguments-differ
     def _calibrate_parameters(
         self,
         *,

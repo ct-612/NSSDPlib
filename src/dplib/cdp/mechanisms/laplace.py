@@ -37,6 +37,7 @@ class LaplaceMechanism(BaseMechanism):
         self.sensitivity = float(sensitivity)
         self.scale: Optional[float] = None
 
+    # pylint: disable=arguments-differ
     def _calibrate_parameters(self, *, sensitivity: Optional[float], **kwargs: Any) -> None:
         """Refresh the global sensitivity (if provided) and compute the Laplace scale."""
         # 受控校准流程（由基类 calibrate() 调用）
