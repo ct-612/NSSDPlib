@@ -70,7 +70,7 @@ def ensure_mechanism_supports_model(
     ensure_supported_model(mech_type, model)
 
 
-def registered_mechanisms() -> Dict[str, str]:
+def registered_mechanisms_snapshot() -> Dict[str, str]:
     # 返回已注册机制标识符与类名的快照供工具或文档生成使用
     """Snapshot of registered mechanisms for tooling or docs."""
     return {mech.value: cls.__name__ for mech, cls in MECHANISM_REGISTRY.items()}
