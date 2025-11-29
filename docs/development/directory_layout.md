@@ -26,7 +26,14 @@ NSSDPlib/                              # 统一差分隐私库
 │   ├── 📁 development/                # 开发文档
 │   │   ├── 📄 index.rst
 │   │   ├── 📄 contributing.rst
-│   │   └── 📄 testing.rst
+│   │   ├── 📄 testing.rst
+│   │   ├── 📄 api_contracts.md
+│   │   ├── 📄 architecture.md
+│   │   ├── 📄 development_flow.md
+│   │   ├── 📄 directory_layout.md
+│   │   ├── 📄 project_plan.md
+│   │   ├── 📄 requirements.md
+│   │   └── 📄 tech_stack.md
 │   ├── 📁 _static/                    # 静态文件
 │   │   ├── 📄 custom.css
 │   │   └── 📄 logo.png
@@ -192,6 +199,8 @@ NSSDPlib/                              # 统一差分隐私库
 │   │   │   │   ├── 📄 test_privacy_accountant.py
 │   │   │   │   ├── 📄 test_budget_tracker.py
 │   │   │   │   ├── 📄 test_composition.py
+│   │   │   │   ├── 📄 test_privacy_guarantee.py
+│   │   │   │   └── 📄 test_privacy_model.py
 │   │   │   ├── 📁 test_data/             # 数据抽象测试
 │   │   │   │   ├── 📄 __init__.py
 │   │   │   │   ├── 📄 test_domain.py
@@ -217,7 +226,8 @@ NSSDPlib/                              # 统一差分隐私库
 │   │   │   │   ├── 📄 test_exponential.py
 │   │   │   │   ├── 📄 test_staircase.py
 │   │   │   │   ├── 📄 test_vector.py
-│   │   │   │   └── 📄 test_geometric.py
+│   │   │   │   ├── 📄 test_geometric.py
+│   │   │   │   └── 📄 test_mechanism_factory_registry.py
 │   │   │   ├── 📁 test_composition/   # CDP组合测试
 │   │   │   │   ├── 📄 __init__.py
 │   │   │   │   ├── 📄 test_basic.py
@@ -242,6 +252,8 @@ NSSDPlib/                              # 统一差分隐私库
 │   │       │   ├── 📄 test_oue.py
 │   │       │   ├── 📄 test_olh.py
 │   │       │   ├── 📄 test_rappor.py
+│   │       │   ├── 📄 test_unary_encoding.py
+│   │       │   ├── 📄 test_direct_encoding.py
 │   │       │   └── 📄 test_continuous.py
 │   │       ├── 📁 test_encoders/      # LDP编码器测试
 │   │       │   ├── 📄 __init__.py
@@ -384,7 +396,7 @@ NSSDPlib/                              # 统一差分隐私库
 
 | 目录/文件 | 状态 | 说明 |
 | --- | --- | --- |
-| `src/dplib/cdp/mechanisms/` | 🟡 进行中 | 已实现：`laplace.py`、`gaussian.py` 复用了 `BaseMechanism` 的校准生命周期，并在 `tests/unit/test_cdp/test_mechanisms/test_{laplace,gaussian}.py` 中验证。待补：`exponential.py`、`geometric.py`、`staircase.py`、`vector_mechanism.py` 及 `mechanism_{factory,registry}.py`，并附带端到端基准与示例。 |
+| `src/dplib/cdp/mechanisms/` | ✅ 已完成 | 已实现：`laplace.py`、`gaussian.py`、`exponential.py`、`geometric.py`、`staircase.py`、`vector.py` 以及 `mechanism_{factory,registry}.py`，均复用 `BaseMechanism` 校准生命周期；测试覆盖 `tests/unit/test_cdp/test_mechanisms/test_{laplace,gaussian,exponential,geometric,staircase,vector}.py` 及 factory/registry UT。 |
 | `src/dplib/cdp/composition/` | ✅ 已完成 | `basic.py`、`advanced.py` 提供顺序/高级组合实现并输出 `CompositionResult`，配套 `tests/unit/test_cdp/test_composition/test_{basic,advanced}.py` 已验证在多事件输入上与 `PrivacyAccountant` 的互操作。 |
 | `src/dplib/cdp/analytics/queries/` | 🟡 进行中 | 已实现：`count.py`、`sum.py`、`mean.py` 提供裁剪+预算拆分策略并在 `tests/unit/test_cdp/test_analytics/test_queries.py` 中验证。待补：按照目录约定扩展 histogram/quantile/synthetic-data 查询、封装共享 clipping/validator 工具，并补充属性测试与端到端流水线。 |
 | `src/dplib/cdp/ml/` | ⚪ 待启动 | 仅有 `__init__.py`。需实现 DP-SGD 训练器、线性/神经网络示例、模型评估与高阶 API，确保可被 Stage 5 集成测试复用。 |
@@ -405,7 +417,7 @@ NSSDPlib/                              # 统一差分隐私库
 | 目录/文件 | 状态 | 说明 |
 | --- | --- | --- |
 | `tests/unit/test_core/` | 🟡 进行中 | 已实现：`test_privacy/test_{base_mechanism,privacy_accountant,budget_tracker,composition,privacy_model,privacy_guarantee}.py`、`test_data/test_{domain,dataset,transformers,data_validation,statistics,sensitivity}.py`、`test_utils/test_{math_utils,random,config,serialization,logging,performance,param_validation}.py` 覆盖核心机制、预算器、数据层与工具链。待补：统一 fixture 及类型/格式化检查。 |
-| `tests/unit/test_cdp/` | 🟡 进行中 | 已实现：`test_mechanisms`、`test_composition`、`test_analytics/test_queries.py`。待补：Exponential/Geometric/Vector 机制、ML/Sensitivity 流水线、以及更高维度的数据集案例。 |
+| `tests/unit/test_cdp/` | 🟡 进行中 | 已实现机制/组合/analytics 查询 UT：`test_mechanisms/test_{laplace,gaussian,exponential,geometric,staircase,vector}.py`、`test_mechanism_factory_registry.py`、`test_composition/test_{basic,advanced}.py`、`test_analytics/test_queries.py`；待补 ML/Sensitivity 流水线与更高维数据集案例。 |
 | `tests/unit/test_ldp/` | 🟡 进行中 | 已实现：`test_mechanisms/test_{grr,oue}.py`。待补：OLH/RAPPOR/continuous 机制、编码器/聚合器用例与多轮交互脚本。 |
 | `tests/integration/` | ⚪ 待启动 | 仅有空目录。需实现 `test_{cdp,ldp}_pipeline.py`、`test_cross_module.py`、`test_data_flow.py`、`test_privacy_accounting.py`，覆盖从数据→机制→记账的全链路。 |
 | `tests/property_based/` | ⚪ 待启动 | 仅有空目录。需按规划创建 `test_dp_properties.py`、`test_composition_properties.py` 等 Hypothesis 用例，校验极端参数组合。 |

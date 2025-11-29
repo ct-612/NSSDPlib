@@ -1,6 +1,6 @@
 # NSSDPlib 全流程开发作业指引（步骤级）
 
-本指引基于 `docs/development/project_plan.md`、`requirements.md`、`architecture.md`、`tech_stack.md` 以及当前代码仓库结构（`src/dplib/*`, `tests/*`, `docs/*`）整理，旨在帮助项目负责人快速了解从立项到发布的每一个执行步骤、交付物、责任人以及现状。
+本指引基于 `docs/development/project_plan.md`、`requirements.md`、`architecture.md`、`tech_stack.md` 以及当前代码仓库结构（`src/dplib/*`、`tests/*`、`docs/*`）整理，旨在帮助项目负责人快速了解从立项到发布的每一个执行步骤、交付物、责任人以及现状。
 
 ## 状态图例
 
@@ -14,10 +14,10 @@
 | ---- | -------- | -------- | ---- |
 | 0 项目准备与架构设计 | 冻结需求/架构/CI 策略 | 🟡 进行中 | 需求/架构/技术栈文档已落地，但 README/贡献规范缺失 |
 | 1 核心框架开发（core/） | 建立 BaseMechanism/Accountant/Data/Utils | 🟡 进行中 | `src/dplib/core/privacy/*`、`core/data/*`、`core/utils/*` 已落地并有单测，仍缺 `core/__init__.py` 工厂导出与核心 API 文档 |
-| 2 CDP 模块实现 | 服务端机制/组合/ML/analytics | 🟡 进行中 | 仅 `src/dplib/cdp/mechanisms/{laplace,gaussian}.py` 与 `composition/{basic,advanced}.py` 可用 |
-| 3 LDP 模块实现 | 客户端机制/编码/聚合/应用 | 🟡 进行中 | 仅 `src/dplib/ldp/mechanisms/{grr,oue}.py` 存在，其他模块为空 |
+| 2 CDP 模块实现 | 服务端机制/组合/ML/analytics | 🟡 进行中 | 机制全量上线（Laplace/Gaussian/Exponential/Geometric/Staircase/Vector + registry/factory），`composition/{basic,advanced}.py` 可用，analytics/ML 仍待补 |
+| 3 LDP 模块实现 | 客户端机制/编码/聚合/应用 | 🟡 进行中 | 已有 `src/dplib/ldp/mechanisms/{grr,oue}.py`，其他模块为空 |
 | 4 模块化安装与包管理 | 拆分 core/cdp/ldp 安装与 extras | 🟡 进行中 | `pyproject.toml` 已声明 extras，但缺少构建脚本与验证 |
-| 5 测试与验证 | 单元/集成/属性/性能/回归体系 | 🟡 进行中 | core/privacy/data/utils 及 CDP Laplace/Gaussian、LDP GRR/OUE 已有单测，其余机制/集成/性能/回归仍缺 |
+| 5 测试与验证 | 单元/集成/属性/性能/回归体系 | 🟡 进行中 | core/privacy/data/utils + CDP 全量机制（含 factory/registry）与 LDP GRR/OUE 已有单测；集成/性能/回归仍缺 |
 | 6 文档、示例与教程 | 完整 Sphinx 文档与示例矩阵 | ⚪ 待启动 | `docs/` 仅有空的 `index.rst`/`conf.py`，无 API/示例内容 |
 | 7 发布与运维 | PyPI 分发、监控、版本治理 | ⚪ 待启动 | 缺少 release pipeline、运行手册与支持策略 |
 
@@ -138,12 +138,12 @@
 
 | Step | 具体工作 | 输入/依赖 | 产出 | Owner | 状态 |
 | ---- | -------- | -------- | ---- | ----- | ---- |
-| 2.1 | 实现拉普拉斯/高斯/指数/几何/阶梯/向量机制及注册 | Stage 1 | `src/dplib/cdp/mechanisms/*` | CDP Team | 🟡 进行中（仅 Laplace/Gaussian 上线，其余机制/工厂缺失） |
+| 2.1 | 实现拉普拉斯/高斯/指数/几何/阶梯/向量机制及注册 | Stage 1 | `src/dplib/cdp/mechanisms/*` | CDP Team | ✅ 已完成（全量机制 + registry/factory 已上线并校准） |
 | 2.2 | 实现基本/高级组合与 Moments Accountant | Stage 1 | `src/dplib/cdp/composition/*` | CDP Team | 🟡 进行中（`basic.py`/`advanced.py` 已完成，Accountant/调度仍缺） |
 | 2.3 | 敏感度分析与噪声校准工具 | Stage 1 | `src/dplib/cdp/sensitivity/*` | CDP Team | ⚪ 待启动（目录仅空壳） |
 | 2.4 | DP-SGD 等 ML 管线与示例 | Stage 1 | `src/dplib/cdp/ml/*`, `examples/cdp/*` | ML Subteam | ⚪ 待启动（`ml/` 仅留空 `__init__.py`，示例缺失） |
 | 2.5 | CDP Analytics：查询 API、报告、基准脚本 | 2.1~2.4 | `src/dplib/cdp/analytics/*`, `benchmarks/performance/*` | Analytics | 🟡 进行中（仅 `queries/{count,mean,sum}.py`，其余模块缺失） |
-| 2.6 | 单元/集成/性能测试与文档 | 2.1~2.5 | `tests/unit/test_cdp/*`, `docs/api/cdp.rst` | QA/Tech Writer | 🟡 进行中（仅 Laplace/Gaussian 有 UT，API 文档缺失） |
+| 2.6 | 单元/集成/性能测试与文档 | 2.1~2.5 | `tests/unit/test_cdp/*`, `docs/api/cdp.rst` | QA/Tech Writer | 🟡 进行中（CDP 全量机制 + factory/registry 已有 UT，API 文档缺失） |
 
 **出口检查**：噪声 <1ms、DP-SGD ≥OpenDP 0.9×、测试覆盖 ≥85%。当前 analytics/benchmarks/文档仍在补齐，性能验证未记录。
 
@@ -151,16 +151,15 @@
 
 **mechanisms**
 
-- `2M-01 src/dplib/cdp/mechanisms/__init__.py`（Owner：CDP Team｜状态：🟡 进行中）：当前仅导出 Laplace/Gaussian，后续需补齐其余机制并接入工厂。
-- `2M-02 src/dplib/cdp/mechanisms/laplace.py`（Owner：CDP Team｜状态：✅ 已完成）：实现拉普拉斯噪声生成、尺度校准与文档示例。
-- `2M-03 src/dplib/cdp/mechanisms/gaussian.py`（Owner：CDP Team｜状态：✅ 已完成）：实现高斯机制、δ-approx 支持以及 `privacy_guarantee` 输出。
-- `2M-04 src/dplib/cdp/mechanisms/exponential.py`（Owner：CDP Team｜状态：⚪ 待启动）：文件未创建，需实现评分函数/归一化逻辑。
-- `2M-05 src/dplib/cdp/mechanisms/geometric.py`（Owner：CDP Team｜状态：⚪ 待启动）：文件未创建，需提供整数域噪声实现。
-- `2M-06 src/dplib/cdp/mechanisms/staircase.py`（Owner：CDP Team｜状态：⚪ 待启动）：文件未创建，需实现阶梯化机制。
-- `2M-07 src/dplib/cdp/mechanisms/vector_mechanism.py`（Owner：CDP Team｜状态：⚪ 待启动）：文件未创建，需支持向量化噪声。
-- `2M-08 src/dplib/cdp/mechanisms/mechanism_factory.py`（Owner：CDP Team｜状态：⚪ 待启动）：文件未创建，需提供名称到类的构建工厂。
-- `2M-09 src/dplib/cdp/mechanisms/mechanism_registry.py`（Owner：CDP Team｜状态：⚪ 待启动）：文件未创建，需维护注册表与版本信息。
-
+- `2M-01 src/dplib/cdp/mechanisms/__init__.py`（Owner：CDP Team｜状态：✅ 已完成）：导出 Laplace/Gaussian/Exponential/Geometric/Staircase/Vector 及 registry/factory 辅助。
+- `2M-02 src/dplib/cdp/mechanisms/laplace.py`（Owner：CDP Team｜状态：✅ 已完成）：实现拉普拉斯噪声、尺度校准与序列化。
+- `2M-03 src/dplib/cdp/mechanisms/gaussian.py`（Owner：CDP Team｜状态：✅ 已完成）：实现高斯机制、(ε,δ)-DP 标定与序列化。
+- `2M-04 src/dplib/cdp/mechanisms/exponential.py`（Owner：CDP Team｜状态：✅ 已完成）：实现评分归一化与指数采样。
+- `2M-05 src/dplib/cdp/mechanisms/geometric.py`（Owner：CDP Team｜状态：✅ 已完成）：实现对称几何（离散拉普拉斯）噪声。
+- `2M-06 src/dplib/cdp/mechanisms/staircase.py`（Owner：CDP Team｜状态：✅ 已完成）：实现阶梯分布噪声、gamma 偏移与序列化。
+- `2M-07 src/dplib/cdp/mechanisms/vector.py`（Owner：CDP Team｜状态：✅ 已完成）：支持 Laplace/Gaussian 向量噪声，保持形状。
+- `2M-08 src/dplib/cdp/mechanisms/mechanism_factory.py`（Owner：CDP Team｜状态：✅ 已完成）：提供机制创建与自动校准工厂。
+- `2M-09 src/dplib/cdp/mechanisms/mechanism_registry.py`（Owner：CDP Team｜状态：✅ 已完成）：维护注册表、标识归一化与模型支持校验。
 **composition**
 
 - `2C-01 src/dplib/cdp/composition/__init__.py`（Owner：CDP Team｜状态：🟡 进行中）：聚合基本/高级组合入口，仅导出已实现的模块。
@@ -369,7 +368,7 @@
 | Step | 具体工作 | 输入/依赖 | 产出 | Owner | 状态 |
 | ---- | -------- | -------- | ---- | ----- | ---- |
 | 5.1 | 规划测试层级与目录 | Stage 0~3 | `tests/unit`, `tests/integration`, `tests/property_based`, `tests/performance`, `tests/accuracy`, `tests/regression`, `tests/fixtures` | QA | ✅ 已完成（tests/unit/test_core/*、test_cdp/*、test_ldp/* 等目录及 `conftest.py` 已建成，可直接落地后续用例） |
-| 5.2 | 实现 core/cdp/ldp 单元测试并收集覆盖率 | Stage 1~3 | `tests/unit/*`, 覆盖率报告 | QA | 🟡 进行中（core/privacy/data/utils 已全量覆盖；CDP 仅 Laplace/Gaussian；LDP 仅 GRR/OUE，其他机制/编码/聚合尚缺） |
+| 5.2 | 实现 core/cdp/ldp 单元测试并收集覆盖率 | Stage 1~3 | `tests/unit/*`, 覆盖率报告 | QA | 🟡 进行中（core/privacy/data/utils + CDP 全量机制与 factory/registry，LDP 仅 GRR/OUE，其他编码/聚合待补） |
 | 5.3 | 构建 LDP→CDP 端到端集成测试 | Stage 2~3 | `tests/integration/*` | QA | ⚪ 待启动（目录为空） |
 | 5.4 | 属性测试（ε/δ 边界）与 `hypothesis` 库整合 | Stage 1~3 | `tests/property_based/*` | QA | ⚪ 待启动（无实现） |
 | 5.5 | 性能 & 基准测试流水线（nightly） | Stage 2~3 | `tests/performance/*`, `benchmarks/*` | QA/DevOps | ⚪ 待启动（无脚本） |
@@ -405,26 +404,19 @@
 
 **单元测试 / cdp（Owner：QA｜状态：🟡 进行中）**
 
-- `5C-01 tests/unit/test_cdp/__init__.py`（Owner：QA｜状态：🟡 进行中）：仅注册包路径，需补充公共 fixture 与 helper，避免在单个文件重复构造机制。
-- `5C-02 tests/unit/test_cdp/test_mechanisms/__init__.py`（Owner：QA｜状态：🟡 进行中）：仅导出 Laplace/Gaussian，用于收拢 `pytest` markers；待新增其余机制的共享工厂。
-- `5C-03 tests/unit/test_cdp/test_mechanisms/test_laplace.py`（Owner：QA｜状态：✅ 已完成）：验证噪声尺度 `sensitivity/epsilon`、标量与向量输入、`release` 序列化，覆盖 calibrate→randomise 全链路。
-- `5C-04 tests/unit/test_cdp/test_mechanisms/test_gaussian.py`（Owner：QA｜状态：✅ 已完成）：校验 δ>0 场景、`privacy_guarantee` 输出、形状保持与异常抛出。
-- `5C-05 tests/unit/test_cdp/test_mechanisms/test_exponential.py`（Owner：QA｜状态：⚪ 待启动）：待实现评分函数 mock、归一化常数验证与 argmax 稳定性测试。
-- `5C-06 tests/unit/test_cdp/test_mechanisms/test_geometric.py`（Owner：QA｜状态：⚪ 待启动）：需补整数域噪声的正负采样、PMF 正规化与 0-敏感度边界用例。
-- `5C-07 tests/unit/test_cdp/test_composition/__init__.py`（Owner：QA｜状态：⚪ 待启动）：计划封装 PrivacyEvent fixture 及通用断言，避免 basic/advanced 重复。
-- `5C-08 tests/unit/test_cdp/test_composition/test_basic.py`（Owner：QA｜状态：✅ 已完成）：验证顺序/并行组合的 epsilon/delta 聚合、输入归一化与异常信息。
-- `5C-09 tests/unit/test_cdp/test_composition/test_advanced.py`（Owner：QA｜状态：✅ 已完成）：覆盖高阶组合（Moments Accountant）与容差 slack，确保与 `PrivacyAccountant` 输出一致。
-- `5C-10 tests/unit/test_cdp/test_composition/test_moment_accounting.py`（Owner：QA｜状态：⚪ 待启动）：需要针对 moment accountant/预算调度实现专项用例，一旦 `composition/privacy_accountant` 扩展完成即补测。
-- `5C-11 tests/unit/test_cdp/test_ml/__init__.py`（Owner：QA｜状态：⚪ 待启动）：待随 DP-SGD 管线一同创建，收敛判定逻辑需预留。
-- `5C-12 tests/unit/test_cdp/test_ml/test_dp_sgd.py`（Owner：QA｜状态：⚪ 待启动）：DP-SGD 尚未落地，需构造 toy dataset、RNG 固定与梯度裁剪断言。
-- `5C-13 tests/unit/test_cdp/test_ml/test_linear_models.py`（Owner：QA｜状态：⚪ 待启动）：随线性模型实现补测，验证带噪梯度与指标记录。
-- `5C-14 tests/unit/test_cdp/test_ml/test_neural_networks.py`（Owner：QA｜状态：⚪ 待启动）：需针对 MLP/Conv 简化模型验证 DP 训练流程。
-- `5C-15 tests/unit/test_cdp/test_ml/test_model_evaluation.py`（Owner：QA｜状态：⚪ 待启动）：计划落地 DP 模型评估、隐私审计报告的测试。
-- `5C-16 tests/unit/test_cdp/test_analytics/__init__.py`（Owner：QA｜状态：⚪ 待启动）：需在 analytics query 扩展后提供公共夹具。
-- `5C-17 tests/unit/test_cdp/test_analytics/test_queries.py`（Owner：QA｜状态：✅ 已完成）：验证 `PrivateSumQuery`/`PrivateCountQuery`/`PrivateMeanQuery` 的裁剪、预算拆分、最小计数阈值以及异常信息。
-- `5C-18 tests/unit/test_cdp/test_analytics/test_synthetic_data.py`（Owner：QA｜状态：⚪ 待启动）：等待 synthetic data 生成器落地，需覆盖采样稳定性与预算消费记录。
-- `5C-19 tests/unit/test_cdp/test_analytics/test_reporting.py`（Owner：QA｜状态：⚪ 待启动）：计划在报告模块上线后验证指标拼装与展示。
-
+- `5C-01 tests/unit/test_cdp/__init__.py`（Owner：QA｜状态：🟡 进行中）：仅注册路径，后续可补共享 fixture/helper。
+- `5C-02 tests/unit/test_cdp/test_mechanisms/__init__.py`（Owner：QA｜状态：✅ 已完成）：汇总全量机制 markers，便于参数化。
+- `5C-03 tests/unit/test_cdp/test_mechanisms/test_laplace.py`（Owner：QA｜状态：✅ 已完成）：校准尺度、标量/向量加噪、序列化往返。
+- `5C-04 tests/unit/test_cdp/test_mechanisms/test_gaussian.py`（Owner：QA｜状态：✅ 已完成）：δ>0 校验、σ 标定、形状保持与异常抛出。
+- `5C-05 tests/unit/test_cdp/test_mechanisms/test_exponential.py`（Owner：QA｜状态：✅ 已完成）：评分归一化、utility_fn 支持、序列化元数据。
+- `5C-06 tests/unit/test_cdp/test_mechanisms/test_geometric.py`（Owner：QA｜状态：✅ 已完成）：对称几何噪声、整数保持、形状保持与序列化。
+- `5C-07 tests/unit/test_cdp/test_mechanisms/test_staircase.py`（Owner：QA｜状态：✅ 已完成）：阶梯噪声校准、gamma 校验、形状保持与序列化。
+- `5C-08 tests/unit/test_cdp/test_mechanisms/test_vector.py`（Owner：QA｜状态：✅ 已完成）：Laplace/Gaussian 向量噪声校准、形状保持与异常路径。
+- `5C-09 tests/unit/test_cdp/test_mechanisms/test_mechanism_factory_registry.py`（Owner：QA｜状态：✅ 已完成）：验证机制注册表、标识归一化及工厂创建/校准。
+- `5C-10 tests/unit/test_cdp/test_composition/__init__.py`（Owner：QA｜状态：🟡 进行中）：占位收拢 composition markers，可补共享 fixture。
+- `5C-11 tests/unit/test_cdp/test_composition/test_basic.py`（Owner：QA｜状态：✅ 已完成）：顺序组合 epsilon/delta 聚合与异常路径。
+- `5C-12 tests/unit/test_cdp/test_composition/test_advanced.py`（Owner：QA｜状态：✅ 已完成）：高级组合（Moments Accountant）参数与 `PrivacyAccountant` 输出一致性。
+- `5C-13 tests/unit/test_cdp/test_analytics/test_queries.py`（Owner：QA｜状态：✅ 已完成）：覆盖 `PrivateSumQuery`/`PrivateCountQuery`/`PrivateMeanQuery` 的裁剪、校准与异常。
 **单元测试 / ldp（Owner：QA｜状态：🟡 进行中）**
 
 - `5L-01 tests/unit/test_ldp/__init__.py`（Owner：QA｜状态：🟡 进行中）：目前仅注册包路径，后续需补充客户端侧的公共 fixture（如伪造遥测数据）。
