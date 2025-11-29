@@ -416,7 +416,17 @@
 - `5C-10 tests/unit/test_cdp/test_composition/__init__.py`（Owner：QA｜状态：🟡 进行中）：占位收拢 composition markers，可补共享 fixture。
 - `5C-11 tests/unit/test_cdp/test_composition/test_basic.py`（Owner：QA｜状态：✅ 已完成）：顺序组合 epsilon/delta 聚合与异常路径。
 - `5C-12 tests/unit/test_cdp/test_composition/test_advanced.py`（Owner：QA｜状态：✅ 已完成）：高级组合（Moments Accountant）参数与 `PrivacyAccountant` 输出一致性。
-- `5C-13 tests/unit/test_cdp/test_analytics/test_queries.py`（Owner：QA｜状态：✅ 已完成）：覆盖 `PrivateSumQuery`/`PrivateCountQuery`/`PrivateMeanQuery` 的裁剪、校准与异常。
+- `5C-13 tests/unit/test_cdp/test_composition/test_moment_accounting.py`（Owner：QA｜状态：⚪ 待启动）：待 moments accountant 扩展完成后补充案例。
+- `5C-14 tests/unit/test_cdp/test_analytics/__init__.py`（Owner：QA｜状态：🟡 进行中）：占位，后续可挂载 query/报告类共享 fixture。
+- `5C-15 tests/unit/test_cdp/test_analytics/test_queries.py`（Owner：QA｜状态：✅ 已完成）：覆盖 `PrivateSumQuery`/`PrivateCountQuery`/`PrivateMeanQuery` 的裁剪、校准与异常。
+- `5C-16 tests/unit/test_cdp/test_analytics/test_synthetic_data.py`（Owner：QA｜状态：⚪ 待启动）：待 synthetic data 生成器落地后补充生成/采样验证。
+- `5C-17 tests/unit/test_cdp/test_analytics/test_reporting.py`（Owner：QA｜状态：⚪ 待启动）：待 reporting 模块实现后补充报告封装与展示测试。
+- `5C-18 tests/unit/test_cdp/test_ml/__init__.py`（Owner：QA｜状态：⚪ 待启动）：DP-ML 相关 UT 占位。
+- `5C-19 tests/unit/test_cdp/test_ml/test_dp_sgd.py`（Owner：QA｜状态：⚪ 待启动）：DP-SGD 训练落地后补梯度裁剪/噪声注入测试。
+- `5C-20 tests/unit/test_cdp/test_ml/test_linear_models.py`（Owner：QA｜状态：⚪ 待启动）：待线性模型实现后验证收敛与精度。
+- `5C-21 tests/unit/test_cdp/test_ml/test_neural_networks.py`（Owner：QA｜状态：⚪ 待启动）：待 NN 示例实现后覆盖 MLP/Conv DP 训练。
+- `5C-22 tests/unit/test_cdp/test_ml/test_model_evaluation.py`（Owner：QA｜状态：⚪ 待启动）：补充模型评估/隐私审计报告生成测试。
+
 **单元测试 / ldp（Owner：QA｜状态：🟡 进行中）**
 
 - `5L-01 tests/unit/test_ldp/__init__.py`（Owner：QA｜状态：🟡 进行中）：目前仅注册包路径，后续需补充客户端侧的公共 fixture（如伪造遥测数据）。
