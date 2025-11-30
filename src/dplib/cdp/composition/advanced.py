@@ -1,120 +1,267 @@
 """
-Advanced composition utilities for CDP.
+Advanced composition utilities for central differential privacy.
 
-Responsibilities:
-    * advanced (Dwork-Roth) composition
-    * ρ-zCDP composition with conversion back to (epsilon, delta)
+Implements:
+    * Dwork–Roth heterogeneous advanced composition for pure DP events
+    * DRV10 strong composition for homogeneous (ε, δ)-DP events
+    * zCDP/RDP/GDP based composition plus conversions back to (ε, δ)-DP
+    * lightweight amplification helpers for subsampling and shuffling
 """
-# 说明：中心化差分隐私（CDP）高级组合工具。
+# 说明：实现中心差分隐私场景下多种高级组合与隐私放大工具函数。
 # 职责：
-# - Advanced composition（Dwork-Roth 上界）：异质 ε_i, δ_i 的组合界
-# - ρ-zCDP 合成：ρ 累加后按目标 δ 转换回 (ε, δ)-DP
+# - 提供 Dwork–Roth 异质纯 DP 事件高级组合与 DRV10 强组合封装
+# - 支持 zCDP/RDP/GDP 等替代表征下的组合并转换回 (ε, δ)-DP
+# - 实现子采样与混洗场景下的隐私放大近似公式与最优组合降级策略
 
 from __future__ import annotations
 
 import math
-from typing import Iterable, Optional, Sequence
+from typing import Callable, Iterable, Optional, Sequence
 
-from dplib.core.privacy.base_mechanism import ValidationError
 from dplib.core.privacy.composition import (
     CompositionResult,
     CompositionRule,
+    PrivacyEventLike,
     normalize_privacy_events,
 )
+from dplib.core.privacy.privacy_accountant import PrivacyEvent
+from dplib.core.privacy.privacy_model import (
+    gdp_to_cdp,
+    rdp_to_cdp,
+    zcdp_to_cdp,
+)
+from dplib.core.utils.param_validation import ParamValidationError, ensure, ensure_type
 
 
-def _validate_delta(name: str, value: float) -> float:
-    # δ 类参数校验：要求在 (0, 1) 开区间内
-    if not 0 < value < 1:
-        raise ValidationError(f"{name} must be in (0, 1)")
-    return float(value)
-
-
-def advanced_composition(events: Iterable, *, delta_prime: float) -> CompositionResult:
+def advanced_composition(
+    events: Iterable[PrivacyEventLike],
+    *,
+    delta_prime: float = 1e-6,
+) -> CompositionResult:
+    # 针对一组异质纯 DP 事件应用 Dwork–Roth 高级组合定理并返回等效 (ε, δ)
     """
-    Advanced composition for heterogeneous epsilons/deltas.
+    Advanced composition for heterogeneous pure-DP events (δ_i = 0).
 
-    Uses the bound:
-        epsilon = sqrt(2 log(1/delta_prime) * sum_i epsilon_i^2)
-                  + sum_i epsilon_i * (exp(epsilon_i) - 1)
-        delta = delta_prime + sum_i delta_i
+    ε = sqrt(2 log(1/δ') * Σ ε_i^2) + Σ ε_i (exp(ε_i) - 1)
+    δ = δ' + Σ δ_i
     """
-    # Dwork-Roth 组合上界：
-    # - 首项是 √(2 log(1/δ') * Σ ε_i^2)
-    # - 次项是 Σ ε_i (e^{ε_i} - 1)
-    # - δ 合成为 δ' + Σ δ_i
+    ensure(delta_prime > 0, "delta_prime must be positive")
     normalized = normalize_privacy_events(events)
-    if not normalized:
-        return CompositionResult.zero(detail={"rule": "advanced", "count": 0})
-    delta_prime = _validate_delta("delta_prime", delta_prime)
-    sum_sq = sum(event.epsilon ** 2 for event in normalized)
-    tail = sum(event.epsilon * (math.exp(event.epsilon) - 1.0) for event in normalized)
-    epsilon = math.sqrt(2.0 * math.log(1.0 / delta_prime) * sum_sq) + tail
-    delta = delta_prime + sum(event.delta for event in normalized)
+    epsilons = [event.epsilon for event in normalized]
+    deltas = [event.delta for event in normalized]
+    eps_sq_sum = sum(eps * eps for eps in epsilons)
+    eps_term = math.sqrt(2.0 * math.log(1.0 / delta_prime) * eps_sq_sum) if eps_sq_sum > 0 else 0.0
+    linear_term = sum(eps * (math.exp(eps) - 1.0) for eps in epsilons)
+    epsilon = eps_term + linear_term
+    delta = float(delta_prime) + sum(deltas)
     detail = {
         "rule": "advanced",
-        "delta_prime": delta_prime,
+        "delta_prime": float(delta_prime),
         "count": len(normalized),
-        "sum_sq": sum_sq,
+        "eps_l2_sq": eps_sq_sum,
     }
     return CompositionResult(epsilon=epsilon, delta=delta, detail=detail)
 
 
-def rho_zcdp_composition(rhos: Sequence[float], *, target_delta: float) -> CompositionResult:
-    """
-    Compose ρ-zCDP mechanisms and convert to (epsilon, delta).
+class AdvancedCompositionRule(CompositionRule):
+    # 将 advanced_composition 封装为 CompositionRule 以便在记账器中复用
+    """Rule wrapper around `advanced_composition` with a default δ'."""
 
-    Args:
-        rhos: Sequence of rho values.
-        target_delta: Desired δ when converting back to (ε, δ)-DP.
+    def __init__(self, delta_prime: float = 1e-6, *, name: Optional[str] = None):
+        # 在规则实例上固定默认 δ' 并允许调用时覆盖
+        ensure(delta_prime > 0, "delta_prime must be positive")
+        super().__init__(name or "advanced")
+        self.delta_prime = float(delta_prime)
+
+    def apply(self, events: Sequence[PrivacyEvent], **kwargs) -> CompositionResult:
+        # 将事件序列与当前规则的 δ' 传递给 advanced_composition 并在 detail 中记录规则名
+        delta_prime = float(kwargs.get("delta_prime", self.delta_prime))
+        result = advanced_composition(events, delta_prime=delta_prime)
+        detail = dict(result.detail)
+        detail["rule"] = self.name
+        return CompositionResult(epsilon=result.epsilon, delta=result.delta, detail=detail)
+
+
+def strong_composition(
+    epsilon: float,
+    delta: float,
+    *,
+    k: int,
+    delta_hat: float,
+) -> CompositionResult:
+    # 针对 k 次相同 (ε, δ)-DP 机制应用 DRV10 强组合界给出整体 (ε', δ')
     """
-    # ρ-zCDP 合成：ρ 可加（Σρ_i）；再用目标 δ 将 ρ 转回 (ε, δ)：
-    # ε = ρ_total + 2 √(ρ_total * log(1/δ_target))
-    if any(rho < 0 for rho in rhos):
-        raise ValidationError("rho values must be non-negative")
-    target_delta = _validate_delta("target_delta", target_delta)
-    rho_total = sum(rhos)
-    if rho_total == 0:
-        return CompositionResult.zero(detail={"rule": "rho-zcdp", "rho": 0.0, "delta": target_delta})
-    epsilon = rho_total + 2.0 * math.sqrt(rho_total * math.log(1.0 / target_delta))
-    detail = {"rule": "rho-zcdp", "rho": rho_total, "delta": target_delta}
+    DRV10 strong composition for k identical (ε, δ)-DP mechanisms.
+
+    ε' = sqrt(2k log(1/δ̂ )) * ε + k * ε * (exp(ε) - 1)
+    δ' = k * δ + δ̂
+    """
+    ensure_type(k, (int,), label="k")
+    ensure(k > 0, "k must be positive")
+    ensure(delta_hat > 0, "delta_hat must be positive")
+    eps_prime = math.sqrt(2.0 * k * math.log(1.0 / delta_hat)) * float(epsilon)
+    eps_prime += k * float(epsilon) * (math.exp(float(epsilon)) - 1.0)
+    delta_prime = k * float(delta) + float(delta_hat)
+    detail = {"rule": "strong", "k": k, "delta_hat": float(delta_hat)}
+    return CompositionResult(epsilon=eps_prime, delta=delta_prime, detail=detail)
+
+
+def rho_zcdp_composition(rhos: Iterable[float], *, target_delta: float) -> CompositionResult:
+    # 对一组 ρ-zCDP 保证进行求和并在给定 target_delta 下转换回 (ε, δ)-DP
+    """Sum ρ-zCDP guarantees and convert back to (ε, δ)-DP at `target_delta`."""
+    ensure(target_delta > 0 and target_delta < 1, "target_delta must be in (0,1)")
+    rho_total = sum(float(rho) for rho in rhos)
+    ensure(rho_total >= 0, "rho must be non-negative")
+    epsilon = zcdp_to_cdp(rho_total, target_delta)
+    detail = {"rule": "rho_zcdp", "rho": rho_total, "target_delta": float(target_delta)}
     return CompositionResult(epsilon=epsilon, delta=target_delta, detail=detail)
 
 
-class AdvancedCompositionRule(CompositionRule):
-    """CompositionRule wrapper around `advanced_composition`."""
-    # 封装成 CompositionRule，便于与统一合成框架对接
-
-    def __init__(self, *, delta_prime: float, name: Optional[str] = None):
-        super().__init__(name or "AdvancedCompositionRule")
-        self.delta_prime = _validate_delta("delta_prime", delta_prime)
-
-    def apply(self, events, **kwargs):
-        # 允许在调用时覆盖 delta_prime；其余逻辑复用函数实现
-        delta_prime = kwargs.get("delta_prime", self.delta_prime)
-        delta_prime = _validate_delta("delta_prime", delta_prime)
-        return advanced_composition(events, delta_prime=delta_prime)
-
-
 class RhoZCDPCompositionRule(CompositionRule):
-    """CompositionRule for ρ-zCDP accounting."""
-    # ρ-zCDP 规则：从事件 metadata 中提取 rho，合成后转回 (ε, δ)
+    # 从事件元数据中提取 rho 并在 zCDP 模型下组合然后还原为 (ε, δ)-DP
+    """Extract ρ from event metadata and compose under zCDP."""
 
-    def __init__(self, *, target_delta: float, name: Optional[str] = None):
-        super().__init__(name or "RhoZCDPCompositionRule")
-        self.target_delta = _validate_delta("target_delta", target_delta)
+    def __init__(
+        self,
+        *,
+        target_delta: float = 1e-6,
+        rho_key: str = "rho",
+        name: Optional[str] = None,
+    ):
+        # 固定 zCDP 组合的 target_delta 与元数据中 rho 对应的键名
+        ensure(target_delta > 0 and target_delta < 1, "target_delta must be in (0,1)")
+        super().__init__(name or "rho_zcdp")
+        self.target_delta = float(target_delta)
+        self.rho_key = rho_key
 
-    def apply(self, events, **kwargs):
-        # 允许覆盖 target_delta；事件需在 metadata 中提供 "rho" 字段
-        target_delta = kwargs.get("target_delta", self.target_delta)
-        target_delta = _validate_delta("target_delta", target_delta)
-        normalized = normalize_privacy_events(events)
-        extracted = []
-        for event in normalized:
-            if "rho" not in event.metadata:
-                raise ValidationError("rho metadata missing from one or more events")
-            rho_value = float(event.metadata["rho"])
-            if rho_value < 0:
-                raise ValidationError("rho values must be non-negative")
-            extracted.append(rho_value)
-        return rho_zcdp_composition(extracted, target_delta=target_delta)
+    def apply(self, events: Sequence[PrivacyEvent], **kwargs) -> CompositionResult:
+        # 通过可配置的 getter 从事件中抽取 rho 并进行数值校验与组合
+        getter: Callable[[PrivacyEvent], float] = kwargs.get(
+            "rho_getter", lambda event: event.metadata.get(self.rho_key, 0.0)
+        )
+        rhos = []
+        for event in events:
+            rho = getter(event)
+            if rho is None:
+                raise ParamValidationError("missing rho in event metadata")
+            try:
+                rho_value = float(rho)
+            except (TypeError, ValueError) as exc:  # pragma: no cover - defensive
+                raise ParamValidationError("rho must be numeric") from exc
+            ensure(rho_value >= 0, "rho must be non-negative")
+            rhos.append(rho_value)
+        result = rho_zcdp_composition(rhos, target_delta=self.target_delta)
+        detail = dict(result.detail)
+        detail["rule"] = self.name
+        return CompositionResult(epsilon=result.epsilon, delta=result.delta, detail=detail)
+
+
+def rdp_composition(
+    rdp_epsilons: Iterable[float],
+    *,
+    order: float,
+    target_delta: float,
+) -> CompositionResult:
+    # 在固定 Rényi 阶 α 下对一组 RDP ε 进行求和并转换为等效 (ε, δ)
+    """
+    Compose (α, ε_i)-RDP guarantees at fixed order α and convert to (ε, δ).
+    """
+    ensure(order > 1, "rdp order must be > 1")
+    ensure(target_delta > 0 and target_delta < 1, "target_delta must be in (0,1)")
+    epsilon_rdp = sum(float(eps) for eps in rdp_epsilons)
+    ensure(epsilon_rdp >= 0, "rdp epsilon must be non-negative")
+    epsilon = rdp_to_cdp(order, epsilon_rdp, target_delta)
+    detail = {"rule": "rdp", "order": float(order), "target_delta": float(target_delta), "rdp_epsilon": epsilon_rdp}
+    return CompositionResult(epsilon=epsilon, delta=target_delta, detail=detail)
+
+
+def gdp_composition(mus: Iterable[float], *, target_delta: float) -> CompositionResult:
+    # 对一组 μ-GDP 保证以 L2 范数组合并转换为等效 (ε, δ)-DP
+    """Compose μ-GDP guarantees (L2 addition) and convert to (ε, δ)-DP."""
+    ensure(target_delta > 0 and target_delta < 1, "target_delta must be in (0,1)")
+    mu_sq = sum(float(mu) ** 2 for mu in mus)
+    ensure(mu_sq >= 0, "mu must be non-negative")
+    mu_total = math.sqrt(mu_sq)
+    epsilon = gdp_to_cdp(mu_total, target_delta)
+    detail = {"rule": "gdp", "mu": mu_total, "target_delta": float(target_delta)}
+    return CompositionResult(epsilon=epsilon, delta=target_delta, detail=detail)
+
+
+def subsampling_amplification(event: PrivacyEventLike, *, sampling_rate: float) -> PrivacyEvent:
+    # 使用泊松子采样启发式对单个事件应用隐私放大并更新 (ε, δ)
+    """
+    Apply privacy amplification by subsampling (Poisson sampling heuristic).
+
+    ε' = log(1 + q * (exp(ε) - 1))
+    δ' = q * δ
+    """
+    ensure(0 < sampling_rate <= 1, "sampling_rate must be in (0,1]")
+    normalized = normalize_privacy_events([event])[0]
+    eps_new = math.log(1.0 + sampling_rate * (math.exp(normalized.epsilon) - 1.0))
+    delta_new = sampling_rate * normalized.delta
+    return PrivacyEvent(
+        epsilon=eps_new,
+        delta=delta_new,
+        description=normalized.description,
+        metadata=dict(normalized.metadata),
+        model=normalized.model,
+        mechanism=normalized.mechanism,
+        parameters=normalized.parameters,
+        cdp_equivalent=normalized.cdp_equivalent,
+        reports=normalized.reports,
+    )
+
+
+def shuffle_amplification(event: PrivacyEventLike, *, population: int) -> PrivacyEvent:
+    # 通过对局部报告进行打乱以近似集中化带来的隐私放大效果
+    """
+    Simplified amplification by shuffling for local reports.
+
+    Uses a loose √n scaling on ε to reflect centralisation effects.
+    """
+    ensure_type(population, (int,), label="population")
+    ensure(population > 0, "population must be positive")
+    normalized = normalize_privacy_events([event])[0]
+    scale = 1.0 / math.sqrt(population)
+    eps_new = normalized.epsilon * scale
+    delta_new = normalized.delta * scale
+    return PrivacyEvent(
+        epsilon=eps_new,
+        delta=delta_new,
+        description=normalized.description,
+        metadata=dict(normalized.metadata),
+        model=normalized.model,
+        mechanism=normalized.mechanism,
+        parameters=normalized.parameters,
+        cdp_equivalent=normalized.cdp_equivalent,
+        reports=normalized.reports,
+    )
+
+
+def optimal_composition_fallback(
+    events: Iterable[PrivacyEventLike],
+    *,
+    delta_hat: float,
+) -> CompositionResult:
+    # 作为最优组合占位实现根据事件是否同质在强组合与高级组合之间做策略降级
+    """
+    Placeholder for optimal composition; currently falls back to strong bound.
+    """
+    normalized = normalize_privacy_events(events)
+    if not normalized:
+        return CompositionResult.zero(detail={"rule": "optimal", "note": "no events"})
+    unique_eps = {event.epsilon for event in normalized}
+    unique_delta = {event.delta for event in normalized}
+    if len(unique_eps) == 1 and len(unique_delta) == 1:
+        # 同质 (ε, δ) 事件时使用 DRV10 强组合界作为近似最优解
+        epsilon = next(iter(unique_eps))
+        delta = next(iter(unique_delta))
+        base = strong_composition(epsilon, delta, k=len(normalized), delta_hat=delta_hat)
+        detail = dict(base.detail)
+        detail.update({"rule": "optimal_fallback", "strategy": "strong"})
+        return CompositionResult(epsilon=base.epsilon, delta=base.delta, detail=detail)
+    # 异质事件组合时退化为 Dwork–Roth 高级组合界
+    base = advanced_composition(normalized, delta_prime=delta_hat)
+    detail = dict(base.detail)
+    detail.update({"rule": "optimal_fallback", "strategy": "advanced"})
+    return CompositionResult(epsilon=base.epsilon, delta=base.delta, detail=detail)
