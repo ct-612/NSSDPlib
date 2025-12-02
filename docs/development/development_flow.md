@@ -168,6 +168,7 @@
 - `2C-04 src/dplib/cdp/composition/privacy_accountant.py`（Owner：CDP Team｜状态：✅ 已完成）：封装 CDP 会计器，支持 basic/advanced/strong/RDP/zCDP/GDP/optimal 策略切换。
 - `2C-05 src/dplib/cdp/composition/budget_scheduler.py`（Owner：CDP Team｜状态：✅ 已完成）：提供均分/按权重/几何衰减的 ε/δ 预算分配策略。
 - `2C-06 src/dplib/cdp/composition/composition_theorems.py`（Owner：CDP Team｜状态：✅ 已完成）：沉淀组合定理参考公式与验证 helper，面向属性测试与数值校验。
+- `2C-07 src/dplib/cdp/composition/moment_accountant.py`（Owner：CDP Team｜状态：✅ 已完成）：基于多阶 RDP 的 moments accountant，支持多步组合的最优 (ε, δ) 会计。
 
 **sensitivity**
 
@@ -416,7 +417,9 @@
 - `5C-10 tests/unit/test_cdp/test_composition/__init__.py`（Owner：QA｜状态：🟡 进行中）：占位收拢 composition markers，可补共享 fixture。
 - `5C-11 tests/unit/test_cdp/test_composition/test_basic.py`（Owner：QA｜状态：✅ 已完成）：覆盖顺序/并行组合、自定义 reducer、重复机制、后处理闭包、群体隐私放大及异常路径。
 - `5C-12 tests/unit/test_cdp/test_composition/test_advanced.py`（Owner：QA｜状态：✅ 已完成）：覆盖 advanced/strong 组合、zCDP/RDP/GDP 转 CDP、放大规则与 optimal fallback。
-- `5C-13 tests/unit/test_cdp/test_composition/test_moment_accounting.py`（Owner：QA｜状态：⚪ 待启动）：预留 moments accountant/数值最优组合的属性测试用例。
+- `5C-13 tests/unit/test_cdp/test_composition/test_budget_scheduler.py`（Owner：QA｜状态：✅ 已完成）：覆盖均分/按权重/几何衰减分配及异常路径，校验剩余额度计算。
+- `5C-14 tests/unit/test_cdp/test_composition/test_privacy_accountant.py`（Owner：QA｜状态：✅ 已完成）：覆盖 basic/advanced/strong/RDP/zCDP/GDP/optimal 会计策略与元数据校验。
+- `5C-15 tests/unit/test_cdp/test_composition/test_moment_accountant.py`（Owner：QA｜状态：✅ 已完成）：覆盖多阶 RDP 累积、最优 (ε, δ) 转换、reset 与非法输入。
 - `5C-14 tests/unit/test_cdp/test_analytics/__init__.py`（Owner：QA｜状态：🟡 进行中）：占位，后续可挂载 query/报告类共享 fixture。
 - `5C-15 tests/unit/test_cdp/test_analytics/test_queries.py`（Owner：QA｜状态：✅ 已完成）：覆盖 `PrivateSumQuery`/`PrivateCountQuery`/`PrivateMeanQuery` 的裁剪、校准与异常。
 - `5C-16 tests/unit/test_cdp/test_analytics/test_synthetic_data.py`（Owner：QA｜状态：⚪ 待启动）：待 synthetic data 生成器落地后补充生成/采样验证。
