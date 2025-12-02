@@ -39,6 +39,9 @@ from .budget_scheduler import (
     Allocation,
     BudgetScheduler,
 )
+from .moment_accountant import (
+    MomentAccountant,
+)
 
 __all__ = [
     "group_privacy",
@@ -70,4 +73,5 @@ __all__ = [
     "CDPPrivacyAccountant",
     "Allocation",
     "BudgetScheduler",
+    "MomentAccountant",
 ]
