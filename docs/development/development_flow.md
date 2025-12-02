@@ -14,7 +14,7 @@
 | ---- | -------- | -------- | ---- |
 | 0 项目准备与架构设计 | 冻结需求/架构/CI 策略 | 🟡 进行中 | 需求/架构/技术栈文档已落地，但 README/贡献规范缺失 |
 | 1 核心框架开发（core/） | 建立 BaseMechanism/Accountant/Data/Utils | 🟡 进行中 | `src/dplib/core/privacy/*`、`core/data/*`、`core/utils/*` 已落地并有单测，仍缺 `core/__init__.py` 工厂导出与核心 API 文档 |
-| 2 CDP 模块实现 | 服务端机制/组合/ML/analytics | 🟡 进行中 | 机制全量上线（Laplace/Gaussian/Exponential/Geometric/Staircase/Vector + registry/factory），`composition/{basic,advanced}.py` 可用，analytics/ML 仍待补 |
+| 2 CDP 模块实现 | 服务端机制/组合/ML/analytics | 🟡 进行中 | 机制全量上线（Laplace/Gaussian/Exponential/Geometric/Staircase/Vector + registry/factory），`composition` 组合/会计/调度/定理工具已补齐，analytics/ML 仍待补 |
 | 3 LDP 模块实现 | 客户端机制/编码/聚合/应用 | 🟡 进行中 | 已有 `src/dplib/ldp/mechanisms/{grr,oue}.py`，其他模块为空 |
 | 4 模块化安装与包管理 | 拆分 core/cdp/ldp 安装与 extras | 🟡 进行中 | `pyproject.toml` 已声明 extras，但缺少构建脚本与验证 |
 | 5 测试与验证 | 单元/集成/属性/性能/回归体系 | 🟡 进行中 | core/privacy/data/utils + CDP 全量机制（含 factory/registry）与 LDP GRR/OUE 已有单测；集成/性能/回归仍缺 |
@@ -162,12 +162,12 @@
 - `2M-09 src/dplib/cdp/mechanisms/mechanism_registry.py`（Owner：CDP Team｜状态：✅ 已完成）：维护注册表、标识归一化与模型支持校验。
 **composition**
 
-- `2C-01 src/dplib/cdp/composition/__init__.py`（Owner：CDP Team｜状态：🟡 进行中）：聚合基本/高级组合入口，仅导出已实现的模块。
-- `2C-02 src/dplib/cdp/composition/basic.py`（Owner：CDP Team｜状态：✅ 已完成）：实现基本组合定理、误差上界计算。
-- `2C-03 src/dplib/cdp/composition/advanced.py`（Owner：CDP Team｜状态：✅ 已完成）：实现高级组合/Moments Accountant 核心逻辑。
-- `2C-04 src/dplib/cdp/composition/privacy_accountant.py`（Owner：CDP Team｜状态：⚪ 待启动）：文件未创建，需封装 CDP 会计器实现。
-- `2C-05 src/dplib/cdp/composition/budget_scheduler.py`（Owner：CDP Team｜状态：⚪ 待启动）：文件未创建，需提供多查询预算分配策略。
-- `2C-06 src/dplib/cdp/composition/composition_theorems.py`（Owner：CDP Team｜状态：⚪ 待启动）：文件未创建，需沉淀组合定理证明/测试向量。
+- `2C-01 src/dplib/cdp/composition/__init__.py`（Owner：CDP Team｜状态：✅ 已完成）：聚合 basic/advanced/会计/调度/定理工具的统一入口，便于上层调用。
+- `2C-02 src/dplib/cdp/composition/basic.py`（Owner：CDP Team｜状态：✅ 已完成）：实现顺序/并行/后处理/群体隐私等基础组合定理与重复机制缩放。
+- `2C-03 src/dplib/cdp/composition/advanced.py`（Owner：CDP Team｜状态：✅ 已完成）：实现高级组合（Dwork–Roth/DRV strong）、zCDP/RDP/GDP 转换与放大工具。
+- `2C-04 src/dplib/cdp/composition/privacy_accountant.py`（Owner：CDP Team｜状态：✅ 已完成）：封装 CDP 会计器，支持 basic/advanced/strong/RDP/zCDP/GDP/optimal 策略切换。
+- `2C-05 src/dplib/cdp/composition/budget_scheduler.py`（Owner：CDP Team｜状态：✅ 已完成）：提供均分/按权重/几何衰减的 ε/δ 预算分配策略。
+- `2C-06 src/dplib/cdp/composition/composition_theorems.py`（Owner：CDP Team｜状态：✅ 已完成）：沉淀组合定理参考公式与验证 helper，面向属性测试与数值校验。
 
 **sensitivity**
 
@@ -414,9 +414,9 @@
 - `5C-08 tests/unit/test_cdp/test_mechanisms/test_vector.py`（Owner：QA｜状态：✅ 已完成）：Laplace/Gaussian 向量噪声校准、形状保持与异常路径。
 - `5C-09 tests/unit/test_cdp/test_mechanisms/test_mechanism_factory_registry.py`（Owner：QA｜状态：✅ 已完成）：验证机制注册表、标识归一化及工厂创建/校准。
 - `5C-10 tests/unit/test_cdp/test_composition/__init__.py`（Owner：QA｜状态：🟡 进行中）：占位收拢 composition markers，可补共享 fixture。
-- `5C-11 tests/unit/test_cdp/test_composition/test_basic.py`（Owner：QA｜状态：✅ 已完成）：顺序组合 epsilon/delta 聚合与异常路径。
-- `5C-12 tests/unit/test_cdp/test_composition/test_advanced.py`（Owner：QA｜状态：✅ 已完成）：高级组合（Moments Accountant）参数与 `PrivacyAccountant` 输出一致性。
-- `5C-13 tests/unit/test_cdp/test_composition/test_moment_accounting.py`（Owner：QA｜状态：⚪ 待启动）：待 moments accountant 扩展完成后补充案例。
+- `5C-11 tests/unit/test_cdp/test_composition/test_basic.py`（Owner：QA｜状态：✅ 已完成）：覆盖顺序/并行组合、自定义 reducer、重复机制、后处理闭包、群体隐私放大及异常路径。
+- `5C-12 tests/unit/test_cdp/test_composition/test_advanced.py`（Owner：QA｜状态：✅ 已完成）：覆盖 advanced/strong 组合、zCDP/RDP/GDP 转 CDP、放大规则与 optimal fallback。
+- `5C-13 tests/unit/test_cdp/test_composition/test_moment_accounting.py`（Owner：QA｜状态：⚪ 待启动）：预留 moments accountant/数值最优组合的属性测试用例。
 - `5C-14 tests/unit/test_cdp/test_analytics/__init__.py`（Owner：QA｜状态：🟡 进行中）：占位，后续可挂载 query/报告类共享 fixture。
 - `5C-15 tests/unit/test_cdp/test_analytics/test_queries.py`（Owner：QA｜状态：✅ 已完成）：覆盖 `PrivateSumQuery`/`PrivateCountQuery`/`PrivateMeanQuery` 的裁剪、校准与异常。
 - `5C-16 tests/unit/test_cdp/test_analytics/test_synthetic_data.py`（Owner：QA｜状态：⚪ 待启动）：待 synthetic data 生成器落地后补充生成/采样验证。
