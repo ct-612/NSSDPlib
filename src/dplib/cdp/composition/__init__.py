@@ -42,6 +42,9 @@ from .budget_scheduler import (
 from .moment_accountant import (
     MomentAccountant,
 )
+from dplib.cdp import (
+    sensitivity as sensitivity_tools,
+)
 
 __all__ = [
     "group_privacy",
@@ -74,4 +77,5 @@ __all__ = [
     "Allocation",
     "BudgetScheduler",
     "MomentAccountant",
+    "sensitivity_tools",
 ]
