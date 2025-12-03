@@ -86,17 +86,33 @@ def range_global_sensitivity(
     *,
     window: int,
     max_contribution: int = 1,
+    metric: str = "sum",
 ) -> float:
-    # 针对固定窗口长度的区间求和查询计算全局敏感度与窗口长度和贡献数成比例
-    """Global sensitivity for fixed-length range sums."""
+    # 针对固定窗口长度的区间查询（sum/count/mean）计算全局敏感度
+    """Global sensitivity for fixed-length range queries (sum/count/mean)."""
     if window <= 0:
         raise SensitivityError("window must be positive")
+    if max_contribution <= 0:
+        raise SensitivityError("max_contribution must be positive")
+
+    metric = metric.lower()
+    if metric not in {"sum", "count", "mean"}:
+        raise SensitivityError("metric must be one of {'sum','count','mean'}")
+
+    if metric == "count":
+        return float(max_contribution)
+
     if domain.minimum is None or domain.maximum is None:
         raise SensitivityError("continuous domain must specify min/max for range sensitivity")
     span = domain.maximum - domain.minimum
     if span <= 0:
         raise SensitivityError("domain span must be positive for range sensitivity")
-    return float(span * window * max_contribution)
+
+    sum_sensitivity = span * window * max_contribution
+    if metric == "sum":
+        return float(sum_sensitivity)
+    # metric == "mean"
+    return float(sum_sensitivity / window)
 
 
 def local_sensitivity(values: Sequence[float], *, metric: str = "l1") -> float:
