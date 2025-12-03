@@ -23,9 +23,7 @@ from .global_sensitivity import (
     count,
     histogram,
     mean,
-    range_sum,
-    range_count,
-    range_mean,
+    range,
     sum,
     variance,
 )
@@ -49,9 +47,7 @@ __all__ = [
     "count",
     "histogram",
     "mean",
-    "range_sum",
-    "range_count",
-    "range_mean",
+    "range",
     "sum",
     "variance",
 ]
