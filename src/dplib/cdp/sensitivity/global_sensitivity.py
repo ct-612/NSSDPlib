@@ -58,9 +58,34 @@ def histogram(max_contribution: int = 1) -> float:
     return histogram_global_sensitivity(max_contribution=max_contribution)
 
 
-def range(domain: ContinuousDomain, *, window: int, max_contribution: int = 1) -> float:
-    # 返回固定窗口长度的区间求和查询在有界连续域上的全局敏感度
-    return range_global_sensitivity(domain, window=window, max_contribution=max_contribution)
+def range_sum(domain: ContinuousDomain, *, window: int, max_contribution: int = 1) -> float:
+    # 基于给定domain与窗口大小计算区间求和查询的全局敏感度
+    return range_global_sensitivity(
+        domain,
+        window=window,
+        max_contribution=max_contribution,
+        metric="sum",
+    )
+
+
+def range_mean(domain: ContinuousDomain, *, window: int, max_contribution: int = 1) -> float:
+    # 根据domain范围与窗口长度计算区间均值查询的全局敏感度
+    return range_global_sensitivity(
+        domain,
+        window=window,
+        max_contribution=max_contribution,
+        metric="mean",
+    )
+
+
+def range_count(*, max_contribution: int = 1) -> float:
+    # 返回区间计数查询的全局敏感度，敏感度等于单用户最大贡献次数
+    return range_global_sensitivity(
+        ContinuousDomain(minimum=0.0, maximum=1.0),
+        window=1,
+        max_contribution=max_contribution,
+        metric="count",
+    )
 
 
 # 为常见查询类型提供名称到底层敏感度实现函数名的映射
@@ -70,5 +95,7 @@ PRESETS: Dict[str, str] = {
     "mean": "mean_global_sensitivity",
     "variance": "variance_global_sensitivity",
     "histogram": "histogram_global_sensitivity",
-    "range": "range_global_sensitivity",
+    "range_sum": "range_global_sensitivity",
+    "range_mean": "range_global_sensitivity",
+    "range_count": "range_global_sensitivity",
 }
