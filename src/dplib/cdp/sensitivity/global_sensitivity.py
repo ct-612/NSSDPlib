@@ -59,7 +59,7 @@ def histogram(max_contribution: int = 1) -> float:
 
 
 def range(domain: ContinuousDomain, *, window: int, max_contribution: int = 1) -> float:
-    # 提供 range_sum 的同义接口便于与查询名称保持一致
+    # 返回固定窗口长度的区间求和查询在有界连续域上的全局敏感度
     return range_global_sensitivity(domain, window=window, max_contribution=max_contribution)
 
 
