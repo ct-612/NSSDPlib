@@ -45,7 +45,9 @@ def test_variance_histogram_and_range_sensitivity() -> None:
     domain = ContinuousDomain(minimum=0.0, maximum=4.0)
     assert variance_global_sensitivity(domain, sample_size=4, ddof=1) == pytest.approx(4.0)
     assert histogram_global_sensitivity(max_contribution=2) == 2.0
-    assert range_global_sensitivity(domain, window=3) == pytest.approx(12.0)
+    assert range_global_sensitivity(domain, window=3, metric="sum") == pytest.approx(12.0)
+    assert range_global_sensitivity(domain, window=3, metric="mean") == pytest.approx(4.0)
+    assert range_global_sensitivity(domain, window=3, metric="count") == pytest.approx(1.0)
 
 
 def test_local_sensitivity_l1_and_l2() -> None:
