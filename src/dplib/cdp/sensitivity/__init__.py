@@ -1,7 +1,7 @@
+from dplib.core.data.sensitivity import SensitivityError
 from .sensitivity_analyzer import (
     SensitivityAnalyzer,
     SensitivityReport,
-    SensitivityError,
 )
 from .noise_calibrator import (
     calibrate,
@@ -11,31 +11,47 @@ from .noise_calibrator import (
 from .sensitivity_bounds import (
     SensitivityBounds,
     count_bounds,
+    histogram_bounds,
     mean_bounds,
+    range_bounds,
     sum_bounds,
     tighten,
+    variance_bounds,
 )
 from .global_sensitivity import (
     PRESETS as GLOBAL_SENSITIVITY_PRESETS,
     count,
+    histogram,
     mean,
+    range_sum,
+    range_count,
+    range_mean,
     sum,
+    variance,
 )
 
 __all__ = [
+    "SensitivityError",
     "SensitivityAnalyzer",
     "SensitivityReport",
-    "SensitivityError",
     "calibrate",
     "calibrate_gaussian",
     "calibrate_laplace",
     "SensitivityBounds",
     "count_bounds",
+    "histogram_bounds",
     "mean_bounds",
+    "range_bounds",
     "sum_bounds",
     "tighten",
+    "variance_bounds",
     "GLOBAL_SENSITIVITY_PRESETS",
     "count",
+    "histogram",
     "mean",
+    "range_sum",
+    "range_count",
+    "range_mean",
     "sum",
+    "variance",
 ]
