@@ -65,8 +65,8 @@ all = [
     
     # CDP
     "scikit-learn>=1.2",    # 模型评估与基准算法
-    "tensorflow>=2.12",     # 深度学习训练接口
-    "torch>=2.1",           # 通用机器学习与 DP-SGD 支持
+#    "tensorflow>=2.12",     # 深度学习训练接口
+#    "torch>=2.1",           # 通用机器学习与 DP-SGD 支持
     "matplotlib>=3.7",      # 可视化与报告输出
 
     # LDP
