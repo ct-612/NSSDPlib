@@ -6,29 +6,28 @@ Responsibilities:
     * default to Laplace noise calibrated for unit sensitivity
     * provide deterministic hooks for custom mechanisms (e.g., Gaussian)
 """
-
-# 说明：差分隐私计数查询工具。
+# 说明：针对任意可迭代数据源提供带 Laplace 噪声的计数查询工具。
 # 职责：
-# - 输入可为任意可迭代对象，支持可选谓词过滤
-# - 默认使用单位敏感度（Δ=1）的拉普拉斯机制并在内部完成校准
-# - 也可注入自定义机制（需继承 BaseMechanism 且已校准）
+# - 接受可选谓词过滤逻辑并统一处理多种输入容器类型
+# - 默认构造单位敏感度（Δ=1）的 Laplace 机制并允许外部注入已校准机制
+# - 对真实计数结果添加噪声后返回浮点形式的差分隐私计数值
 
 from __future__ import annotations
 
-from typing import Any, Callable, Iterable, Optional
+from typing import Any, Callable, Iterable, List, Optional
 
 import numpy as np
 
-from dplib.cdp.mechanisms.laplace import LaplaceMechanism
+from dplib.core.data.statistics import count as count_values
 from dplib.core.privacy.base_mechanism import BaseMechanism, ValidationError
+from dplib.core.utils.param_validation import ensure, ensure_type
+from dplib.cdp.mechanisms.laplace import LaplaceMechanism
 
 Predicate = Callable[[Any], bool]  # 谓词类型：接收元素，返回布尔值
 
 
 class PrivateCountQuery:
     """Release DP protected counts for arbitrary iterables."""
-
-    # 对任意可迭代数据执行计数，并返回加入噪声的差分隐私计数。
 
     def __init__(
         self,
@@ -37,56 +36,48 @@ class PrivateCountQuery:
         mechanism: Optional[BaseMechanism] = None,
         predicate: Optional[Predicate] = None,
     ):
-        # 构造：校验 ε，保存可选谓词；准备并校准噪声机制（默认 Laplace Δ=1）。
-        self._validate_epsilon(epsilon)
-        self.epsilon = float(epsilon)
+        # 校验 epsilon 与可选 predicate 并准备计数查询使用的噪声机制
+        self.epsilon = self._validate_epsilon(epsilon)
+        if predicate is not None:
+            ensure(callable(predicate), "predicate must be callable", error=ValidationError)
         self.predicate = predicate
         self.mechanism = self._prepare_mechanism(mechanism)
 
     @staticmethod
-    def _validate_epsilon(epsilon: float) -> None:
-        # ε 必须为正数；否则抛出参数校验错误。
-        if epsilon is None or float(epsilon) <= 0:
-            raise ValidationError("epsilon must be a positive number for count queries")
+    def _validate_epsilon(epsilon: float) -> float:
+        # 将传入的 epsilon 转为浮点并要求其为正数否则抛出 ValidationError
+        try:
+            numeric = float(epsilon)
+        except (TypeError, ValueError) as exc:  # pragma: no cover - defensive
+            raise ValidationError("epsilon must be a positive number for count queries") from exc
+        ensure(numeric > 0, "epsilon must be a positive number for count queries", error=ValidationError)
+        return numeric
 
     def _prepare_mechanism(self, mechanism: Optional[BaseMechanism]) -> BaseMechanism:
-        # 准备噪声机制：
-        # - 未提供时创建 LaplaceMechanism(ε, Δ = 1.0) 并 calibrate()；
-        # - 提供时要求继承 BaseMechanism 且已校准。
+        # 若未提供机制则创建单位敏感度（Δ=1）的 Laplace 机制并完成校准，否则校验外部机制类型与已校准状态
         if mechanism is None:
             mech = LaplaceMechanism(epsilon=self.epsilon, sensitivity=1.0)
             mech.calibrate()
             return mech
-        if not isinstance(mechanism, BaseMechanism):
-            raise ValidationError("mechanism must inherit from BaseMechanism")
-        if not mechanism.calibrated:
-            raise ValidationError("provided mechanism must be calibrated before use")
+        ensure_type(mechanism, (BaseMechanism,), label="mechanism")
+        ensure(mechanism.calibrated, "provided mechanism must be calibrated before use", error=ValidationError)
         return mechanism
 
     @staticmethod
-    def _ensure_iterable(data: Any) -> Iterable[Any]:
-        # 输入必须是可迭代对象；字符串/字节串不被接受以避免逐字符计数的误用。
+    def _materialize_iterable(data: Any) -> List[Any]:
+        # 将输入统一转换为列表并显式拒绝字符串类型或不可迭代对象
         if isinstance(data, (str, bytes)):
             raise ValidationError("count query input must not be a string")
         try:
-            iter(data)
+            iterable = data if isinstance(data, np.ndarray) or isinstance(data, list) else list(data)  # type: ignore[arg-type]
         except TypeError as exc:  # pragma: no cover - defensive
             raise ValidationError("count query input must be iterable") from exc
-        return data
+        return list(iterable)
 
-    def _count(self, data: Iterable[Any], predicate: Optional[Predicate]) -> int:
-        # 真实计数：
-        # - 若是 numpy 数组，走矢量化路径；
-        # - 否则使用 Python 生成器统计；
-        # - 无谓词时即为元素总数，有谓词时统计满足谓词的数量。
-        if isinstance(data, np.ndarray):
-            if predicate is None:
-                return int(data.size)
-            mask = np.vectorize(predicate, otypes=[bool])(data)
-            return int(np.count_nonzero(mask))
-
+    def _count(self, data: List[Any], predicate: Optional[Predicate]) -> int:
+        # 若未提供谓词则直接统计元素数量否则按谓词过滤后计数
         if predicate is None:
-            return sum(1 for _ in data)
+            return int(count_values(data))
         return sum(1 for value in data if predicate(value))
 
     def evaluate(
@@ -101,12 +92,8 @@ class PrivateCountQuery:
         Returns:
             Noisy count as a floating point value.
         """
-        # 流程：
-        # 1) 选择谓词（参数优先于默认）；
-        # 2) 校验输入可迭代；
-        # 3) 计算真实计数；
-        # 4) 通过机制 randomise() 加噪并返回浮点值。
-        predicate = predicate or self.predicate
-        iterable = self._ensure_iterable(data)
-        true_count = float(self._count(iterable, predicate))
+        # 结合可选覆盖谓词完成计数并通过已配置机制对真实计数添加噪声
+        effective_predicate = predicate or self.predicate
+        materialized = self._materialize_iterable(data)
+        true_count = float(self._count(materialized, effective_predicate))
         return float(self.mechanism.randomise(true_count))
