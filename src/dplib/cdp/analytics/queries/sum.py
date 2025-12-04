@@ -110,7 +110,7 @@ class PrivateSumQuery:
         Returns:
             Noisy sum respecting the configured bounds.
         """
-        # 完整执行流程：统一输入类型与裁剪后计算真实和并通过机制注入噪声
+        # 统一输入类型与裁剪后计算真实和并通过机制注入噪声
         clipped = self._clip_values(self._materialize_numeric(values))
         true_sum = float(summation(clipped))
         return float(self.mechanism.randomise(true_sum))
