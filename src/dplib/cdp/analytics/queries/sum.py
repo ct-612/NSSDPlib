@@ -6,22 +6,26 @@ Responsibilities:
     * default to Laplace noise calibrated from epsilon and (upper-lower)
     * operate on scalars, Python iterables, or numpy arrays
 """
-# 说明：差分隐私求和查询工具。
+# 说明：在有界数值范围内对求和结果添加噪声以满足差分隐私需求的查询工具。
 # 职责：
-# - 通过对输入值进行区间裁剪 [lower, upper] 来保证全局敏感度（Δ = upper - lower）
-# - 默认使用拉普拉斯机制，尺度由 ε 与 Δ 标定
-# - 支持标量、Python 可迭代、NumPy 数组作为输入
+# - 校验并固定输入数据的数值边界以确保全局敏感度有限
+# - 默认使用基于 epsilon 与区间跨度校准的 Laplace 机制进行噪声注入
+# - 支持标量、Python 可迭代对象与 numpy 数组等多种输入形式的统一处理
 
 from __future__ import annotations
-from typing import Iterable, Optional, Sequence, Any, Tuple
+
+from typing import Any, Iterable, List, Optional, Sequence, Tuple
+
 import numpy as np
+
+from dplib.core.data.statistics import summation
 from dplib.core.privacy.base_mechanism import BaseMechanism, ValidationError
+from dplib.core.utils.param_validation import ensure, ensure_type
 from dplib.cdp.mechanisms.laplace import LaplaceMechanism
 
 
 class PrivateSumQuery:
     """Release DP protected sums for bounded numeric sequences."""
-    # 对经过裁剪的数值序列计算和，并在输出端加拉普拉斯噪声。
 
     def __init__(
         self,
@@ -30,36 +34,37 @@ class PrivateSumQuery:
         *,
         mechanism: Optional[BaseMechanism] = None,
     ):
-        # 初始化：校验并保存边界、ε；敏感度 Δ = upper - lower；准备或验证机制。
+        # 初始化带界求和查询并根据敏感度配置默认或自定义的噪声机制
+        # 校验并保存边界与 ε；敏感度 Δ = upper - lower；准备或验证噪声机制
         self.lower, self.upper = self._validate_bounds(bounds)
-        self._validate_epsilon(epsilon)
-        self.epsilon = float(epsilon)
+        self.epsilon = self._validate_epsilon(epsilon)
         self.sensitivity = self.upper - self.lower
         self.mechanism = self._prepare_mechanism(mechanism)
 
     @staticmethod
-    def _validate_epsilon(epsilon: float) -> None:
-        # ε 必须为正
-        if epsilon is None or float(epsilon) <= 0:
-            raise ValidationError("epsilon must be a positive number for sum queries")
+    def _validate_epsilon(epsilon: float) -> float:
+        # 将传入的 epsilon 转为浮点并要求其为正数否则抛出 ValidationError
+        try:
+            numeric = float(epsilon)
+        except (TypeError, ValueError) as exc:  # pragma: no cover - defensive
+            raise ValidationError("epsilon must be a positive number for sum queries") from exc
+        ensure(numeric > 0, "epsilon must be a positive number for sum queries", error=ValidationError)
+        return numeric
 
     @staticmethod
     def _validate_bounds(bounds: Tuple[float, float]) -> Tuple[float, float]:
-        # 边界必须是二元组/列表，且 lower < upper
-        if (
-            not isinstance(bounds, (tuple, list))
-            or len(bounds) != 2
-        ):
-            raise ValidationError("bounds must be a (lower, upper) pair")
-        lower, upper = float(bounds[0]), float(bounds[1])
-        if lower >= upper:
-            raise ValidationError("sum query bounds must satisfy lower < upper")
+        # 校验 bounds 结构与数值类型并确保 lower < upper
+        ensure_type(bounds, (tuple, list), label="bounds")
+        ensure(len(bounds) == 2, "bounds must be a (lower, upper) pair", error=ValidationError)
+        try:
+            lower, upper = float(bounds[0]), float(bounds[1])
+        except (TypeError, ValueError) as exc:  # pragma: no cover - defensive
+            raise ValidationError("bounds must be numeric") from exc
+        ensure(lower < upper, "sum query bounds must satisfy lower < upper", error=ValidationError)
         return lower, upper
 
     def _prepare_mechanism(self, mechanism: Optional[BaseMechanism]) -> BaseMechanism:
-        # 准备噪声机制：
-        # - 未提供时创建 LaplaceMechanism(ε, Δ) 并 calibrate()；
-        # - 提供时要求继承 BaseMechanism 且已校准。
+        # 若未提供机制则按当前 ε 与敏感度构造并校准 Laplace 机制，否则校验外部机制类型与已校准状态
         if mechanism is None:
             mech = LaplaceMechanism(
                 epsilon=self.epsilon,
@@ -67,31 +72,34 @@ class PrivateSumQuery:
             )
             mech.calibrate()
             return mech
-        if not isinstance(mechanism, BaseMechanism):
-            raise ValidationError("mechanism must inherit from BaseMechanism")
-        if not mechanism.calibrated:
-            raise ValidationError("provided mechanism must be calibrated before use")
+        ensure_type(mechanism, (BaseMechanism,), label="mechanism")
+        ensure(mechanism.calibrated, "provided mechanism must be calibrated before use", error=ValidationError)
         return mechanism
 
     @staticmethod
-    def _to_numpy(values: Any) -> np.ndarray:
-        # 将输入转换为 float 型 ndarray；拒绝字符串；通用可迭代通过 list(...) 再转 array
+    def _materialize_numeric(values: Any) -> List[float]:
+        # 将多种输入形式统一转换为浮点列表并显式拒绝字符串类型
         if isinstance(values, (str, bytes)):
             raise ValidationError("sum query input must be numeric and non-string")
-        if isinstance(values, np.ndarray):
-            return values.astype(float)
-        if isinstance(values, Sequence):
-            return np.asarray(values, dtype=float)
         try:
-            return np.asarray(list(values), dtype=float)
-        except TypeError as exc:  # pragma: no cover - defensive
-            raise ValidationError("sum query input must be numeric iterable") from exc
+            iterable = values if isinstance(values, Sequence) or isinstance(values, np.ndarray) else list(values)  # type: ignore[arg-type]
+        except TypeError:
+            iterable = [values]
 
-    def _clip(self, arr: np.ndarray) -> np.ndarray:
-        # 对数组进行区间裁剪并转为 float；空数组时仅保证 dtype
-        if arr.size == 0:
-            return arr.astype(float)
-        return np.clip(arr, self.lower, self.upper).astype(float)
+        numeric: List[float] = []
+        for value in iterable:
+            try:
+                numeric.append(float(value))
+            except (TypeError, ValueError) as exc:  # pragma: no cover - defensive
+                raise ValidationError("sum query input must be numeric iterable") from exc
+        return numeric
+
+    def _clip_values(self, values: List[float]) -> List[float]:
+        # 将输入数值裁剪到配置的 [lower, upper] 区间以匹配敏感度假设
+        if not values:
+            return []
+        clipped = np.clip(np.asarray(values, dtype=float), self.lower, self.upper)
+        return clipped.tolist()
 
     def evaluate(self, values: Iterable[float]) -> float:
         """
@@ -102,7 +110,7 @@ class PrivateSumQuery:
         Returns:
             Noisy sum respecting the configured bounds.
         """
-        # 流程：转换→裁剪→真实求和→通过机制加噪→返回浮点结果
-        arr = self._clip(self._to_numpy(values))
-        true_sum = float(arr.sum())
+        # 完整执行流程：统一输入类型与裁剪后计算真实和并通过机制注入噪声
+        clipped = self._clip_values(self._materialize_numeric(values))
+        true_sum = float(summation(clipped))
         return float(self.mechanism.randomise(true_sum))
