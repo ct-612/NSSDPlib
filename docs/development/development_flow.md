@@ -172,11 +172,11 @@
 
 **sensitivity**
 
-- `2S-01 src/dplib/cdp/sensitivity/__init__.py`（Owner：CDP Team｜状态：⚪ 待启动）：当前为空壳，尚未导出任何敏感度接口。
-- `2S-02 src/dplib/cdp/sensitivity/analyzer.py`（Owner：CDP Team｜状态：⚪ 待启动）：文件未创建，需生成局部/全局敏感度报告。
-- `2S-03 src/dplib/cdp/sensitivity/calibrator.py`（Owner：CDP Team｜状态：⚪ 待启动）：文件未创建，需实现噪声标定逻辑。
-- `2S-04 src/dplib/cdp/sensitivity/bounds.py`（Owner：CDP Team｜状态：⚪ 待启动）：文件未创建，需维护敏感度上下界 helper。
-- `2S-05 src/dplib/cdp/sensitivity/global_sensitivity.py`（Owner：CDP Team｜状态：⚪ 待启动）：文件未创建，需提供全局敏感度预计算。
+- `2S-01 src/dplib/cdp/sensitivity/__init__.py`（Owner：CDP Team｜状态：✅ 已完成）：导出 sensitivity 工具、校准器与 analyzer。
+- `2S-02 src/dplib/cdp/sensitivity/sensitivity_analyzer.py`（Owner：CDP Team｜状态：✅ 已完成）：提供 count/sum/mean/variance/histogram/range 等全局/局部/平滑敏感度分析。
+- `2S-03 src/dplib/cdp/sensitivity/noise_calibrator.py`（Owner：CDP Team｜状态：✅ 已完成）：封装 Laplace/Gaussian 等机制的噪声标定工具。
+- `2S-04 src/dplib/cdp/sensitivity/sensitivity_bounds.py`（Owner：CDP Team｜状态：✅ 已完成）：维护 count/sum/mean/variance/histogram/range 的敏感度上下界 helper。
+- `2S-05 src/dplib/cdp/sensitivity/global_sensitivity.py`（Owner：CDP Team｜状态：✅ 已完成）：提供常用查询的全局敏感度封装与 PRESETS。
 
 **ml/models、training、evaluation**
 
@@ -204,10 +204,10 @@
 - `2A-03 src/dplib/cdp/analytics/queries/count.py`（Owner：Analytics｜状态：✅ 已完成）：实现计数查询与噪声注入。
 - `2A-04 src/dplib/cdp/analytics/queries/sum.py`（Owner：Analytics｜状态：✅ 已完成）：实现求和查询。
 - `2A-05 src/dplib/cdp/analytics/queries/mean.py`（Owner：Analytics｜状态：✅ 已完成）：实现均值查询。
-- `2A-06 src/dplib/cdp/analytics/queries/variance.py`（Owner：Analytics｜状态：⚪ 待启动）：文件未创建。
-- `2A-07 src/dplib/cdp/analytics/queries/histogram.py`（Owner：Analytics｜状态：⚪ 待启动）：文件未创建。
-- `2A-08 src/dplib/cdp/analytics/queries/range_query.py`（Owner：Analytics｜状态：⚪ 待启动）：文件未创建。
-- `2A-09 src/dplib/cdp/analytics/queries/query_engine.py`（Owner：Analytics｜状态：⚪ 待启动）：文件未创建。
+- `2A-06 src/dplib/cdp/analytics/queries/variance.py`（Owner：Analytics｜状态：✅ 已完成）：实现方差查询（噪声 sum/squares/count 组合）。
+- `2A-07 src/dplib/cdp/analytics/queries/histogram.py`（Owner：Analytics｜状态：✅ 已完成）：实现直方图查询（向量噪声、非负截断）。
+- `2A-08 src/dplib/cdp/analytics/queries/range.py`（Owner：Analytics｜状态：✅ 已完成）：实现区间查询（sum/count/mean，噪声前缀和）。
+- `2A-09 src/dplib/cdp/analytics/queries/query_engine.py`（Owner：Analytics｜状态：✅ 已完成）：统一入口调度各查询、支持流水线与会计挂钩。
 - `2A-10 src/dplib/cdp/analytics/synthetic_data/__init__.py`（Owner：Analytics｜状态：⚪ 待启动）：目录尚未创建。
 - `2A-11 src/dplib/cdp/analytics/synthetic_data/generator.py`（Owner：Analytics｜状态：⚪ 待启动）：目录尚未创建。
 - `2A-12 src/dplib/cdp/analytics/synthetic_data/methods/__init__.py`（Owner：Analytics｜状态：⚪ 待启动）：目录尚未创建。
@@ -421,9 +421,10 @@
 - `5C-14 tests/unit/test_cdp/test_composition/test_privacy_accountant.py`（Owner：QA｜状态：✅ 已完成）：覆盖 basic/advanced/strong/RDP/zCDP/GDP/optimal 会计策略与元数据校验。
 - `5C-15 tests/unit/test_cdp/test_composition/test_moment_accountant.py`（Owner：QA｜状态：✅ 已完成）：覆盖多阶 RDP 累积、最优 (ε, δ) 转换、reset 与非法输入。
 - `5C-14 tests/unit/test_cdp/test_analytics/__init__.py`（Owner：QA｜状态：🟡 进行中）：占位，后续可挂载 query/报告类共享 fixture。
-- `5C-15 tests/unit/test_cdp/test_analytics/test_queries.py`（Owner：QA｜状态：✅ 已完成）：覆盖 `PrivateSumQuery`/`PrivateCountQuery`/`PrivateMeanQuery` 的裁剪、校准与异常。
-- `5C-16 tests/unit/test_cdp/test_analytics/test_synthetic_data.py`（Owner：QA｜状态：⚪ 待启动）：待 synthetic data 生成器落地后补充生成/采样验证。
-- `5C-17 tests/unit/test_cdp/test_analytics/test_reporting.py`（Owner：QA｜状态：⚪ 待启动）：待 reporting 模块实现后补充报告封装与展示测试。
+- `5C-15 tests/unit/test_cdp/test_analytics/test_queries.py`（Owner：QA｜状态：✅ 已完成）：覆盖 count/sum/mean/variance/histogram/range 查询的裁剪、校准与异常。
+- `5C-16 tests/unit/test_cdp/test_analytics/test_query_engine.py`（Owner：QA｜状态：✅ 已完成）：覆盖 QueryEngine 对所有查询的分发与结果一致性。
+- `5C-17 tests/unit/test_cdp/test_analytics/test_synthetic_data.py`（Owner：QA｜状态：⚪ 待启动）：待 synthetic data 生成器落地后补充生成/采样验证。
+- `5C-18 tests/unit/test_cdp/test_analytics/test_reporting.py`（Owner：QA｜状态：⚪ 待启动）：待 reporting 模块实现后补充报告封装与展示测试。
 - `5C-18 tests/unit/test_cdp/test_ml/__init__.py`（Owner：QA｜状态：⚪ 待启动）：DP-ML 相关 UT 占位。
 - `5C-19 tests/unit/test_cdp/test_ml/test_dp_sgd.py`（Owner：QA｜状态：⚪ 待启动）：DP-SGD 训练落地后补梯度裁剪/噪声注入测试。
 - `5C-20 tests/unit/test_cdp/test_ml/test_linear_models.py`（Owner：QA｜状态：⚪ 待启动）：待线性模型实现后验证收敛与精度。

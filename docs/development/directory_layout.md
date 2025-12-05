@@ -85,12 +85,13 @@ NSSDPlib/                              # 统一差分隐私库
 │       │   │   ├── 📄 advanced.py             # 高级组合(矩会计)
 │       │   │   ├── 📄 privacy_accountant.py   # CDP隐私会计
 │       │   │   ├── 📄 budget_scheduler.py     # 预算调度器
+│       │   │   ├── 📄 moment_accountant.py
 │       │   │   └── 📄 composition_theorems.py # 组合定理实现
 │       │   ├── 📁 sensitivity/                # 敏感度分析
 │       │   │   ├── 📄 __init__.py
-│       │   │   ├── 📄 analyzer.py             # 敏感度分析器
-│       │   │   ├── 📄 calibrator.py           # 噪声校准器
-│       │   │   ├── 📄 bounds.py               # 敏感度边界计算
+│       │   │   ├── 📄 sensitivity_analyzer.py # 敏感度分析器
+│       │   │   ├── 📄 noise_calibrator.py     # 噪声校准器
+│       │   │   ├── 📄 sensitivity_bounds.py   # 敏感度边界计算
 │       │   │   └── 📄 global_sensitivity.py   # 全局敏感度
 │       │   ├── 📁 ml/                         # CDP机器学习
 │       │   │   ├── 📁 models/                 # 差分隐私模型
@@ -126,12 +127,10 @@ NSSDPlib/                              # 统一差分隐私库
 │       │   │   ├── 📁 synthetic_data/         # 合成数据生成
 │       │   │   │   ├── 📄 __init__.py
 │       │   │   │   ├── 📄 generator.py        # 生成器基类
-│       │   │   │   └── 📁 methods/            # 生成方法
-│       │   │   │       ├── 📄 __init__.py
-│       │   │   │       ├── 📄 marginal.py     # 边际方法
-│       │   │   │       ├── 📄 bayesian.py     # 贝叶斯网络
-│       │   │   │       ├── 📄 gan.py          # 生成对抗网络
-│       │   │   │       └── 📄 copula.py       # Copula方法
+│       │   │   │   ├── 📄 marginal.py         # 边际方法
+│       │   │   │   ├── 📄 bayesian.py         # 贝叶斯网络
+│       │   │   │   ├── 📄 gan.py              # 生成对抗网络
+│       │   │   │   └── 📄 copula.py           # Copula方法
 │       │   │   ├── 📁 reporting/              # 报告生成
 │       │   │   │   ├── 📄 __init__.py
 │       │   │   │   ├── 📄 privacy_report.py   # 隐私报告
@@ -376,8 +375,7 @@ NSSDPlib/                              # 统一差分隐私库
 ├── 📄 MANIFEST.in
 ├── 📄 pyproject.toml
 ├── 📄 README.md
-├── 📄 setup.cfg
-└── 📄 __init__.py
+└── 📄 setup.cfg
 ```
 ---
 ## **目录状态追踪（与 `project_plan.md`、`development_flow.md` 对齐）**
@@ -398,9 +396,9 @@ NSSDPlib/                              # 统一差分隐私库
 | --- | --- | --- |
 | `src/dplib/cdp/mechanisms/` | ✅ 已完成 | 已实现：`laplace.py`、`gaussian.py`、`exponential.py`、`geometric.py`、`staircase.py`、`vector.py` 以及 `mechanism_{factory,registry}.py`，均复用 `BaseMechanism` 校准生命周期；测试覆盖 `tests/unit/test_cdp/test_mechanisms/test_{laplace,gaussian,exponential,geometric,staircase,vector}.py` 及 factory/registry UT。 |
 | `src/dplib/cdp/composition/` | ✅ 已完成 | `basic.py`、`advanced.py` 提供顺序/高级组合实现并输出 `CompositionResult`，配套 `tests/unit/test_cdp/test_composition/test_{basic,advanced}.py` 已验证在多事件输入上与 `PrivacyAccountant` 的互操作。 |
-| `src/dplib/cdp/analytics/queries/` | 🟡 进行中 | 已实现：`count.py`、`sum.py`、`mean.py` 提供裁剪+预算拆分策略并在 `tests/unit/test_cdp/test_analytics/test_queries.py` 中验证。待补：按照目录约定扩展 histogram/quantile/synthetic-data 查询、封装共享 clipping/validator 工具，并补充属性测试与端到端流水线。 |
+| `src/dplib/cdp/analytics/queries/` | ✅ 已完成 | 已实现：`count.py`、`sum.py`、`mean.py`、`variance.py`、`histogram.py`、`range.py`、`query_engine.py`，覆盖计数/求和/均值/方差/直方图/区间（sum/count/mean）查询与统一入口；测试覆盖 `tests/unit/test_cdp/test_analytics/test_queries.py`、`test_query_engine.py`。 |
 | `src/dplib/cdp/ml/` | ⚪ 待启动 | 仅有 `__init__.py`。需实现 DP-SGD 训练器、线性/神经网络示例、模型评估与高阶 API，确保可被 Stage 5 集成测试复用。 |
-| `src/dplib/cdp/sensitivity/` | ⚪ 待启动 | 仅有 `__init__.py`。应将 `core/data/sensitivity.py` 的通用逻辑封装为 CDP 查询专用的校准器，支持多轮流水线的预算拆分。 |
+| `src/dplib/cdp/sensitivity/` | ✅ 已完成 | 已实现：`global_sensitivity.py`（sum/mean/variance/histogram/range）、`sensitivity_bounds.py`（上下界/metric 支持）、`sensitivity_analyzer.py`（分析分发）、`noise_calibrator.py` 及 `__init__.py` 导出；测试覆盖 `tests/unit/test_cdp/test_sensitivity/test_{global_sensitivity,noise_calibrator,sensitivity_bounds,sensitivity_analyzer}.py`。 |
 
 ### Stage 3 · `ldp/`
 
@@ -417,7 +415,7 @@ NSSDPlib/                              # 统一差分隐私库
 | 目录/文件 | 状态 | 说明 |
 | --- | --- | --- |
 | `tests/unit/test_core/` | 🟡 进行中 | 已实现：`test_privacy/test_{base_mechanism,privacy_accountant,budget_tracker,composition,privacy_model,privacy_guarantee}.py`、`test_data/test_{domain,dataset,transformers,data_validation,statistics,sensitivity}.py`、`test_utils/test_{math_utils,random,config,serialization,logging,performance,param_validation}.py` 覆盖核心机制、预算器、数据层与工具链。待补：统一 fixture 及类型/格式化检查。 |
-| `tests/unit/test_cdp/` | 🟡 进行中 | 已实现机制/组合/analytics 查询 UT：`test_mechanisms/test_{laplace,gaussian,exponential,geometric,staircase,vector}.py`、`test_mechanism_factory_registry.py`、`test_composition/test_{basic,advanced}.py`、`test_analytics/test_queries.py`；待补 ML/Sensitivity 流水线与更高维数据集案例。 |
+| `tests/unit/test_cdp/` | 🟡 进行中 | 已实现机制/组合/analytics/sensitivity UT：`test_mechanisms/test_{laplace,gaussian,exponential,geometric,staircase,vector}.py`、`test_mechanism_factory_registry.py`、`test_composition/test_{basic,advanced,budget_scheduler,privacy_accountant,moment_accountant}.py`、`test_analytics/test_{queries,query_engine}.py`、`test_sensitivity/test_{global_sensitivity,noise_calibrator,sensitivity_bounds,sensitivity_analyzer}.py`；待补 ML 与更高维数据集案例。 |
 | `tests/unit/test_ldp/` | 🟡 进行中 | 已实现：`test_mechanisms/test_{grr,oue}.py`。待补：OLH/RAPPOR/continuous 机制、编码器/聚合器用例与多轮交互脚本。 |
 | `tests/integration/` | ⚪ 待启动 | 仅有空目录。需实现 `test_{cdp,ldp}_pipeline.py`、`test_cross_module.py`、`test_data_flow.py`、`test_privacy_accounting.py`，覆盖从数据→机制→记账的全链路。 |
 | `tests/property_based/` | ⚪ 待启动 | 仅有空目录。需按规划创建 `test_dp_properties.py`、`test_composition_properties.py` 等 Hypothesis 用例，校验极端参数组合。 |
