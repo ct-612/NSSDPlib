@@ -208,13 +208,12 @@
 - `2A-07 src/dplib/cdp/analytics/queries/histogram.py`（Owner：Analytics｜状态：✅ 已完成）：实现直方图查询（向量噪声、非负截断）。
 - `2A-08 src/dplib/cdp/analytics/queries/range.py`（Owner：Analytics｜状态：✅ 已完成）：实现区间查询（sum/count/mean，噪声前缀和）。
 - `2A-09 src/dplib/cdp/analytics/queries/query_engine.py`（Owner：Analytics｜状态：✅ 已完成）：统一入口调度各查询、支持流水线与会计挂钩。
-- `2A-10 src/dplib/cdp/analytics/synthetic_data/__init__.py`（Owner：Analytics｜状态：⚪ 待启动）：目录尚未创建。
-- `2A-11 src/dplib/cdp/analytics/synthetic_data/generator.py`（Owner：Analytics｜状态：⚪ 待启动）：目录尚未创建。
-- `2A-12 src/dplib/cdp/analytics/synthetic_data/methods/__init__.py`（Owner：Analytics｜状态：⚪ 待启动）：目录尚未创建。
-- `2A-13 src/dplib/cdp/analytics/synthetic_data/methods/marginal.py`（Owner：Analytics｜状态：⚪ 待启动）：目录尚未创建。
-- `2A-14 src/dplib/cdp/analytics/synthetic_data/methods/bayesian.py`（Owner：Analytics｜状态：⚪ 待启动）：目录尚未创建。
-- `2A-15 src/dplib/cdp/analytics/synthetic_data/methods/gan.py`（Owner：Analytics｜状态：⚪ 待启动）：目录尚未创建。
-- `2A-16 src/dplib/cdp/analytics/synthetic_data/methods/copula.py`（Owner：Analytics｜状态：⚪ 待启动）：目录尚未创建。
+- `2A-10 src/dplib/cdp/analytics/synthetic_data/__init__.py`（Owner：Analytics｜状态：🟡 进行中）：已聚合 SyntheticGeneratorConfig/SyntheticDataGenerator 工厂及 marginal/bayesian/gan/copula 入口。
+- `2A-11 src/dplib/cdp/analytics/synthetic_data/base_generator.py`（Owner：Analytics｜状态：🟡 进行中）：定义通用配置、抽象基类与 create_generator 工厂，统一 RNG/隐私计费流程。
+- `2A-13 src/dplib/cdp/analytics/synthetic_data/marginal.py`（Owner：Analytics｜状态：🟡 进行中）：基于边际直方图的生成器，支持离散域拟合与采样，预留加权策略扩展。
+- `2A-14 src/dplib/cdp/analytics/synthetic_data/bayesian.py`（Owner：Analytics｜状态：🟡 进行中）：贝叶斯网络生成器，在固定结构下拟合 DP 条件概率表并按拓扑采样。
+- `2A-15 src/dplib/cdp/analytics/synthetic_data/gan.py`（Owner：Analytics｜状态：🟡 进行中）：DP-GAN 生成器骨架，封装训练/采样接口，后续集成 DP-SGD。
+- `2A-16 src/dplib/cdp/analytics/synthetic_data/copula.py`（Owner：Analytics｜状态：🟡 进行中）：Copula 生成器，基于高斯 copula 拟合并支持多变量采样。
 - `2A-17 src/dplib/cdp/analytics/reporting/__init__.py`（Owner：Analytics｜状态：⚪ 待启动）：目录尚未创建。
 - `2A-18 src/dplib/cdp/analytics/reporting/privacy_report.py`（Owner：Analytics｜状态：⚪ 待启动）：目录尚未创建。
 - `2A-19 src/dplib/cdp/analytics/reporting/utility_report.py`（Owner：Analytics｜状态：⚪ 待启动）：目录尚未创建。
@@ -423,8 +422,8 @@
 - `5C-14 tests/unit/test_cdp/test_analytics/__init__.py`（Owner：QA｜状态：🟡 进行中）：占位，后续可挂载 query/报告类共享 fixture。
 - `5C-15 tests/unit/test_cdp/test_analytics/test_queries.py`（Owner：QA｜状态：✅ 已完成）：覆盖 count/sum/mean/variance/histogram/range 查询的裁剪、校准与异常。
 - `5C-16 tests/unit/test_cdp/test_analytics/test_query_engine.py`（Owner：QA｜状态：✅ 已完成）：覆盖 QueryEngine 对所有查询的分发与结果一致性。
-- `5C-17 tests/unit/test_cdp/test_analytics/test_synthetic_data.py`（Owner：QA｜状态：⚪ 待启动）：待 synthetic data 生成器落地后补充生成/采样验证。
-- `5C-18 tests/unit/test_cdp/test_analytics/test_reporting.py`（Owner：QA｜状态：⚪ 待启动）：待 reporting 模块实现后补充报告封装与展示测试。
+- `5C-17 tests/unit/test_cdp/test_analytics/test_base_generator.py`（Owner：QA｜状态：✅ 已完成）：覆盖 SyntheticDataGenerator 的 fit/sample 生命周期、RNG 复用与预算扣减。
+- `5C-18 tests/unit/test_cdp/test_analytics/test_synthetic_methods.py`（Owner：QA｜状态：✅ 已完成）：端到端验证 marginal/bayesian/copula/DP-GAN 生成器的拟合、采样与隐私花费记录。
 - `5C-19 tests/unit/test_cdp/test_ml/__init__.py`（Owner：QA｜状态：⚪ 待启动）：DP-ML 相关 UT 占位。
 - `5C-20 tests/unit/test_cdp/test_ml/test_dp_sgd.py`（Owner：QA｜状态：⚪ 待启动）：DP-SGD 训练落地后补梯度裁剪/噪声注入测试。
 - `5C-21 tests/unit/test_cdp/test_ml/test_linear_models.py`（Owner：QA｜状态：⚪ 待启动）：待线性模型实现后验证收敛与精度。
