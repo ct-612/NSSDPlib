@@ -119,7 +119,17 @@ class CopulaGenerator(SyntheticDataGenerator):
             matrix = np.vstack(cont_matrix).T
             empirical_cov = np.cov(matrix, rowvar=False)
             cov_noise = self._prepare_cov_mechanism().randomise(empirical_cov)
-            self._cov = np.asarray(cov_noise, dtype=float)
+            cov = np.asarray(cov_noise, dtype=float)
+            # numpy 在单维场景下会返回标量协方差，这里规范为 (dim, dim) 以满足多元正态采样接口
+            cov = np.atleast_2d(cov)
+            dim = matrix.shape[1]
+            if cov.shape != (dim, dim):
+                if cov.size == 1:
+                    cov = np.full((dim, dim), float(cov))
+                else:
+                    diag = np.diag(np.diag(cov)) if cov.ndim == 2 else np.eye(dim) * float(np.mean(cov))
+                    cov = diag
+            self._cov = cov
         else:
             # 若不存在连续特征则不构建协方差结构，后续采样退化为独立一维情形
             self._cov = None
@@ -149,6 +159,10 @@ class CopulaGenerator(SyntheticDataGenerator):
         if cont_fields:
             dim = len(cont_fields)
             cov = self._cov if self._cov is not None else np.eye(dim)
+            cov = np.atleast_2d(cov)
+            if cov.shape != (dim, dim):
+                # 若维度与保存的协方差不匹配，则退化为同维度的对角结构以保证形状合法
+                cov = np.eye(dim) * float(cov.flat[0])
             # 在潜在高斯空间按协方差结构采样多元正态向量
             gaussian_samples = rng.multivariate_normal(mean=np.zeros(dim), cov=cov, size=n)
             for idx, field in enumerate(cont_fields):
