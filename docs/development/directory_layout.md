@@ -126,7 +126,7 @@ NSSDPlib/                              # 统一差分隐私库
 │       │   │   │   └── 📄 query_engine.py     # 查询引擎
 │       │   │   ├── 📁 synthetic_data/         # 合成数据生成
 │       │   │   │   ├── 📄 __init__.py
-│       │   │   │   ├── 📄 generator.py        # 生成器基类
+│       │   │   │   ├── 📄 base_generator.py   # 生成器基类
 │       │   │   │   ├── 📄 marginal.py         # 边际方法
 │       │   │   │   ├── 📄 bayesian.py         # 贝叶斯网络
 │       │   │   │   ├── 📄 gan.py              # 生成对抗网络
@@ -241,7 +241,9 @@ NSSDPlib/                              # 统一差分隐私库
 │   │   │   ├── 📁 test_analytics/     # CDP分析测试
 │   │   │   │   ├── 📄 __init__.py
 │   │   │   │   ├── 📄 test_queries.py
-│   │   │   │   ├── 📄 test_synthetic_data.py
+│   │   │   │   ├── 📄 test_query_engine.py
+│   │   │   │   ├── 📄 test_base_generator.py
+│   │   │   │   ├── 📄 test_synthetic_methods.py
 │   │   │   │   └── 📄 test_reporting.py
 │   │   │   └── 📄 __init__.py
 │   │   └── 📁 test_ldp/               # LDP模块测试
@@ -422,7 +424,7 @@ NSSDPlib/                              # 统一差分隐私库
 | `tests/performance/` | ⚪ 待启动 | 仅有空目录。需补充 `test_mechanism_performance.py`、`test_composition_performance.py`、`test_ml_performance.py`、`test_ldp_performance.py` 与 `benchmark_utils.py`。 |
 | `tests/accuracy/` | ⚪ 待启动 | 仅有空目录。需补 `test_mechanism_accuracy.py`、`test_bias_variance.py`、`test_utility_analysis.py` 等，用于跟踪实际误差。 |
 | `tests/fixtures/` | ⚪ 待启动 | 仅有 `__init__.py`。需沉淀 `test_data.py`、`mock_objects.py`、`privacy_configs.py`、`mechanism_fixtures.py` 以支撑其他测试目录。 |
-| `tests/regressionmkdir/` | ⚪ 待启动 | 名称与规划的 `tests/regression/` 不一致且仅有 `__init__.py`。需重命名目录并补充 `test_regression_{cdp,ldp}.py`、`test_bug_fixes.py` 以防止回归。 |
+| `tests/regression/` | ⚪ 待启动 | 名称与规划的 `tests/regression/` 不一致且仅有 `__init__.py`。需重命名目录并补充 `test_regression_{cdp,ldp}.py`、`test_bug_fixes.py` 以防止回归。 |
 
 ### Stage 6 · 文档、示例与资产
 
