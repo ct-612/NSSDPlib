@@ -222,7 +222,7 @@ class PrivacyReport:
             self.annotations.append(
                 PrivacyAnnotation(
                     level="critical",
-                    message=f"epsilon usage reached {ratio:.2f} of budget",
+                    message=f"🔴 Critical: epsilon usage reached {ratio:.2f} of budget",
                     related_event_ids=[e.event_id for e in self.events],
                     code="epsilon_critical",
                 )
@@ -231,9 +231,18 @@ class PrivacyReport:
             self.annotations.append(
                 PrivacyAnnotation(
                     level="warning",
-                    message=f"epsilon usage reached {ratio:.2f} of budget",
+                    message=f"🟠 Warning: epsilon usage reached {ratio:.2f} of budget",
                     related_event_ids=[e.event_id for e in self.events],
                     code="epsilon_warning",
+                )
+            )
+        else:
+            self.annotations.append(
+                PrivacyAnnotation(
+                    level="info",
+                    message=f"🔵 Info: epsilon usage at {ratio:.2f} of budget",
+                    related_event_ids=[e.event_id for e in self.events],
+                    code="epsilon_ok",
                 )
             )
 
