@@ -142,7 +142,7 @@
 | 2.2 | 实现基本/高级组合与 Moments Accountant | Stage 1 | `src/dplib/cdp/composition/*` | CDP Team | 🟡 进行中（`basic.py`/`advanced.py` 已完成，Accountant/调度仍缺） |
 | 2.3 | 敏感度分析与噪声校准工具 | Stage 1 | `src/dplib/cdp/sensitivity/*` | CDP Team | ⚪ 待启动（目录仅空壳） |
 | 2.4 | DP-SGD 等 ML 管线与示例 | Stage 1 | `src/dplib/cdp/ml/*`, `examples/cdp/*` | ML Subteam | ⚪ 待启动（`ml/` 仅留空 `__init__.py`，示例缺失） |
-| 2.5 | CDP Analytics：查询 API、报告、基准脚本 | 2.1~2.4 | `src/dplib/cdp/analytics/*`, `benchmarks/performance/*` | Analytics | 🟡 进行中（仅 `queries/{count,mean,sum}.py`，其余模块缺失） |
+| 2.5 | CDP Analytics：查询 API、报告、基准脚本 | 2.1~2.4 | `src/dplib/cdp/analytics/*`, `benchmarks/performance/*` | Analytics | 🟡 进行中（queries/synthetic_data/reporting 已落地并有 UT，benchmarks 缺失） |
 | 2.6 | 单元/集成/性能测试与文档 | 2.1~2.5 | `tests/unit/test_cdp/*`, `docs/api/cdp.rst` | QA/Tech Writer | 🟡 进行中（CDP 全量机制 + factory/registry 已有 UT，API 文档缺失） |
 
 **出口检查**：噪声 <1ms、DP-SGD ≥OpenDP 0.9×、测试覆盖 ≥85%。当前 analytics/benchmarks/文档仍在补齐，性能验证未记录。
@@ -199,7 +199,7 @@
 
 **analytics**
 
-- `2A-01 src/dplib/cdp/analytics/__init__.py`（Owner：Analytics｜状态：🟡 进行中）：导出 queries 子模块，synthetic/reporting 仍缺。
+- `2A-01 src/dplib/cdp/analytics/__init__.py`（Owner：Analytics｜状态：🟡 进行中）：导出 queries 子模块，待补充综合出口。
 - `2A-02 src/dplib/cdp/analytics/queries/__init__.py`（Owner：Analytics｜状态：🟡 进行中）：注册已完成的查询 API。
 - `2A-03 src/dplib/cdp/analytics/queries/count.py`（Owner：Analytics｜状态：✅ 已完成）：实现计数查询与噪声注入。
 - `2A-04 src/dplib/cdp/analytics/queries/sum.py`（Owner：Analytics｜状态：✅ 已完成）：实现求和查询。
@@ -214,9 +214,9 @@
 - `2A-14 src/dplib/cdp/analytics/synthetic_data/bayesian.py`（Owner：Analytics｜状态：🟡 进行中）：贝叶斯网络生成器，在固定结构下拟合 DP 条件概率表并按拓扑采样。
 - `2A-15 src/dplib/cdp/analytics/synthetic_data/gan.py`（Owner：Analytics｜状态：🟡 进行中）：DP-GAN 生成器骨架，封装训练/采样接口，后续集成 DP-SGD。
 - `2A-16 src/dplib/cdp/analytics/synthetic_data/copula.py`（Owner：Analytics｜状态：🟡 进行中）：Copula 生成器，基于高斯 copula 拟合并支持多变量采样。
-- `2A-17 src/dplib/cdp/analytics/reporting/__init__.py`（Owner：Analytics｜状态：⚪ 待启动）：目录尚未创建。
-- `2A-18 src/dplib/cdp/analytics/reporting/privacy_report.py`（Owner：Analytics｜状态：⚪ 待启动）：目录尚未创建。
-- `2A-19 src/dplib/cdp/analytics/reporting/utility_report.py`（Owner：Analytics｜状态：⚪ 待启动）：目录尚未创建。
+- `2A-17 src/dplib/cdp/analytics/reporting/__init__.py`（Owner：Analytics｜状态：✅ 已完成）：导出隐私/效用报告类。
+- `2A-18 src/dplib/cdp/analytics/reporting/privacy_report.py`（Owner：Analytics｜状态：✅ 已完成）：实现隐私报告（事件、时间线、注释、序列化）。
+- `2A-19 src/dplib/cdp/analytics/reporting/utility_report.py`（Owner：Analytics｜状态：✅ 已完成）：实现效用报告（误差指标、曲线、序列化）。
 
 **模块入口与示例**
 
@@ -424,11 +424,12 @@
 - `5C-16 tests/unit/test_cdp/test_analytics/test_query_engine.py`（Owner：QA｜状态：✅ 已完成）：覆盖 QueryEngine 对所有查询的分发与结果一致性。
 - `5C-17 tests/unit/test_cdp/test_analytics/test_base_generator.py`（Owner：QA｜状态：✅ 已完成）：覆盖 SyntheticDataGenerator 的 fit/sample 生命周期、RNG 复用与预算扣减。
 - `5C-18 tests/unit/test_cdp/test_analytics/test_synthetic_methods.py`（Owner：QA｜状态：✅ 已完成）：端到端验证 marginal/bayesian/copula/DP-GAN 生成器的拟合、采样与隐私花费记录。
-- `5C-19 tests/unit/test_cdp/test_ml/__init__.py`（Owner：QA｜状态：⚪ 待启动）：DP-ML 相关 UT 占位。
-- `5C-20 tests/unit/test_cdp/test_ml/test_dp_sgd.py`（Owner：QA｜状态：⚪ 待启动）：DP-SGD 训练落地后补梯度裁剪/噪声注入测试。
-- `5C-21 tests/unit/test_cdp/test_ml/test_linear_models.py`（Owner：QA｜状态：⚪ 待启动）：待线性模型实现后验证收敛与精度。
-- `5C-22 tests/unit/test_cdp/test_ml/test_neural_networks.py`（Owner：QA｜状态：⚪ 待启动）：待 NN 示例实现后覆盖 MLP/Conv DP 训练。
-- `5C-23 tests/unit/test_cdp/test_ml/test_model_evaluation.py`（Owner：QA｜状态：⚪ 待启动）：补充模型评估/隐私审计报告生成测试。
+- `5C-19 tests/unit/test_cdp/test_analytics/test_reporting.py`（Owner：QA｜状态：✅ 已完成）：验证隐私/效用报告的数据聚合、序列化、曲线生成与注释。
+- `5C-20 tests/unit/test_cdp/test_ml/__init__.py`（Owner：QA｜状态：⚪ 待启动）：DP-ML 相关 UT 占位。
+- `5C-21 tests/unit/test_cdp/test_ml/test_dp_sgd.py`（Owner：QA｜状态：⚪ 待启动）：DP-SGD 训练落地后补梯度裁剪/噪声注入测试。
+- `5C-22 tests/unit/test_cdp/test_ml/test_linear_models.py`（Owner：QA｜状态：⚪ 待启动）：待线性模型实现后验证收敛与精度。
+- `5C-23 tests/unit/test_cdp/test_ml/test_neural_networks.py`（Owner：QA｜状态：⚪ 待启动）：待 NN 示例实现后覆盖 MLP/Conv DP 训练。
+- `5C-24 tests/unit/test_cdp/test_ml/test_model_evaluation.py`（Owner：QA｜状态：⚪ 待启动）：补充模型评估/隐私审计报告生成测试。
 
 **单元测试 / ldp（Owner：QA｜状态：🟡 进行中）**
 
