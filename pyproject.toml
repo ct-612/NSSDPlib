@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=61.0", "wheel"]
+requires = ["setuptools>=69.0", "wheel>=0.43"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -14,8 +14,8 @@ keywords = ["differential-privacy", "dp", "cdp", "ldp"]
 
 # 基础依赖，所有模块共用
 dependencies = [
-    "numpy>=1.24",          # 数值计算核心
-    "scipy>=1.10"           # 概率分布与统计函数
+    "numpy>=1.26",          # 数值计算核心
+    "scipy>=1.13",          # 概率分布与统计函数
 ]
 
 # 可选模块依赖
@@ -23,74 +23,93 @@ dependencies = [
 
 # 核心模块：数据抽象、隐私模型、工具函数
 core = [
-    "pandas>=2.0",          # 数据处理与结构化接口
-    "tqdm>=4.65",           # 进度条与批处理日志
+    "pandas>=2.2",          # 数据处理与结构化接口
+    "tqdm>=4.66",           # 进度条与批处理日志
 ]
 
-# CDP模块：中心化差分隐私功能 + 机器学习
+# CDP 模块：中心化差分隐私功能
 cdp = [
-#    "scikit-learn>=1.2",    # 模型评估与基准算法
-#    "tensorflow>=2.12",     # 深度学习训练接口
-#    "torch>=2.1",           # 通用机器学习与 DP-SGD 支持
-    "pandas>=2.0",          # 数据处理与结构化接口
-    "matplotlib>=3.7",      # 可视化与报告输出
+    "pandas>=2.2",          # 数据处理与结构化接口
+    "matplotlib>=3.8",      # 可视化与报告输出
 ]
 
-# LDP模块：本地差分隐私功能
+# LDP 模块：本地差分隐私功能
 ldp = [
     "bitarray>=2.5",        # 位级数据表示
     "xxhash>=3.2",          # 高速哈希
-    "pandas>=2.0",          # 数据处理与结构化接口
+    "pandas>=2.2",          # 数据处理与结构化接口
 ]
 
-# 开发依赖
+# ML 模块：DP-SGD / 模型训练等扩展能力
+ml = [
+    # "scikit-learn>=1.4",    # 经典机器学习与评估工具
+    # "torch>=2.3",           # 通用机器学习与 DP-SGD 支持
+    # "tensorflow>=2.15",     # 深度学习训练接口
+]
+
+# 开发依赖（开发/测试/CI 通用）
 dev = [
-    "pytest>=7.0",          # 测试框架
-    "pytest-cov>=4.0",      # 测试覆盖率报告
-    "flake8>=6.0",          # 代码风格检查
-    "black>=23.3",          # 代码格式化
-    "isort>=6.0",           # 导入排序
-    "mypy>=1.5",            # 类型检查
-    "pre-commit>=3.3",      # 提交前代码检查
-    "build>=1.0",           # 打包工具
+    "pytest>=8.3",          # 测试框架
+    "pytest-cov>=5.0",      # 测试覆盖率报告
+    "flake8>=7.1",          # 代码风格检查
+    "black>=24.10",         # 代码格式化
+    "isort>=5.13",          # 导入排序
+    "mypy>=1.10",           # 类型检查
+    "pre-commit>=3.7",      # 提交前代码检查钩子
+    "build>=1.2",           # 打包工具
 ]
 
-# 全部模块：CDP + LDP + ML + examples + docs + dev
+# 全部模块：Core + CDP + LDP + ML + Docs + Examples + Dev
 all = [
     # Core
-    "numpy>=1.24",          # 数值计算核心
-    "scipy>=1.10",          # 概率分布与统计函数
-    "pandas>=2.0",          # 数据处理与结构化接口
-    "tqdm>=4.65",           # 进度条与批处理日志
-    
+    "numpy>=1.26",          # 数值计算核心
+    "scipy>=1.13",          # 概率分布与统计函数
+    "pandas>=2.2",          # 数据处理与结构化接口
+    "tqdm>=4.66",           # 进度条与批处理日志
+
     # CDP
-#    "scikit-learn>=1.2",    # 模型评估与基准算法
-#    "tensorflow>=2.12",     # 深度学习训练接口
-#    "torch>=2.1",           # 通用机器学习与 DP-SGD 支持
-    "matplotlib>=3.7",      # 可视化与报告输出
+    "matplotlib>=3.8",      # 可视化与报告输出
 
     # LDP
     "bitarray>=2.5",        # 位级数据表示
     "xxhash>=3.2",          # 高速哈希
     "datasketch>=1.5.2",    # LDP/聚合近似算法支持
-    "mmh3>=3.0.0",          # MurmurHash 实现，用于哈希机制
+    "mmh3>=3.0.0",          # MurmurHash 实现，用于哈希机制/Sketch
+
+    # ML
+    # "scikit-learn>=1.4",    # 经典机器学习与评估工具
+    # "torch>=2.3",           # 通用机器学习与 DP-SGD 支持
+    # "tensorflow>=2.15",     # 深度学习训练接口
 
     # Docs & Examples
-    "sphinx>=5.0",              # 文档生成
-    "sphinx-rtd-theme>=1.2",    # 文档主题
-    "jupyter>=1.0",             # 教程与实验交互环境
+    "sphinx>=7.3",              # 文档生成
+    "sphinx-rtd-theme>=2.0",    # 文档主题
+    "jupyter>=1.0",             # 教程与实验交互环境（Notebook）
 
     # Testing & Dev
-    "pytest>=7.0",          # 测试框架
-    "pytest-cov>=4.0",      # 测试覆盖率报告
-    "black>=23.3",          # 代码格式化
-    "isort>=6.0",           # 导入排序
-    "pre-commit>=3.3",      # 提交前代码检查
-    "flake8>=6.0",          # 代码风格检查
-    "mypy>=1.5",            # 类型检查
-    "build>=1.0",           # 打包工具
+    "pytest>=8.3",          # 测试框架
+    "pytest-cov>=5.0",      # 测试覆盖率报告
+    "black>=24.10",         # 代码格式化
+    "isort>=5.13",          # 导入排序
+    "pre-commit>=3.7",      # 提交前代码检查
+    "flake8>=7.1",          # 代码风格检查
+    "mypy>=1.10",           # 类型检查
+    "build>=1.2",           # 打包工具
 ]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+include-package-data = true
+zip-safe = false
 
 [tool.setuptools.packages.find]
 where = ["src"]
 exclude = ["tests*", "benchmarks*"]
+
+[tool.flake8]
+max-line-length = 120
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = "-q --maxfail=1"
+testpaths = ["tests"]
