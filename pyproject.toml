@@ -29,7 +29,7 @@ core = [
 
 # CDP模块：中心化差分隐私功能 + 机器学习
 cdp = [
-    "scikit-learn>=1.2",    # 模型评估与基准算法
+#    "scikit-learn>=1.2",    # 模型评估与基准算法
 #    "tensorflow>=2.12",     # 深度学习训练接口
 #    "torch>=2.1",           # 通用机器学习与 DP-SGD 支持
     "pandas>=2.0",          # 数据处理与结构化接口
@@ -64,7 +64,7 @@ all = [
     "tqdm>=4.65",           # 进度条与批处理日志
     
     # CDP
-    "scikit-learn>=1.2",    # 模型评估与基准算法
+#    "scikit-learn>=1.2",    # 模型评估与基准算法
 #    "tensorflow>=2.12",     # 深度学习训练接口
 #    "torch>=2.1",           # 通用机器学习与 DP-SGD 支持
     "matplotlib>=3.7",      # 可视化与报告输出
