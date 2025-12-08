@@ -138,60 +138,66 @@ NSSDPlib/                              # 统一差分隐私库
 │       │   │   └── 📄 __init__.py
 │       │   └── 📄 __init__.py
 │       ├── 📁 ldp/                            # 本地差分隐私模块
-│       │   ├── 📁 mechanisms/                 # LDP机制实现
+│       │   ├── 📄 types.py                    # LDPReport / EncodedValue / Estimate 等跨模块共享类型定义
+│       │   ├── 📄 utils.py                    # LDP 专用工具：hash family、bit 操作、通用校验/数学 helper
+│       │   ├── 📁 mechanisms/                 # 本地扰动机制（严格 client-side 语义）
 │       │   │   ├── 📄 __init__.py
-│       │   │   ├── 📄 grr.py                  # 广义随机响应
-│       │   │   ├── 📄 oue.py                  # 优化一元编码
-│       │   │   ├── 📄 olh.py                  # 优化局部哈希
-│       │   │   ├── 📄 rappor.py               # RAPPOR机制
-│       │   │   ├── 📄 unary_encoding.py       # 通用一元编码
-│       │   │   ├── 📄 direct_encoding.py      # 直接编码
+│       │   │   ├── 📄 base.py                 # BaseLDPMechanism：继承 core.BaseMechanism，固定 privacy_model=LDP
+│       │   │   ├── 📁 discrete/               # 离散 LDP 机制（分类/有限域）
+│       │   │   │   ├── 📄 __init__.py
+│       │   │   │   ├── 📄 grr.py              # 广义随机响应
+│       │   │   │   ├── 📄 oue.py              # 优化一元编码
+│       │   │   │   ├── 📄 olh.py              # 优化局部哈希
+│       │   │   │   ├── 📄 rappor.py           # RAPPOR机制
+│       │   │   │   └── 📄 unary_randomizer.py # 对 unary 编码后的 bit 向量做随机化（和 encoders.unary 配合）
 │       │   │   ├── 📁 continuous/             # 连续值LDP机制
 │       │   │   │   ├── 📄 __init__.py
-│       │   │   │   ├── 📄 laplace.py          # 本地拉普拉斯
-│       │   │   │   ├── 📄 gaussian.py         # 本地高斯
-│       │   │   │   ├── 📄 piecewise.py        # 分段机制
+│       │   │   │   ├── 📄 laplace_local.py    # 本地 Laplace 噪声（区间裁剪后加噪）
+│       │   │   │   ├── 📄 gaussian_local.py   # 本地 Gaussian 噪声（区间裁剪后加噪）
+│       │   │   │   ├── 📄 piecewise.py        # Piecewise 机制（Kairouz 型等）
 │       │   │   │   └── 📄 duchi.py            # Duchi机制
 │       │   │   ├── 📄 mechanism_factory.py    # LDP机制工厂
 │       │   │   └── 📄 mechanism_registry.py   # LDP机制注册表
-│       │   ├── 📁 encoders/                   # 数据编码器
+│       │   ├── 📁 encoders/                   # 编码层（deterministic，client/server 共享）
 │       │   │   ├── 📄 __init__.py
-│       │   │   ├── 📄 base.py                 # 编码器基类
-│       │   │   ├── 📄 categorical.py          # 分类变量编码
-│       │   │   ├── 📄 numerical.py            # 数值离散化编码
-│       │   │   ├── 📄 hashing.py              # 哈希编码工具
-│       │   │   ├── 📄 sketch.py               # Sketch编码(CMS/Hadamard)
-│       │   │   ├── 📄 bloom_filter.py         # 布隆过滤器编码
+│       │   │   ├── 📄 base.py                 # BaseEncoder 协议：fit/encode/decode/metadata
+│       │   │   ├── 📄 categorical.py          # 类别编码：label / one-hot 等
+│       │   │   ├── 📄 numerical.py            # 数值离散化编码：等宽/等频 bucket
+│       │   │   ├── 📄 unary.py                # Unary / Binary 编码（仅编码，不加噪）
+│       │   │   ├── 📄 hashing.py              # 通用 hash-based 编码（OLH / sketch 等的基础）
+│       │   │   ├── 📄 sketch.py               # Count-Sketch / Count-Min 等结构的编码支持
+│       │   │   ├── 📄 bloom_filter.py         # Bloom Filter 编码（RAPPOR 用）
 │       │   │   └── 📄 encoder_factory.py      # 编码器工厂
-│       │   ├── 📁 aggregators/                # 数据聚合器
+│       │   ├── 📁 aggregators/                # 聚合层（strict server-side 语义）
 │       │   │   ├── 📄 __init__.py
-│       │   │   ├── 📄 frequency.py            # 频率估计器
-│       │   │   ├── 📄 mean.py                 # 均值估计器
-│       │   │   ├── 📄 variance.py             # 方差估计器
-│       │   │   ├── 📄 quantile.py             # 分位数估计器
-│       │   │   ├── 📄 user_aggregate.py       # 用户级聚合逻辑
-│       │   │   ├── 📄 consistency.py          # 一致性约束工具
+│       │   │   ├── 📄 base.py                 # BaseAggregator：aggregate(reports) -> Estimate
+│       │   │   ├── 📄 frequency.py            # 频率估计聚合器（适配 GRR/UE/OLH/RAPPOR）
+│       │   │   ├── 📄 mean.py                 # 均值估计（需要 continuous LDP 机制输出）
+│       │   │   ├── 📄 variance.py             # 方差 / 二阶矩估计
+│       │   │   ├── 📄 quantile.py             # 分位数估计（可用分桶+秩近似）
+│       │   │   ├── 📄 user_level.py           # 用户级聚合逻辑：按 user_id 合并多轮报告（原 user_aggregate.py）
+│       │   │   ├── 📄 consistency.py          # 一致性约束工具（一致性后处理：非负、归一化等）
 │       │   │   └── 📄 aggregator_factory.py   # 聚合器工厂
-│       │   ├── 📁 composition/                # LDP组合
+│       │   ├── 📁 composition/                # LDP 视角的隐私组合 & 会计（per-user ε）
 │       │   │   ├── 📄 __init__.py
-│       │   │   ├── 📄 basic.py                # 基本组合
-│       │   │   ├── 📄 sequential.py           # 顺序组合
-│       │   │   ├── 📄 parallel.py             # 并行组合
-│       │   │   └── 📄 privacy_accountant.py   # LDP隐私会计
-│       │   ├── 📁 applications/               # LDP应用场景
+│       │   │   ├── 📄 basic.py                # 简单加和规则：多轮上报 / 多维上报的 ε 总和
+│       │   │   ├── 📄 sequential.py           # 单用户多轮交互的顺序组合
+│       │   │   ├── 📄 parallel.py             # 不同用户/分片的并行组合
+│       │   │   └── 📄 privacy_accountant.py   # LDP 会计器，可选地挂接 core 的 CDP Accountant
+│       │   ├── 📁 applications/               # 端到端 LDP 应用（pipeline），封装 encoder+mechanism+aggregator
 │       │   │   ├── 📄 __init__.py
-│       │   │   ├── 📄 heavy_hitters.py        # 频繁项发现
-│       │   │   ├── 📄 range_queries.py        # 范围查询
-│       │   │   ├── 📄 marginals.py            # 边际释放
-│       │   │   ├── 📄 key_value.py            # 键值对统计
-│       │   │   ├── 📄 sequence_analysis.py    # 序列数据分析
-│       │   │   └── 📄 application_factory.py  # 应用工厂
+│       │   │   ├── 📄 heavy_hitters.py        # Heavy hitters（频繁项）检测
+│       │   │   ├── 📄 frequency_estimation.py # 泛频率估计（可作为 heavy_hitters 的基础）
+│       │   │   ├── 📄 range_queries.py        # 区间查询（数值型 LDP）
+│       │   │   ├── 📄 marginals.py            # 多维边际估计（配合 encoders + aggregators）
+│       │   │   ├── 📄 key_value.py            # key-value 遥测（典型 telemetry 场景）
+│       │   │   ├── 📄 sequence_analysis.py    # 序列/事件流分析（如点击序列）
+│       │   │   └── 📄 application_factory.py  # 应用工厂:根据配置组装 pipeline（client/report/server）
 │       │   └── 📄 __init__.py
 │       └── 📄 __init__.py
 ├── 📁 tests/                          # 综合测试模块
 │   ├── 📁 unit/                       # 单元测试
 │   │   ├── 📁 test_core/              # 核心模块测试
-│   │   │   ├── 📄 __init__.py
 │   │   │   ├── 📁 test_privacy/             # 隐私抽象测试
 │   │   │   │   ├── 📄 __init__.py
 │   │   │   │   ├── 📄 test_base_mechanism.py
@@ -208,15 +214,16 @@ NSSDPlib/                              # 统一差分隐私库
 │   │   │   │   ├── 📄 test_statistics.py
 │   │   │   │   ├── 📄 test_transformers.py
 │   │   │   │   └── 📄 test_data_validation.py
-│   │   │   └── 📁 test_utils/             # 工具函数测试
-│   │   │       ├── 📄 __init__.py
-│   │   │       ├── 📄 test_math_utils.py
-│   │   │       ├── 📄 test_random.py
-│   │   │       ├── 📄 test_config.py
-│   │   │       ├── 📄 test_logging.py
-│   │   │       ├── 📄 test_serialization.py
-│   │   │       ├── 📄 test_param_validation.py
-│   │   │       └── 📄 test_performance.py
+│   │   │   ├── 📁 test_utils/             # 工具函数测试
+│   │   │   │   ├── 📄 __init__.py
+│   │   │   │   ├── 📄 test_math_utils.py
+│   │   │   │   ├── 📄 test_random.py
+│   │   │   │   ├── 📄 test_config.py
+│   │   │   │   ├── 📄 test_logging.py
+│   │   │   │   ├── 📄 test_serialization.py
+│   │   │   │   ├── 📄 test_param_validation.py
+│   │   │   │   └── 📄 test_performance.py
+│   │   │   └── 📄 __init__.py
 │   │   ├── 📁 test_cdp/               # CDP模块测试
 │   │   │   ├── 📁 test_mechanisms/    # CDP机制测试
 │   │   │   │   ├── 📄 __init__.py
@@ -246,34 +253,46 @@ NSSDPlib/                              # 统一差分隐私库
 │   │   │   │   ├── 📄 test_synthetic_methods.py
 │   │   │   │   └── 📄 test_reporting.py
 │   │   │   └── 📄 __init__.py
-│   │   └── 📁 test_ldp/               # LDP模块测试
-│   │       ├── 📁 test_mechanisms/    # LDP机制测试
-│   │       │   ├── 📄 __init__.py
-│   │       │   ├── 📄 test_grr.py
-│   │       │   ├── 📄 test_oue.py
-│   │       │   ├── 📄 test_olh.py
-│   │       │   ├── 📄 test_rappor.py
-│   │       │   ├── 📄 test_unary_encoding.py
-│   │       │   ├── 📄 test_direct_encoding.py
-│   │       │   └── 📄 test_continuous.py
-│   │       ├── 📁 test_encoders/      # LDP编码器测试
-│   │       │   ├── 📄 __init__.py
-│   │       │   ├── 📄 test_categorical.py
-│   │       │   ├── 📄 test_numerical.py
-│   │       │   ├── 📄 test_hashing.py
-│   │       │   └── 📄 test_sketch.py
-│   │       ├── 📁 test_aggregators/   # LDP聚合器测试
-│   │       │   ├── 📄 __init__.py
-│   │       │   ├── 📄 test_frequency.py
-│   │       │   ├── 📄 test_mean.py
-│   │       │   ├── 📄 test_variance.py
-│   │       │   └── 📄 test_quantile.py
-│   │       ├── 📁 test_applications/  # LDP应用测试
-│   │       │   ├── 📄 __init__.py
-│   │       │   ├── 📄 test_heavy_hitters.py
-│   │       │   ├── 📄 test_range_queries.py
-│   │       │   └── 📄 test_marginals.py
-│   │       └── 📄 __init__.py
+│   │   ├── 📁 test_ldp/               # LDP模块测试
+│   │   │   ├── 📄 test_types.py       # LDPReport / Estimate 等 dataclass 的基本行为
+│   │   │   ├── 📁 test_mechanisms/    # LDP机制测试
+│   │   │   │   ├── 📄 __init__.py
+│   │   │   │   ├── 📄 test_grr.py
+│   │   │   │   ├── 📄 test_oue.py
+│   │   │   │   ├── 📄 test_olh.py
+│   │   │   │   ├── 📄 test_rappor.py
+│   │   │   │   ├── 📄 test_unary_randomizer.py
+│   │   │   │   └── 📄 test_continuous_mechanisms.py    # 聚合 continuous 下的 duchi/piecewise/laplace_local/gaussian_local 的基础性质测试
+│   │   │   ├── 📁 test_encoders/      # LDP编码器测试
+│   │   │   │   ├── 📄 __init__.py
+│   │   │   │   ├── 📄 test_categorical_encoder.py
+│   │   │   │   ├── 📄 test_numerical_encoder.py
+│   │   │   │   ├── 📄 test_unary_encoder.py 
+│   │   │   │   ├── 📄 test_bloom_filter_encoder.py 
+│   │   │   │   ├── 📄 test_hashing_encoder.py
+│   │   │   │   └── 📄 test_sketch_encoder.py
+│   │   │   ├── 📁 test_aggregators/   # LDP聚合器测试
+│   │   │   │   ├── 📄 __init__.py
+│   │   │   │   ├── 📄 test_frequency_aggregator.py
+│   │   │   │   ├── 📄 test_mean_aggregator.py
+│   │   │   │   ├── 📄 test_variance_aggregator.py
+│   │   │   │   ├── 📄 test_quantile_aggregator.py
+│   │   │   │   └── 📄 test_user_level_aggregator.py   # user_level 的逻辑：按 user_id 合并多轮报告
+│   │   │   ├── 📁 test_composition/
+│   │   │   │   ├── 📄 __init__.py
+│   │   │   │   ├── 📄 test_basic_composition.py
+│   │   │   │   ├── 📄 test_sequential_composition.py
+│   │   │   │   └── 📄 test_parallel_composition.py
+│   │   │   ├── 📁 test_applications/  # LDP应用测试
+│   │   │   │   ├── 📄 __init__.py
+│   │   │   │   ├── 📄 test_heavy_hitters.py
+│   │   │   │   ├── 📄 test_frequency_estimation.py
+│   │   │   │   ├── 📄 test_range_queries.py
+│   │   │   │   ├── 📄 test_marginals.py
+│   │   │   │   ├── 📄 test_key_value.py
+│   │   │   │   └── 📄 test_sequence_analysis.py
+│   │   │   └── 📄 __init__.py
+│   │   └── 📄 __init__.py
 │   ├── 📁 integration/                # 集成测试
 │   │   ├── 📄 __init__.py
 │   │   ├── 📄 test_cdp_pipeline.py    # CDP流水线测试
