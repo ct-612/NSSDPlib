@@ -139,7 +139,7 @@ NSSDPlib/                              # 统一差分隐私库
 │       │   └── 📄 __init__.py
 │       ├── 📁 ldp/                            # 本地差分隐私模块
 │       │   ├── 📄 types.py                    # LDPReport / EncodedValue / Estimate 等跨模块共享类型定义
-│       │   ├── 📄 utils.py                    # LDP 专用工具：hash family、bit 操作、通用校验/数学 helper
+│       │   ├── 📄 ldp_utils.py                    # LDP 专用工具：hash family、bit 操作、通用校验/数学 helper
 │       │   ├── 📁 mechanisms/                 # 本地扰动机制（严格 client-side 语义）
 │       │   │   ├── 📄 __init__.py
 │       │   │   ├── 📄 base.py                 # BaseLDPMechanism：继承 core.BaseMechanism，固定 privacy_model=LDP
@@ -186,6 +186,7 @@ NSSDPlib/                              # 统一差分隐私库
 │       │   │   └── 📄 privacy_accountant.py   # LDP 会计器，可选地挂接 core 的 CDP Accountant
 │       │   ├── 📁 applications/               # 端到端 LDP 应用（pipeline），封装 encoder+mechanism+aggregator
 │       │   │   ├── 📄 __init__.py
+│       │   │   ├── 📄 base.py                 # BaseLDPApplication 抽象基类
 │       │   │   ├── 📄 heavy_hitters.py        # Heavy hitters（频繁项）检测
 │       │   │   ├── 📄 frequency_estimation.py # 泛频率估计（可作为 heavy_hitters 的基础）
 │       │   │   ├── 📄 range_queries.py        # 区间查询（数值型 LDP）
