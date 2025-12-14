@@ -46,7 +46,8 @@ def test_privacy_model_from_str_and_error():
 def test_mechanism_type_from_str_and_alias():
     # MechanismType.from_str 应处理大小写和别名（如 "unary" → UNARY）
     assert MechanismType.from_str("Laplace") is MechanismType.LAPLACE
-    assert MechanismType.from_str("unary") is MechanismType.UNARY
+    assert MechanismType.from_str("unary") is MechanismType.UNARY_RANDOMIZER
+    assert MechanismType.from_str("ue") is MechanismType.UNARY_RANDOMIZER
     with pytest.raises(ParamValidationError):
         MechanismType.from_str("bad-mech")
 
