@@ -58,20 +58,27 @@ class MechanismType(enum.Enum):
     GEOMETRIC = "geometric"
     STAIRCASE = "staircase"
     VECTOR = "vector"
-    GRR = "grr"  # generalized randomized response
-    OUE = "oue"  # optimized unary encoding
-    OLH = "olh"  # optimized local hashing
+    GRR = "grr"
+    OUE = "oue"
+    OLH = "olh"
     RAPPOR = "rappor"
-    UNARY = "unary_encoding"
-    DIRECT = "direct_encoding"
+    UNARY_RANDOMIZER = "unary_randomizer"
+    LOCAL_LAPLACE = "local_laplace"
+    LOCAL_GAUSSIAN = "local_gaussian"
+    PIECEWISE = "piecewise"
+    DUCHI = "duchi"
 
     @classmethod
     def from_str(cls, name: str) -> "MechanismType":
-        # 从字符串构造机制类型，对空格和“unary”别名做轻量规范化处理
+        # 从字符串构造机制类型，对空格和别名做轻量规范化处理
         try:
             normalized = name.lower().replace(" ", "_")
-            if normalized == "unary":
-                normalized = "unary_encoding"
+            if normalized in ("unary", "unary_encoding", "ue"):
+                normalized = "unary_randomizer"
+            if normalized in ("laplace_local",):
+                normalized = "local_laplace"
+            if normalized in ("gaussian_local",):
+                normalized = "local_gaussian"
             return cls(normalized)
         except Exception as exc:  # pragma: no cover - defensive
             raise ParamValidationError(f"unknown mechanism '{name}'") from exc
@@ -89,8 +96,11 @@ MECHANISM_DEFAULT_MODEL: Dict[MechanismType, PrivacyModel] = {
     MechanismType.OUE: PrivacyModel.LDP,
     MechanismType.OLH: PrivacyModel.LDP,
     MechanismType.RAPPOR: PrivacyModel.LDP,
-    MechanismType.UNARY: PrivacyModel.LDP,
-    MechanismType.DIRECT: PrivacyModel.LDP,
+    MechanismType.UNARY_RANDOMIZER: PrivacyModel.LDP,
+    MechanismType.LOCAL_LAPLACE: PrivacyModel.LDP,
+    MechanismType.LOCAL_GAUSSIAN: PrivacyModel.LDP,
+    MechanismType.PIECEWISE: PrivacyModel.LDP,
+    MechanismType.DUCHI: PrivacyModel.LDP,
 }
 
 # 可支持模型族：各机制在更精细会计下可以支持的所有隐私模型族（用于能力检查）
@@ -105,8 +115,11 @@ MECHANISM_SUPPORTED_MODELS: Dict[MechanismType, Tuple[PrivacyModel, ...]] = {
     MechanismType.OUE: (PrivacyModel.LDP,),
     MechanismType.OLH: (PrivacyModel.LDP,),
     MechanismType.RAPPOR: (PrivacyModel.LDP,),
-    MechanismType.UNARY: (PrivacyModel.LDP,),
-    MechanismType.DIRECT: (PrivacyModel.LDP,),
+    MechanismType.UNARY_RANDOMIZER: (PrivacyModel.LDP,),
+    MechanismType.LOCAL_LAPLACE: (PrivacyModel.LDP,),
+    MechanismType.LOCAL_GAUSSIAN: (PrivacyModel.LDP,),
+    MechanismType.PIECEWISE: (PrivacyModel.LDP,),
+    MechanismType.DUCHI: (PrivacyModel.LDP,),
 }
 
 
@@ -310,4 +323,3 @@ def registry_snapshot() -> Dict[str, Iterable[str]]:
         "privacy_models": [m.value for m in PrivacyModel],
         "mechanisms": [m.value for m in MechanismType],
     }
-
