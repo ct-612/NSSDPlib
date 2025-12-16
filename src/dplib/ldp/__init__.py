@@ -23,9 +23,11 @@ try:
         LocalGaussianMechanism,
         PiecewiseMechanism,
         DuchiMechanism,
-        register_mechanism,
-        get_mechanism,
-        list_mechanisms,
+        MECHANISM_REGISTRY,
+        normalize_mechanism,
+        get_mechanism_class,
+        ensure_mechanism_supports_model,
+        registered_mechanisms_snapshot,
         create_mechanism,
         create_default_grr,
         create_default_oue,
@@ -43,9 +45,11 @@ try:
             "LocalGaussianMechanism",
             "PiecewiseMechanism",
             "DuchiMechanism",
-            "register_mechanism",
-            "get_mechanism",
-            "list_mechanisms",
+            "MECHANISM_REGISTRY",
+            "normalize_mechanism",
+            "get_mechanism_class",
+            "ensure_mechanism_supports_model",
+            "registered_mechanisms_snapshot",
             "create_mechanism",
             "create_default_grr",
             "create_default_oue",
@@ -62,9 +66,11 @@ except Exception:  # pragma: no cover - optional until implemented
     LocalGaussianMechanism = None  # type: ignore
     PiecewiseMechanism = None  # type: ignore
     DuchiMechanism = None  # type: ignore
-    register_mechanism = None  # type: ignore
-    get_mechanism = None  # type: ignore
-    list_mechanisms = None  # type: ignore
+    MECHANISM_REGISTRY = None  # type: ignore
+    normalize_mechanism = None  # type: ignore
+    get_mechanism_class = None  # type: ignore
+    ensure_mechanism_supports_model = None  # type: ignore
+    registered_mechanisms_snapshot = None  # type: ignore
     create_mechanism = None  # type: ignore
     create_default_grr = None  # type: ignore
     create_default_oue = None  # type: ignore
