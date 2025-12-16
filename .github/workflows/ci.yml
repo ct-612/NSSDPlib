@@ -84,7 +84,12 @@ jobs:
 
       # 运行测试：安静模式，遇到首个失败即退出该分项
       - name: Run pytest
-        run: pytest --maxfail=1 --disable-warnings -q
+        run: |
+          TEST_PATH="tests/"
+          if [[ "${{ matrix.module }}" != "all" ]]; then
+            TEST_PATH="tests/unit/test_${{ matrix.module }}"
+          fi
+          pytest --maxfail=1 --disable-warnings -q $TEST_PATH
 
       # 覆盖率：只在 Python 3.11 且安装 all extras 时生成，节省 CI 时间
       - name: Coverage (py3.11 + all)
