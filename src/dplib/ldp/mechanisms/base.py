@@ -12,6 +12,7 @@ from typing import Any, Mapping, Optional, Union
 
 from dplib.core.privacy.base_mechanism import BaseMechanism, ValidationError
 from dplib.core.privacy.privacy_model import PrivacyModel
+from dplib.core.utils.param_validation import ParamValidationError
 from dplib.ldp.ldp_utils import ensure_epsilon
 from dplib.ldp.types import EncodedValue, LDPReport
 
@@ -35,9 +36,11 @@ class BaseLDPMechanism(BaseMechanism, ABC):
         rng: Optional[Any] = None,
         name: Optional[str] = None,
     ):
-        # 在初始化阶段通过 ensure_epsilon 包装 ValidationError 统一校验 epsilon 合法性
+        # 在初始化阶段通过 ensure_epsilon 校验 epsilon 合法性
         try:
             ensure_epsilon(epsilon)
+        except ParamValidationError:
+            raise
         except (TypeError, ValueError) as exc:
             raise ValidationError(str(exc)) from exc
         self._identifier = identifier
