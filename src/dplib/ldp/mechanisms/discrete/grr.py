@@ -14,6 +14,7 @@ import numpy as np
 
 from dplib.ldp.mechanisms.base import BaseLDPMechanism
 from dplib.ldp.types import EncodedValue
+from dplib.core.utils.param_validation import ParamValidationError
 
 
 class GRRMechanism(BaseLDPMechanism):
@@ -31,24 +32,24 @@ class GRRMechanism(BaseLDPMechanism):
     ):
         # 根据给定类别集合或离散域大小初始化 GRR 机制并检查参数合法性
         if categories is None and domain_size is None:
-            raise ValueError("either categories or domain_size must be provided")
+            raise ParamValidationError("either categories or domain_size must be provided")
         if categories is not None and domain_size is not None:
-            raise ValueError("provide either categories or domain_size, not both")
+            raise ParamValidationError("provide either categories or domain_size, not both")
 
         self._categories: Optional[Sequence[Any]] = tuple(categories) if categories is not None else None
         self._index_map: Optional[Dict[Any, int]] = None
         if self._categories is not None:
             if len(self._categories) == 0:
-                raise ValueError("categories must be non-empty")
+                raise ParamValidationError("categories must be non-empty")
             self._index_map = {value: idx for idx, value in enumerate(self._categories)}
             self._k = len(self._categories)
         else:
             if domain_size is None or domain_size <= 0:
-                raise ValueError("domain_size must be positive")
+                raise ParamValidationError("domain_size must be positive")
             self._k = int(domain_size)
 
         if self._k <= 1:
-            raise ValueError("domain must contain at least two categories")
+            raise ParamValidationError("domain must contain at least two categories")
 
         super().__init__(epsilon=epsilon, delta=0.0, identifier=identifier, rng=rng, name=name)
 
@@ -61,15 +62,15 @@ class GRRMechanism(BaseLDPMechanism):
         # 将原始值映射为离散域中的整数索引并进行合法性检查
         if self._categories is None:
             if not isinstance(value, (int, np.integer)):
-                raise ValueError("value must be an integer index within domain")
+                raise ParamValidationError("value must be an integer index within domain")
             idx = int(value)
         else:
             if value not in self._index_map:  # type: ignore[arg-type]
-                raise ValueError("value not in configured categories")
+                raise ParamValidationError("value not in configured categories")
             idx = self._index_map[value]  # type: ignore[index]
 
         if idx < 0 or idx >= self._k:
-            raise ValueError("value index out of domain range")
+            raise ParamValidationError("value index out of domain range")
         return idx
 
     def _from_index(self, idx: int) -> Any:
