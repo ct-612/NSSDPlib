@@ -10,6 +10,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, Callable, Iterable, List, Union
 
 import numpy as np
+from dplib.core.utils.param_validation import ParamValidationError
 
 try:
     import xxhash
@@ -48,12 +49,12 @@ def hash_to_range(value: Union[str, bytes], seed: int, num_buckets: int) -> int:
     """
     # 使用可用的哈希库将输入 value 映射到 [0, num_buckets) 区间，并根据 seed 控制哈希族
     if num_buckets <= 0:
-        raise ValueError("num_buckets must be positive")
+        raise ParamValidationError("num_buckets must be positive")
 
     if xxhash is not None:
         payload = value.encode("utf-8") if isinstance(value, str) else value
         if not isinstance(payload, (bytes, bytearray)):
-            raise TypeError("value must be str or bytes")
+            raise ParamValidationError("value must be str or bytes")
         digest = xxhash.xxh64(payload, seed=seed).intdigest()
     elif mmh3 is not None:
         if isinstance(value, bytes):
@@ -61,7 +62,7 @@ def hash_to_range(value: Union[str, bytes], seed: int, num_buckets: int) -> int:
         elif isinstance(value, str):
             payload_str = value
         else:
-            raise TypeError("value must be str or bytes")
+            raise ParamValidationError("value must be str or bytes")
         digest = mmh3.hash(payload_str, seed=seed, signed=False)
     else:
         raise ImportError("xxhash or mmh3 is required for hashing")
@@ -75,9 +76,9 @@ def make_hash_family(num_hashes: int, num_buckets: int, seed: int) -> List[Calla
     """
     # 构造一组相互独立的哈希函数，将字符串映射到固定桶数的索引空间
     if num_hashes <= 0:
-        raise ValueError("num_hashes must be positive")
+        raise ParamValidationError("num_hashes must be positive")
     if num_buckets <= 0:
-        raise ValueError("num_buckets must be positive")
+        raise ParamValidationError("num_buckets must be positive")
 
     hash_functions: List[Callable[[str], int]] = []
     for i in range(num_hashes):
@@ -97,7 +98,7 @@ def make_bitarray(length: int, indices: Iterable[int] = ()) -> BitVector:
     """
     # 创建指定长度的比特向量并将给定 indices 位置置为 1，优先使用 bitarray 实现
     if length < 0:
-        raise ValueError("length must be non-negative")
+        raise ParamValidationError("length must be non-negative")
 
     if _BitArrayRuntime is not None:
         bits = _BitArrayRuntime(length)
@@ -129,17 +130,17 @@ def count_ones(bits: BitVector) -> int:
 
 
 def ensure_probability(p: float, name: str = "p") -> None:
-    """Ensure p is within [0, 1]; otherwise raise ValueError."""
-    # 校验给定概率参数是否落在 [0, 1] 区间内，非法时抛出 ValueError
+    """Ensure p is within [0, 1]; otherwise raise ParamValidationError."""
+    # 校验给定概率参数是否落在 [0, 1] 区间内，非法时抛出 ParamValidationError
     if not (0.0 <= p <= 1.0):
-        raise ValueError(f"{name} must be within [0, 1]")
+        raise ParamValidationError(f"{name} must be within [0, 1]")
 
 
 def ensure_epsilon(epsilon: float) -> None:
-    """Ensure epsilon is positive; otherwise raise ValueError."""
-    # 校验隐私预算 epsilon 是否为正数，非法时抛出 ValueError
+    """Ensure epsilon is positive; otherwise raise ParamValidationError."""
+    # 校验隐私预算 epsilon 是否为正数，非法时抛出 ParamValidationError
     if epsilon <= 0:
-        raise ValueError("epsilon must be positive")
+        raise ParamValidationError("epsilon must be positive")
 
 
 def sigmoid(x: float) -> float:
@@ -149,9 +150,9 @@ def sigmoid(x: float) -> float:
 
 
 def logit(p: float) -> float:
-    """Compute logit(p) where p in (0, 1); raises ValueError otherwise."""
+    """Compute logit(p) where p in (0, 1); raises ParamValidationError otherwise."""
     # 在 p ∈ (0, 1) 条件下计算 logit 变换，边界值时抛出异常
     ensure_probability(p, name="p")
     if p in (0.0, 1.0):
-        raise ValueError("p must be in (0, 1) for logit")
+        raise ParamValidationError("p must be in (0, 1) for logit")
     return float(np.log(p / (1.0 - p)))
