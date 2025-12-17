@@ -1,8 +1,4 @@
-"""Entry point for the Local Differential Privacy (LDP) subsystem in NSSDPlib.
-
-Exposes core types along with encoder, mechanism, aggregator, composition,
-and application entry points for downstream consumers.
-"""
+"""Entry point for the Local Differential Privacy (LDP) subsystem."""
 
 from __future__ import annotations
 
