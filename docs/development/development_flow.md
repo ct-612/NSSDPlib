@@ -15,9 +15,9 @@
 | 0 项目准备与架构设计 | 冻结需求/架构/CI 策略 | 🟡 进行中 | 需求/架构/技术栈文档已落地，但 README/贡献规范缺失 |
 | 1 核心框架开发（core/） | 建立 BaseMechanism/Accountant/Data/Utils | 🟡 进行中 | `src/dplib/core/privacy/*`、`core/data/*`、`core/utils/*` 已落地并有单测，仍缺 `core/__init__.py` 工厂导出与核心 API 文档 |
 | 2 CDP 模块实现 | 服务端机制/组合/ML/analytics | 🟡 进行中 | 机制全量上线（Laplace/Gaussian/Exponential/Geometric/Staircase/Vector + registry/factory），`composition` 组合/会计/调度/定理工具已补齐，analytics/ML 仍待补 |
-| 3 LDP 模块实现 | 客户端机制/编码/聚合/应用 | 🟡 进行中 | 已有 `src/dplib/ldp/mechanisms/{grr,oue}.py`，其他模块为空 |
+| 3 LDP 模块实现 | 客户端机制/编码/聚合/应用 | 🟡 进行中 | 已落地 LDP 类型/工具、离散与连续机制全量、机制 registry/factory、主要编码器；聚合/组合/应用仍待补 |
 | 4 模块化安装与包管理 | 拆分 core/cdp/ldp 安装与 extras | 🟡 进行中 | `pyproject.toml` 已声明 extras，但缺少构建脚本与验证 |
-| 5 测试与验证 | 单元/集成/属性/性能/回归体系 | 🟡 进行中 | core/privacy/data/utils + CDP 全量机制（含 factory/registry）与 LDP GRR/OUE 已有单测；集成/性能/回归仍缺 |
+| 5 测试与验证 | 单元/集成/属性/性能/回归体系 | 🟡 进行中 | core/privacy/data/utils + CDP 全量机制（含 factory/registry）与 LDP 类型/编码器/离散&连续机制已覆盖单测；集成/性能/回归仍缺 |
 | 6 文档、示例与教程 | 完整 Sphinx 文档与示例矩阵 | ⚪ 待启动 | `docs/` 仅有空的 `index.rst`/`conf.py`，无 API/示例内容 |
 | 7 发布与运维 | PyPI 分发、监控、版本治理 | ⚪ 待启动 | 缺少 release pipeline、运行手册与支持策略 |
 
@@ -245,8 +245,8 @@
 
 | Step | 具体工作 | 输入/依赖 | 产出 | Owner | 状态 |
 | ---- | -------- | -------- | ---- | ----- | ---- |
-| 3.1 | 实现 GRR/OUE/OLH/RAPPOR/连续值机制 | Stage 1 | `src/dplib/ldp/mechanisms/*` | LDP Team | 🟡 进行中（仅 GRR/OUE 实现，其余机制缺失） |
-| 3.2 | 编码器（分类/数值/哈希/Sketch/BF）及元数据输出 | 3.1 | `src/dplib/ldp/encoders/*` | LDP Team | ⚪ 待启动（目录仅空 `__init__.py`） |
+| 3.1 | 实现 GRR/OUE/OLH/RAPPOR/连续值机制 | Stage 1 | `src/dplib/ldp/mechanisms/*` | LDP Team | ✅ 已完成（离散：GRR/OUE/OLH/RAPPOR/UnaryRandomizer；连续：LocalLaplace/LocalGaussian/Piecewise/Duchi，全量挂载 registry/factory） |
+| 3.2 | 编码器（分类/数值/哈希/Sketch/BF）及元数据输出 | 3.1 | `src/dplib/ldp/encoders/*` | LDP Team | ✅ 已完成（categorical/numerical[uniform+quantile]/unary+binary/hashing/bloom_filter；sketch 为占位实现） |
 | 3.3 | 聚合器（频率/均值/方差/分位数） | 3.1 | `src/dplib/ldp/aggregators/*` | LDP Team | ⚪ 待启动（无实现文件） |
 | 3.4 | 典型应用（heavy hitters、range query 等） | 3.2~3.3 | `src/dplib/ldp/applications/*`, `examples/ldp/*` | LDP Team | ⚪ 待启动（应用与示例目录为空） |
 | 3.5 | 轻量序列化/网络接口（JSON/Protobuf） | 3.1~3.4 | 序列化模块（待建） | LDP Team | ⚪ 待启动 |
@@ -259,31 +259,31 @@
 
 **mechanisms**
 
-- `3M-01 src/dplib/ldp/mechanisms/__init__.py`（Owner：LDP Team｜状态：🟡 进行中）：仅导出 GRR/OUE，其他机制尚未挂载。
-- `3M-02 src/dplib/ldp/mechanisms/grr.py`（Owner：LDP Team｜状态：✅ 已完成）：实现广义随机响应（GRR）。
-- `3M-03 src/dplib/ldp/mechanisms/oue.py`（Owner：LDP Team｜状态：✅ 已完成）：实现优雅一次编码（OUE）。
-- `3M-04 src/dplib/ldp/mechanisms/olh.py`（Owner：LDP Team｜状态：⚪ 待启动）：文件未创建。
-- `3M-05 src/dplib/ldp/mechanisms/rappor.py`（Owner：LDP Team｜状态：⚪ 待启动）：文件未创建。
-- `3M-06 src/dplib/ldp/mechanisms/unary_encoding.py`（Owner：LDP Team｜状态：⚪ 待启动）：文件未创建。
-- `3M-07 src/dplib/ldp/mechanisms/direct_encoding.py`（Owner：LDP Team｜状态：⚪ 待启动）：文件未创建。
-- `3M-08 src/dplib/ldp/mechanisms/continuous/__init__.py`（Owner：LDP Team｜状态：⚪ 待启动）：目录尚未创建。
-- `3M-09 src/dplib/ldp/mechanisms/continuous/laplace.py`（Owner：LDP Team｜状态：⚪ 待启动）：目录尚未创建。
-- `3M-10 src/dplib/ldp/mechanisms/continuous/gaussian.py`（Owner：LDP Team｜状态：⚪ 待启动）：目录尚未创建。
-- `3M-11 src/dplib/ldp/mechanisms/continuous/piecewise.py`（Owner：LDP Team｜状态：⚪ 待启动）：目录尚未创建。
-- `3M-12 src/dplib/ldp/mechanisms/continuous/duchi.py`（Owner：LDP Team｜状态：⚪ 待启动）：目录尚未创建。
-- `3M-13 src/dplib/ldp/mechanisms/mechanism_factory.py`（Owner：LDP Team｜状态：⚪ 待启动）：文件未创建。
-- `3M-14 src/dplib/ldp/mechanisms/mechanism_registry.py`（Owner：LDP Team｜状态：⚪ 待启动）：文件未创建。
+- `3M-01 src/dplib/ldp/mechanisms/__init__.py`（Owner：LDP Team｜状态：✅ 已完成）：导出离散/连续机制与 registry/factory。
+- `3M-02 src/dplib/ldp/mechanisms/discrete/grr.py`（Owner：LDP Team｜状态：✅ 已完成）：实现广义随机响应（GRR）。
+- `3M-03 src/dplib/ldp/mechanisms/discrete/oue.py`（Owner：LDP Team｜状态：✅ 已完成）：实现优雅一次编码（OUE）。
+- `3M-04 src/dplib/ldp/mechanisms/discrete/olh.py`（Owner：LDP Team｜状态：✅ 已完成）：实现 Optimized Local Hashing。
+- `3M-05 src/dplib/ldp/mechanisms/discrete/rappor.py`（Owner：LDP Team｜状态：✅ 已完成）：实现 RAPPOR 噪声注入。
+- `3M-06 src/dplib/ldp/mechanisms/discrete/unary_randomizer.py`（Owner：LDP Team｜状态：✅ 已完成）：通用 unary/bit 向量随机化。
+- `3M-07 src/dplib/ldp/mechanisms/continuous/__init__.py`（Owner：LDP Team｜状态：✅ 已完成）：导出本地连续机制集合。
+- `3M-08 src/dplib/ldp/mechanisms/continuous/laplace_local.py`（Owner：LDP Team｜状态：✅ 已完成）：本地 Laplace 噪声（裁剪+加噪）。
+- `3M-09 src/dplib/ldp/mechanisms/continuous/gaussian_local.py`（Owner：LDP Team｜状态：✅ 已完成）：本地 Gaussian 噪声（ε,δ 校准）。
+- `3M-10 src/dplib/ldp/mechanisms/continuous/piecewise.py`（Owner：LDP Team｜状态：✅ 已完成）：Piecewise 机制占位实现（已加近似采样，TODO 精确采样）。
+- `3M-11 src/dplib/ldp/mechanisms/continuous/duchi.py`（Owner：LDP Team｜状态：✅ 已完成）：Duchi 机制实现。
+- `3M-12 src/dplib/ldp/mechanisms/mechanism_factory.py`（Owner：LDP Team｜状态：✅ 已完成）：LDP 机制工厂，分支创建 + LDP 模型校验。
+- `3M-13 src/dplib/ldp/mechanisms/mechanism_registry.py`（Owner：LDP Team｜状态：✅ 已完成）：LDP 机制注册表，含标识归一化与 snapshot。
 
 **encoders**
 
-- `3E-01 src/dplib/ldp/encoders/__init__.py`（Owner：LDP Team｜状态：⚪ 待启动）：仅有空文件，尚未导出接口。
-- `3E-02 src/dplib/ldp/encoders/base.py`（Owner：LDP Team｜状态：⚪ 待启动）：文件未创建。
-- `3E-03 src/dplib/ldp/encoders/categorical.py`（Owner：LDP Team｜状态：⚪ 待启动）：文件未创建。
-- `3E-04 src/dplib/ldp/encoders/numerical.py`（Owner：LDP Team｜状态：⚪ 待启动）：文件未创建。
-- `3E-05 src/dplib/ldp/encoders/hashing.py`（Owner：LDP Team｜状态：⚪ 待启动）：文件未创建。
-- `3E-06 src/dplib/ldp/encoders/sketch.py`（Owner：LDP Team｜状态：⚪ 待启动）：文件未创建。
-- `3E-07 src/dplib/ldp/encoders/bloom_filter.py`（Owner：LDP Team｜状态：⚪ 待启动）：文件未创建。
-- `3E-08 src/dplib/ldp/encoders/encoder_factory.py`（Owner：LDP Team｜状态：⚪ 待启动）：文件未创建。
+- `3E-01 src/dplib/ldp/encoders/__init__.py`（Owner：LDP Team｜状态：✅ 已完成）：导出 BaseEncoder/工厂与各编码器。
+- `3E-02 src/dplib/ldp/encoders/base.py`（Owner：LDP Team｜状态：✅ 已完成）：Stateless/Fitted 基类，统一 fit/encode/decode/metadata。
+- `3E-03 src/dplib/ldp/encoders/categorical.py`（Owner：LDP Team｜状态：✅ 已完成）：类别索引/one-hot 编码，支持未知值回退。
+- `3E-04 src/dplib/ldp/encoders/numerical.py`（Owner：LDP Team｜状态：✅ 已完成）：数值分桶编码，支持均匀/分位数策略。
+- `3E-05 src/dplib/ldp/encoders/hashing.py`（Owner：LDP Team｜状态：✅ 已完成）：通用哈希编码（单/多哈希）。
+- `3E-06 src/dplib/ldp/encoders/sketch.py`（Owner：LDP Team｜状态：✅ 已完成）：Count-Sketch 占位，提供坐标输出，TODO sign hash/稀疏向量。
+- `3E-07 src/dplib/ldp/encoders/unary.py`（Owner：LDP Team｜状态：✅ 已完成）：为 OUE / UnaryRandomizer / RAPPOR 等机制提供基础的 bit 向量编码，对整数索引进行 unary 或定长二进制表示的确定性映射。
+- `3E-08 src/dplib/ldp/encoders/bloom_filter.py`（Owner：LDP Team｜状态：✅ 已完成）：Bloom Filter 编码（RAPPOR 前置）。
+- `3E-09 src/dplib/ldp/encoders/encoder_factory.py`（Owner：LDP Team｜状态：✅ 已完成）：编码器注册表/工厂，统一 ParamValidationError。
 
 **aggregators**
 
@@ -316,7 +316,7 @@
 
 **模块入口与示例**
 
-- `3I-01 src/dplib/ldp/__init__.py`（Owner：LDP Team｜状态：⚪ 待启动）：文件为空，未导出任何组件。
+- `3I-01 src/dplib/ldp/__init__.py`（Owner：LDP Team｜状态：✅ 已完成）：导出 LDP 类型/机制/编码器入口与工厂。
 - `3X-01 examples/ldp_examples/__init__.py`（Owner：LDP Team｜状态：⚪ 待启动）：目录未创建。
 - `3X-02 examples/ldp_examples/ldp_frequency_estimation.py`（Owner：LDP Team｜状态：⚪ 待启动）：文件未创建。
 - `3X-03 examples/ldp_examples/ldp_mean_estimation.py`（Owner：LDP Team｜状态：⚪ 待启动）：文件未创建。
@@ -368,7 +368,7 @@
 | Step | 具体工作 | 输入/依赖 | 产出 | Owner | 状态 |
 | ---- | -------- | -------- | ---- | ----- | ---- |
 | 5.1 | 规划测试层级与目录 | Stage 0~3 | `tests/unit`, `tests/integration`, `tests/property_based`, `tests/performance`, `tests/accuracy`, `tests/regression`, `tests/fixtures` | QA | ✅ 已完成（tests/unit/test_core/*、test_cdp/*、test_ldp/* 等目录及 `conftest.py` 已建成，可直接落地后续用例） |
-| 5.2 | 实现 core/cdp/ldp 单元测试并收集覆盖率 | Stage 1~3 | `tests/unit/*`, 覆盖率报告 | QA | 🟡 进行中（core/privacy/data/utils + CDP 全量机制与 factory/registry，LDP 仅 GRR/OUE，其他编码/聚合待补） |
+| 5.2 | 实现 core/cdp/ldp 单元测试并收集覆盖率 | Stage 1~3 | `tests/unit/*`, 覆盖率报告 | QA | 🟡 进行中（core/privacy/data/utils + CDP 全量机制与 factory/registry，LDP 已覆盖 types/编码器/离散与连续机制；聚合/组合/应用待补） |
 | 5.3 | 构建 LDP→CDP 端到端集成测试 | Stage 2~3 | `tests/integration/*` | QA | ⚪ 待启动（目录为空） |
 | 5.4 | 属性测试（ε/δ 边界）与 `hypothesis` 库整合 | Stage 1~3 | `tests/property_based/*` | QA | ⚪ 待启动（无实现） |
 | 5.5 | 性能 & 基准测试流水线（nightly） | Stage 2~3 | `tests/performance/*`, `benchmarks/*` | QA/DevOps | ⚪ 待启动（无脚本） |
@@ -433,27 +433,30 @@
 
 **单元测试 / ldp（Owner：QA｜状态：🟡 进行中）**
 
-- `5L-01 tests/unit/test_ldp/__init__.py`（Owner：QA｜状态：🟡 进行中）：目前仅注册包路径，后续需补充客户端侧的公共 fixture（如伪造遥测数据）。
-- `5L-02 tests/unit/test_ldp/test_mechanisms/__init__.py`（Owner：QA｜状态：🟡 进行中）：仅导入现有机制，待 OLH/RAPPOR/连续机制补全后扩展导出。
-- `5L-03 tests/unit/test_ldp/test_mechanisms/test_grr.py`（Owner：QA｜状态：✅ 已完成）：验证 GRR 在不同类别数量、ε 下的概率归一化、KL 约束与 `to_dict` 序列化。
-- `5L-04 tests/unit/test_ldp/test_mechanisms/test_oue.py`（Owner：QA｜状态：✅ 已完成）：覆盖 OUE 参数校验、采样 bit-vector 的期望概率、以及批量输入的稳定性。
-- `5L-05 tests/unit/test_ldp/test_mechanisms/test_olh.py`（Owner：QA｜状态：⚪ 待启动）：需在 OLH 实现后补充哈希族选择、稀疏向量合成与容错测试。
-- `5L-06 tests/unit/test_ldp/test_mechanisms/test_rappor.py`（Owner：QA｜状态：⚪ 待启动）：待实现 Bloom 与噪声注入逻辑后，补足编码/解码用例。
-- `5L-07 tests/unit/test_ldp/test_mechanisms/test_continuous.py`（Owner：QA｜状态：⚪ 待启动）：连续值机制实现后需覆盖裁剪、pdf/采样验证。
-- `5L-08 tests/unit/test_ldp/test_encoders/__init__.py`（Owner：QA｜状态：⚪ 待启动）：将来封装 categorical/numerical 编码器的公共 fixture。
-- `5L-09 tests/unit/test_ldp/test_encoders/test_categorical.py`（Owner：QA｜状态：⚪ 待启动）：实现后需验证 one-hot / bucket encoder 的精度与错误分支。
-- `5L-10 tests/unit/test_ldp/test_encoders/test_numerical.py`（Owner：QA｜状态：⚪ 待启动）：规划针对数值离散化策略的覆盖率。
-- `5L-11 tests/unit/test_ldp/test_encoders/test_hashing.py`（Owner：QA｜状态：⚪ 待启动）：待实现 hashing encoder 后补充 hash family/碰撞测试。
-- `5L-12 tests/unit/test_ldp/test_encoders/test_sketch.py`（Owner：QA｜状态：⚪ 待启动）：需继承 sketch/bloom 工程后验证稀疏恢复能力。
-- `5L-13 tests/unit/test_ldp/test_aggregators/__init__.py`（Owner：QA｜状态：⚪ 待启动）：聚合器实现后建公共 fixture。
-- `5L-14 tests/unit/test_ldp/test_aggregators/test_frequency.py`（Owner：QA｜状态：⚪ 待启动）：聚合器上线后验证频率估计的偏差/方差。
-- `5L-15 tests/unit/test_ldp/test_aggregators/test_mean.py`（Owner：QA｜状态：⚪ 待启动）：需覆盖均值聚合器对噪声输入的鲁棒性。
-- `5L-16 tests/unit/test_ldp/test_aggregators/test_variance.py`（Owner：QA｜状态：⚪ 待启动）：计划验证二阶矩估计与误差分析。
-- `5L-17 tests/unit/test_ldp/test_aggregators/test_quantile.py`（Owner：QA｜状态：⚪ 待启动）：待实现 quantile 聚合算法后补充顺序统计测试。
-- `5L-18 tests/unit/test_ldp/test_applications/__init__.py`（Owner：QA｜状态：⚪ 待启动）：应用示例落地后汇总 fixture。
-- `5L-19 tests/unit/test_ldp/test_applications/test_heavy_hitters.py`（Owner：QA｜状态：⚪ 待启动）：需构建 1k 用户样本，验证 heavy hitter 管道与聚合精度。
-- `5L-20 tests/unit/test_ldp/test_applications/test_range_queries.py`（Owner：QA｜状态：⚪ 待启动）：实现 LDP range query 后新增端到端测试。
-- `5L-21 tests/unit/test_ldp/test_applications/test_marginals.py`（Owner：QA｜状态：⚪ 待启动）：待上线 marginals 应用后，验证不同维度组合的结果。
+- `5L-01 tests/unit/test_ldp/__init__.py`（Owner：QA｜状态：🟡 进行中）：已标记 ldp/ldp_mechanism marker，后续可补公共 fixture。
+- `5L-02 tests/unit/test_ldp/test_mechanisms/__init__.py`（Owner：QA｜状态：🟡 进行中）：汇总机制测试入口。
+- `5L-03 tests/unit/test_ldp/test_mechanisms/test_grr.py`（Owner：QA｜状态：✅ 已完成）：验证 GRR 概率与输出域。
+- `5L-04 tests/unit/test_ldp/test_mechanisms/test_oue.py`（Owner：QA｜状态：✅ 已完成）：覆盖 OUE 参数校验与 bit 采样概率。
+- `5L-05 tests/unit/test_ldp/test_mechanisms/test_olh.py`（Owner：QA｜状态：✅ 已完成）：验证哈希输出范围与随机性。
+- `5L-06 tests/unit/test_ldp/test_mechanisms/test_rappor.py`（Owner：QA｜状态：✅ 已完成）：覆盖 Bloom 长度与噪声退化检查。
+- `5L-07 tests/unit/test_ldp/test_mechanisms/test_unary_randomizer.py`（Owner：QA｜状态：✅ 已完成）：验证 unary/bit 随机化概率。
+- `5L-08 tests/unit/test_ldp/test_mechanisms/test_continuous_mechanisms.py`（Owner：QA｜状态：✅ 已完成）：覆盖本地 Laplace/Gaussian/Piecewise/Duchi 裁剪与采样均值。
+- `5L-09 tests/unit/test_ldp/test_encoders/__init__.py`（Owner：QA｜状态：🟡 进行中）：编码器测试入口。
+- `5L-10 tests/unit/test_ldp/test_encoders/test_categorical_encoder.py`（Owner：QA｜状态：✅ 已完成）：类别编码/未知值回退。
+- `5L-11 tests/unit/test_ldp/test_encoders/test_numerical_encoder.py`（Owner：QA｜状态：✅ 已完成）：均匀/分位数分桶策略。
+- `5L-12 tests/unit/test_ldp/test_encoders/test_hashing_encoder.py`（Owner：QA｜状态：✅ 已完成）：哈希输出域与确定性。
+- `5L-13 tests/unit/test_ldp/test_encoders/test_bloom_filter_encoder.py`（Owner：QA｜状态：✅ 已完成）：Bloom Filter 长度与哈希覆盖。
+- `5L-14 tests/unit/test_ldp/test_encoders/test_sketch_encoder.py`（Owner：QA｜状态：✅ 已完成）：占位 Sketch 编码的坐标输出。
+- `5L-15 tests/unit/test_ldp/test_encoders/test_unary_encoder.py`（Owner：QA｜状态：✅ 已完成）：Unary/Binary 编码往返与越界校验。
+- `5L-16 tests/unit/test_ldp/test_aggregators/__init__.py`（Owner：QA｜状态：⚪ 待启动）：聚合器实现后建公共 fixture。
+- `5L-17 tests/unit/test_ldp/test_aggregators/test_frequency.py`（Owner：QA｜状态：⚪ 待启动）：聚合器上线后验证频率估计的偏差/方差。
+- `5L-18 tests/unit/test_ldp/test_aggregators/test_mean.py`（Owner：QA｜状态：⚪ 待启动）：需覆盖均值聚合器对噪声输入的鲁棒性。
+- `5L-19 tests/unit/test_ldp/test_aggregators/test_variance.py`（Owner：QA｜状态：⚪ 待启动）：计划验证二阶矩估计与误差分析。
+- `5L-20 tests/unit/test_ldp/test_aggregators/test_quantile.py`（Owner：QA｜状态：⚪ 待启动）：待实现 quantile 聚合算法后补充顺序统计测试。
+- `5L-21 tests/unit/test_ldp/test_applications/__init__.py`（Owner：QA｜状态：⚪ 待启动）：应用示例落地后汇总 fixture。
+- `5L-22 tests/unit/test_ldp/test_applications/test_heavy_hitters.py`（Owner：QA｜状态：⚪ 待启动）：需构建 1k 用户样本，验证 heavy hitter 管道与聚合精度。
+- `5L-23 tests/unit/test_ldp/test_applications/test_range_queries.py`（Owner：QA｜状态：⚪ 待启动）：实现 LDP range query 后新增端到端测试。
+- `5L-24 tests/unit/test_ldp/test_applications/test_marginals.py`（Owner：QA｜状态：⚪ 待启动）：待上线 marginals 应用后，验证不同维度组合的结果。
 
 **单元测试 / utils（Owner：QA｜状态：⚪ 待启动）**
 
