@@ -1,3 +1,4 @@
+"""CDP sensitivity analysis and noise calibration utilities."""
 from dplib.core.data.sensitivity import SensitivityError
 from .sensitivity_analyzer import (
     SensitivityAnalyzer,
