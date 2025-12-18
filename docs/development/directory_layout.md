@@ -278,7 +278,8 @@ NSSDPlib/                              # 统一差分隐私库
 │   │   │   │   ├── 📄 test_mean_aggregator.py
 │   │   │   │   ├── 📄 test_variance_aggregator.py
 │   │   │   │   ├── 📄 test_quantile_aggregator.py
-│   │   │   │   └── 📄 test_user_level_aggregator.py   # user_level 的逻辑：按 user_id 合并多轮报告
+│   │   │   │   ├── 📄 test_user_level_aggregator.py   # user_level 的逻辑：按 user_id 合并多轮报告
+│   │   │   │   └── 📄 test_consistency_aggregator.py
 │   │   │   ├── 📁 test_composition/
 │   │   │   │   ├── 📄 __init__.py
 │   │   │   │   ├── 📄 test_basic_composition.py
@@ -429,8 +430,8 @@ NSSDPlib/                              # 统一差分隐私库
 | 目录/文件 | 状态 | 说明 |
 | --- | --- | --- |
 | `src/dplib/ldp/mechanisms/` | 🟡 进行中 | 已实现离散/连续机制全量（`grr`/`oue`/`olh`/`rappor`/`unary_randomizer` + `laplace_local`/`gaussian_local`/`piecewise`/`duchi`）及 registry/factory，配套 UT `tests/unit/test_ldp/test_mechanisms/test_{grr,oue,olh,rappor,unary_randomizer,continuous_mechanisms}.py`。 |
-| `src/dplib/ldp/encoders/` | 🟡 进行中 | 已实现 categorical/numerical（均匀+分位数）/unary+binary/hashing/bloom_filter/encoder_factory，sketch 为占位；UT 位于 `tests/unit/test_ldp/test_encoders/test_{categorical,numerical,hashing,sketch,bloom_filter,unary}_encoder.py`。 |
-| `src/dplib/ldp/aggregators/` | ⚪ 待启动 | 目录为空。需实现频率/均值/方差/分位数等聚合器，包含噪声组合与 Server 端抗噪策略。 |
+| `src/dplib/ldp/encoders/` | ✅ 已完成 | 已实现 base/categorical/numerical（均匀分桶，分位数留 TODO）/unary+binary/hashing/bloom_filter/sketch（简化占位）与 encoder_factory；UT 位于 `tests/unit/test_ldp/test_encoders/test_{categorical,numerical,hashing,sketch,bloom_filter,unary}_encoder.py`。 |
+| `src/dplib/ldp/aggregators/` | ✅ 已完成 | 已实现 frequency/mean/variance/quantile/user_level/consistency 与 aggregator_factory；frequency 支持 GRR 去偏与 bit 向量均值/去偏（p/q 可用时），consistency 覆盖非负裁剪/归一化/单调约束/simplex 投影，variance 支持噪声方差扣除，quantile 提供 Laplace/Gaussian 校正的可选分支；UT 位于 `tests/unit/test_ldp/test_aggregators/test_{frequency,mean,variance,quantile,user_level,consistency}_aggregator.py`。 |
 | `src/dplib/ldp/applications/` | ⚪ 待启动 | 目录为空。需提供 heavy-hitters、range queries、marginals 等端到端脚本，并在 `examples/ldp_examples/` 中引用。 |
 | `src/dplib/ldp/composition/` | ⚪ 待启动 | 仅有占位文件。需落地本地隐私组合规则及 API，与 `ldp/aggregators` 打通。 |
 
@@ -440,7 +441,7 @@ NSSDPlib/                              # 统一差分隐私库
 | --- | --- | --- |
 | `tests/unit/test_core/` | 🟡 进行中 | 已实现：`test_privacy/test_{base_mechanism,privacy_accountant,budget_tracker,composition,privacy_model,privacy_guarantee}.py`、`test_data/test_{domain,dataset,transformers,data_validation,statistics,sensitivity}.py`、`test_utils/test_{math_utils,random,config,serialization,logging,performance,param_validation}.py` 覆盖核心机制、预算器、数据层与工具链。待补：统一 fixture 及类型格式化检查。 |
 | `tests/unit/test_cdp/` | 🟡 进行中 | 已实现机制/组合/analytics/sensitivity UT：`test_mechanisms/test_{laplace,gaussian,exponential,geometric,staircase,vector}.py`、`test_mechanism_factory_registry.py`、`test_composition/test_{basic,advanced,budget_scheduler,privacy_accountant,moment_accountant}.py`、`test_analytics/test_{queries,query_engine,base_generator,synthetic_methods,reporting}.py`、`test_sensitivity/test_{global_sensitivity,noise_calibrator,sensitivity_bounds,sensitivity_analyzer}.py`；待补 ML 与高维数据集案例。 |
-| `tests/unit/test_ldp/` | 🟡 进行中 | 已实现：types/机制（离散+连续）/编码器 UT，见 `tests/unit/test_ldp/test_{types,mechanisms/*,encoders/*}.py`；聚合器/组合/应用 UT 待补。 |
+| `tests/unit/test_ldp/` | 🟡 进行中 | 已实现：types/机制（离散+连续）/编码器/聚合器 UT，见 `tests/unit/test_ldp/test_{types,mechanisms/*,encoders/*,aggregators/*}.py`；组合/应用 UT 待补。 |
 | `tests/integration/` | ⚪ 待启动 | 仅有空目录。需实现 `test_{cdp,ldp}_pipeline.py`、`test_cross_module.py`、`test_data_flow.py`、`test_privacy_accounting.py`，覆盖从数据→机制→记账的全链路。 |
 | `tests/property_based/` | ⚪ 待启动 | 仅有空目录。需按规划创建 `test_dp_properties.py`、`test_composition_properties.py` 等 Hypothesis 用例，校验极端参数组合。 |
 | `tests/performance/` | ⚪ 待启动 | 仅有空目录。需补充 `test_mechanism_performance.py`、`test_composition_performance.py`、`test_ml_performance.py`、`test_ldp_performance.py` 及 `benchmark_utils.py`。 |
