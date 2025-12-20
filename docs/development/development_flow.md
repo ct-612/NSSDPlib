@@ -15,9 +15,9 @@
 | 0 项目准备与架构设计 | 冻结需求/架构/CI 策略 | 🟡 进行中 | 需求/架构/技术栈文档已落地，但 README/贡献规范缺失 |
 | 1 核心框架开发（core/） | 建立 BaseMechanism/Accountant/Data/Utils | 🟡 进行中 | `src/dplib/core/privacy/*`、`core/data/*`、`core/utils/*` 已落地并有单测，仍缺 `core/__init__.py` 工厂导出与核心 API 文档 |
 | 2 CDP 模块实现 | 服务端机制/组合/ML/analytics | 🟡 进行中 | 机制全量上线（Laplace/Gaussian/Exponential/Geometric/Staircase/Vector + registry/factory），`composition` 组合/会计/调度/定理工具已补齐，analytics/ML 仍待补 |
-| 3 LDP 模块实现 | 客户端机制/编码/聚合/应用 | 🟡 进行中 | 已落地 LDP 类型/工具、离散与连续机制全量、机制 registry/factory、编码器与聚合器；组合/应用仍待补 |
+| 3 LDP 模块实现 | 客户端机制/编码/聚合/应用 | 🟡 进行中 | 已落地 LDP 类型/工具、离散与连续机制全量、机制 registry/factory、编码器与聚合器；composition 与 applications 已完成，序列化/示例/文档/基准仍待补 |
 | 4 模块化安装与包管理 | 拆分 core/cdp/ldp 安装与 extras | 🟡 进行中 | `pyproject.toml` 已声明 extras，但缺少构建脚本与验证 |
-| 5 测试与验证 | 单元/集成/属性/性能/回归体系 | 🟡 进行中 | core/privacy/data/utils + CDP 全量机制（含 factory/registry）与 LDP 类型/编码器/聚合器/离散&连续机制已覆盖单测；集成/性能/回归仍缺 |
+| 5 测试与验证 | 单元/集成/属性/性能/回归体系 | 🟡 进行中 | core/privacy/data/utils + CDP 全量机制（含 factory/registry）与 LDP 类型/编码器/聚合器/离散&连续机制/组合/应用已覆盖单测；集成/性能/回归仍缺 |
 | 6 文档、示例与教程 | 完整 Sphinx 文档与示例矩阵 | ⚪ 待启动 | `docs/` 仅有空的 `index.rst`/`conf.py`，无 API/示例内容 |
 | 7 发布与运维 | PyPI 分发、监控、版本治理 | ⚪ 待启动 | 缺少 release pipeline、运行手册与支持策略 |
 
@@ -248,7 +248,7 @@
 | 3.1 | 实现 GRR/OUE/OLH/RAPPOR/连续值机制 | Stage 1 | `src/dplib/ldp/mechanisms/*` | LDP Team | ✅ 已完成（离散：GRR/OUE/OLH/RAPPOR/UnaryRandomizer；连续：LocalLaplace/LocalGaussian/Piecewise/Duchi，全量挂载 registry/factory） |
 | 3.2 | 编码器（分类/数值/哈希/Sketch/BF）及元数据输出 | 3.1 | `src/dplib/ldp/encoders/*` | LDP Team | ✅ 已完成（categorical/numerical[uniform，quantile TODO]/unary+binary/hashing/bloom_filter；sketch 为简化占位实现） |
 | 3.3 | 聚合器（频率/均值/方差/分位数） | 3.1 | `src/dplib/ldp/aggregators/*` | LDP Team | ✅ 已完成（frequency/mean/variance/quantile/user_level/consistency + aggregator_factory） |
-| 3.4 | 典型应用（heavy hitters、range query 等） | 3.2~3.3 | `src/dplib/ldp/applications/*`, `examples/ldp/*` | LDP Team | ⚪ 待启动（应用与示例目录为空） |
+| 3.4 | 典型应用（heavy hitters、range query 等） | 3.2~3.3 | `src/dplib/ldp/applications/*`, `examples/ldp/*` | LDP Team | 🟡 进行中（应用模块已完成，示例目录仍待补） |
 | 3.5 | 轻量序列化/网络接口（JSON/Protobuf） | 3.1~3.4 | 序列化模块（待建） | LDP Team | ⚪ 待启动 |
 | 3.6 | 客户端基准与准确性评估 | 3.1~3.4 | `benchmarks/performance/ldp_*` | QA | ⚪ 待启动（无基准脚本） |
 | 3.7 | 文档与教程（客户端视角） | 3.1~3.5 | `docs/api/ldp.rst`, `notebooks/tutorials/*` | Tech Writer | ⚪ 待启动（文件未创建） |
@@ -298,21 +298,22 @@
 
 **composition**
 
-- `3C-01 src/dplib/ldp/composition/__init__.py`（Owner：LDP Team｜状态：⚪ 待启动）：仅空文件，尚未导出接口。
-- `3C-02 src/dplib/ldp/composition/basic.py`（Owner：LDP Team｜状态：⚪ 待启动）：文件未创建。
-- `3C-03 src/dplib/ldp/composition/sequential.py`（Owner：LDP Team｜状态：⚪ 待启动）：文件未创建。
-- `3C-04 src/dplib/ldp/composition/parallel.py`（Owner：LDP Team｜状态：⚪ 待启动）：文件未创建。
-- `3C-05 src/dplib/ldp/composition/privacy_accountant.py`（Owner：LDP Team｜状态：⚪ 待启动）：文件未创建。
+- `3C-01 src/dplib/ldp/composition/__init__.py`（Owner：LDP Team｜状态：✅ 已完成）：导出 compose、ldp_cdp_mapping、privacy_accountant 入口，统一 LDP 组合与会计器 API。
+- `3C-02 src/dplib/ldp/composition/compose.py`（Owner：LDP Team｜状态：✅ 已完成）：合并基础/顺序/并行组合入口，提供 per-user ε 的求和、分组与汇总能力。
+- `3C-03 src/dplib/ldp/composition/ldp_cdp_mapping.py`（Owner：LDP Team｜状态：✅ 已完成）：提供 LDP→CDP 映射策略、推荐 metadata 字段与事件规范化辅助。
+- `3C-04 src/dplib/ldp/composition/privacy_accountant.py`（Owner：LDP Team｜状态：✅ 已完成）：实现 per-user LDP 会计器，支持可选 CDP 记账桥接。
 
 **applications**
 
-- `3P-01 src/dplib/ldp/applications/__init__.py`（Owner：LDP Team｜状态：⚪ 待启动）：仅空文件，尚未导出接口。
-- `3P-02 src/dplib/ldp/applications/heavy_hitters.py`（Owner：LDP Team｜状态：⚪ 待启动）：文件未创建。
-- `3P-03 src/dplib/ldp/applications/range_queries.py`（Owner：LDP Team｜状态：⚪ 待启动）：文件未创建。
-- `3P-04 src/dplib/ldp/applications/marginals.py`（Owner：LDP Team｜状态：⚪ 待启动）：文件未创建。
-- `3P-05 src/dplib/ldp/applications/key_value.py`（Owner：LDP Team｜状态：⚪ 待启动）：文件未创建。
-- `3P-06 src/dplib/ldp/applications/sequence_analysis.py`（Owner：LDP Team｜状态：⚪ 待启动）：文件未创建。
-- `3P-07 src/dplib/ldp/applications/application_factory.py`（Owner：LDP Team｜状态：⚪ 待启动）：文件未创建。
+- `3P-01 src/dplib/ldp/applications/__init__.py`（Owner：LDP Team｜状态：✅ 已完成）：导出 BaseLDPApplication 与内置应用入口。
+- `3P-02 src/dplib/ldp/applications/base.py`（Owner：LDP Team｜状态：✅ 已完成）：抽象基类，定义 client 侧上报与 server 侧聚合构建接口。
+- `3P-03 src/dplib/ldp/applications/heavy_hitters.py`（Owner：LDP Team｜状态：✅ 已完成）：heavy hitters pipeline，封装类别上报与 top-k 过滤。
+- `3P-04 src/dplib/ldp/applications/frequency_estimation.py`（Owner：LDP Team｜状态：✅ 已完成）：频率估计 pipeline，输出完整分布。
+- `3P-05 src/dplib/ldp/applications/range_queries.py`（Owner：LDP Team｜状态：✅ 已完成）：数值型 range/quantile 查询 pipeline。
+- `3P-06 src/dplib/ldp/applications/marginals.py`（Owner：LDP Team｜状态：✅ 已完成）：多维边际估计 pipeline（逐维独立）。
+- `3P-07 src/dplib/ldp/applications/key_value.py`（Owner：LDP Team｜状态：✅ 已完成）：key/value 遥测 pipeline，支持频率与均值。
+- `3P-08 src/dplib/ldp/applications/sequence_analysis.py`（Owner：LDP Team｜状态：✅ 已完成）：序列事件 unigram 分析 pipeline。
+- `3P-09 src/dplib/ldp/applications/application_factory.py`（Owner：LDP Team｜状态：✅ 已完成）：应用注册表与工厂创建入口。
 
 **模块入口与示例**
 
@@ -368,7 +369,7 @@
 | Step | 具体工作 | 输入/依赖 | 产出 | Owner | 状态 |
 | ---- | -------- | -------- | ---- | ----- | ---- |
 | 5.1 | 规划测试层级与目录 | Stage 0~3 | `tests/unit`, `tests/integration`, `tests/property_based`, `tests/performance`, `tests/accuracy`, `tests/regression`, `tests/fixtures` | QA | ✅ 已完成（tests/unit/test_core/*、test_cdp/*、test_ldp/* 等目录及 `conftest.py` 已建成，可直接落地后续用例） |
-| 5.2 | 实现 core/cdp/ldp 单元测试并收集覆盖率 | Stage 1~3 | `tests/unit/*`, 覆盖率报告 | QA | 🟡 进行中（core/privacy/data/utils + CDP 全量机制与 factory/registry，LDP 已覆盖 types/编码器/聚合器/离散与连续机制；组合/应用待补） |
+| 5.2 | 实现 core/cdp/ldp 单元测试并收集覆盖率 | Stage 1~3 | `tests/unit/*`, 覆盖率报告 | QA | 🟡 进行中（core/privacy/data/utils + CDP 全量机制与 factory/registry，LDP 已覆盖 types/编码器/聚合器/离散与连续机制/组合/应用；集成/性能/回归仍缺） |
 | 5.3 | 构建 LDP→CDP 端到端集成测试 | Stage 2~3 | `tests/integration/*` | QA | ⚪ 待启动（目录为空） |
 | 5.4 | 属性测试（ε/δ 边界）与 `hypothesis` 库整合 | Stage 1~3 | `tests/property_based/*` | QA | ⚪ 待启动（无实现） |
 | 5.5 | 性能 & 基准测试流水线（nightly） | Stage 2~3 | `tests/performance/*`, `benchmarks/*` | QA/DevOps | ⚪ 待启动（无脚本） |
@@ -455,10 +456,15 @@
 - `5L-20 tests/unit/test_ldp/test_aggregators/test_quantile_aggregator.py`（Owner：QA｜状态：✅ 已完成）：覆盖分位数计算与噪声校正分支。
 - `5L-21 tests/unit/test_ldp/test_aggregators/test_user_level_aggregator.py`（Owner：QA｜状态：✅ 已完成）：覆盖用户分组、权重模式与 reducer 合并。
 - `5L-22 tests/unit/test_ldp/test_aggregators/test_consistency_aggregator.py`（Owner：QA｜状态：✅ 已完成）：覆盖非负/归一化/单调/simplex 投影与严格模式。
-- `5L-23 tests/unit/test_ldp/test_applications/__init__.py`（Owner：QA｜状态：⚪ 待启动）：应用示例落地后汇总 fixture。
-- `5L-24 tests/unit/test_ldp/test_applications/test_heavy_hitters.py`（Owner：QA｜状态：⚪ 待启动）：需构建 1k 用户样本，验证 heavy hitter 管道与聚合精度。
-- `5L-25 tests/unit/test_ldp/test_applications/test_range_queries.py`（Owner：QA｜状态：⚪ 待启动）：实现 LDP range query 后新增端到端测试。
-- `5L-26 tests/unit/test_ldp/test_applications/test_marginals.py`（Owner：QA｜状态：⚪ 待启动）：待上线 marginals 应用后，验证不同维度组合的结果。
+- `5L-23 tests/unit/test_ldp/test_composition/test_compose.py`（Owner：QA｜状态：✅ 已完成）：覆盖 compose 的基础/顺序/并行组合入口与 per-user 汇总。
+- `5L-24 tests/unit/test_ldp/test_composition/test_privacy_accountant.py`（Owner：QA｜状态：✅ 已完成）：覆盖 LDPPrivacyAccountant 预算累加与 LDP→CDP 映射路径。
+- `5L-25 tests/unit/test_ldp/test_applications/__init__.py`（Owner：QA｜状态：✅ 已完成）：应用测试入口与 pytest marker 注册。
+- `5L-26 tests/unit/test_ldp/test_applications/test_heavy_hitters.py`（Owner：QA｜状态：✅ 已完成）：验证 heavy hitters 客户端上报与 top-k 抽取。
+- `5L-27 tests/unit/test_ldp/test_applications/test_frequency_estimation.py`（Owner：QA｜状态：✅ 已完成）：验证频率估计聚合与归一化输出。
+- `5L-28 tests/unit/test_ldp/test_applications/test_range_queries.py`（Owner：QA｜状态：✅ 已完成）：覆盖数值裁剪与均值/分位估计路径。
+- `5L-29 tests/unit/test_ldp/test_applications/test_marginals.py`（Owner：QA｜状态：✅ 已完成）：覆盖逐维聚合与维度路由逻辑。
+- `5L-30 tests/unit/test_ldp/test_applications/test_key_value.py`（Owner：QA｜状态：✅ 已完成）：覆盖 key 频率与 value 均值分流。
+- `5L-31 tests/unit/test_ldp/test_applications/test_sequence_analysis.py`（Owner：QA｜状态：✅ 已完成）：覆盖序列事件上报与按位置聚合。
 
 **单元测试 / utils（Owner：QA｜状态：⚪ 待启动）**
 
