@@ -2,190 +2,60 @@
 
 from __future__ import annotations
 
-from .analytics import (
-    BayesianNetworkGenerator,
-    CopulaGenerator,
-    DPSyntheticGAN,
-    ErrorMetrics,
-    MarginalGenerator,
-    PrivateCountQuery,
-    PrivateHistogramQuery,
-    PrivateMeanQuery,
-    PrivateRangeQuery,
-    PrivateSumQuery,
-    PrivateVarianceQuery,
-    PrivacyAnnotation,
-    PrivacyBudgetSnapshot,
-    PrivacyReport,
-    PrivacyUsageRecord,
-    QueryEngine,
-    QueryUtilityRecord,
-    SyntheticDataGenerator,
-    SyntheticGeneratorConfig,
-    UtilityCurve,
-    UtilityReport,
-    create_generator,
-)
-from .composition import (
-    AccountingMethod,
-    AdvancedCompositionRule,
-    Allocation,
-    BudgetScheduler,
-    CDPPrivacyAccountant,
-    MomentAccountant,
-    RhoZCDPCompositionRule,
-    advanced_composition,
-    advanced_pure_dp_bound,
-    assert_non_decreasing_spending,
-    compare_composition_paths,
-    drv10_strong_bound,
-    gdp_composition,
-    gdp_to_cdp_bound,
-    group_privacy,
-    linear_addition,
-    optimal_composition_fallback,
-    parallel_composition,
-    parallel_max,
-    post_processing_invariance,
-    rdp_composition,
-    rdp_to_cdp_bound,
-    repeated_mechanism,
-    rho_zcdp_composition,
-    sensitivity_tools,
-    sequential_composition,
-    sequential_sum,
-    shuffle_amplification,
-    strong_composition,
-    subsampling_amplification,
-    zcdp_to_cdp_bound,
-)
-from .mechanisms import (
-    ExponentialMechanism,
-    GaussianMechanism,
-    GeometricMechanism,
-    LaplaceMechanism,
-    MECHANISM_REGISTRY,
-    StaircaseMechanism,
-    VectorMechanism,
-    create_mechanism,
-    ensure_mechanism_supports_model,
-    get_mechanism_class,
-    normalize_mechanism,
-    registered_mechanisms_snapshot,
-)
-from .sensitivity import (
-    GLOBAL_SENSITIVITY_PRESETS,
-    SensitivityAnalyzer,
-    SensitivityBounds,
-    SensitivityError,
-    SensitivityReport,
-    calibrate,
-    calibrate_gaussian,
-    calibrate_laplace,
-    count,
-    count_bounds,
-    histogram,
-    histogram_bounds,
-    mean,
-    mean_bounds,
-    range,
-    range_bounds,
-    sum,
-    sum_bounds,
-    tighten,
-    variance,
-    variance_bounds,
-)
+__all__: list[str] = []
 
-__all__ = [
-    # analytics
-    "BayesianNetworkGenerator",
-    "CopulaGenerator",
-    "DPSyntheticGAN",
-    "ErrorMetrics",
-    "MarginalGenerator",
-    "PrivateCountQuery",
-    "PrivateHistogramQuery",
-    "PrivateMeanQuery",
-    "PrivateRangeQuery",
-    "PrivateSumQuery",
-    "PrivateVarianceQuery",
-    "PrivacyAnnotation",
-    "PrivacyBudgetSnapshot",
-    "PrivacyReport",
-    "PrivacyUsageRecord",
-    "QueryEngine",
-    "QueryUtilityRecord",
-    "SyntheticDataGenerator",
-    "SyntheticGeneratorConfig",
-    "UtilityCurve",
-    "UtilityReport",
-    "create_generator",
-    # composition
-    "AccountingMethod",
-    "AdvancedCompositionRule",
-    "Allocation",
-    "BudgetScheduler",
-    "CDPPrivacyAccountant",
-    "MomentAccountant",
-    "RhoZCDPCompositionRule",
-    "advanced_composition",
-    "advanced_pure_dp_bound",
-    "assert_non_decreasing_spending",
-    "compare_composition_paths",
-    "drv10_strong_bound",
-    "gdp_composition",
-    "gdp_to_cdp_bound",
-    "group_privacy",
-    "linear_addition",
-    "optimal_composition_fallback",
-    "parallel_composition",
-    "parallel_max",
-    "post_processing_invariance",
-    "rdp_composition",
-    "rdp_to_cdp_bound",
-    "repeated_mechanism",
-    "rho_zcdp_composition",
-    "sensitivity_tools",
-    "sequential_composition",
-    "sequential_sum",
-    "shuffle_amplification",
-    "strong_composition",
-    "subsampling_amplification",
-    "zcdp_to_cdp_bound",
-    # mechanisms
-    "ExponentialMechanism",
-    "GaussianMechanism",
-    "GeometricMechanism",
-    "LaplaceMechanism",
-    "MECHANISM_REGISTRY",
-    "StaircaseMechanism",
-    "VectorMechanism",
-    "create_mechanism",
-    "ensure_mechanism_supports_model",
-    "get_mechanism_class",
-    "normalize_mechanism",
-    "registered_mechanisms_snapshot",
-    # sensitivity
-    "GLOBAL_SENSITIVITY_PRESETS",
-    "SensitivityAnalyzer",
-    "SensitivityBounds",
-    "SensitivityError",
-    "SensitivityReport",
-    "calibrate",
-    "calibrate_gaussian",
-    "calibrate_laplace",
-    "count",
-    "count_bounds",
-    "histogram",
-    "histogram_bounds",
-    "mean",
-    "mean_bounds",
-    "range",
-    "range_bounds",
-    "sum",
-    "sum_bounds",
-    "tighten",
-    "variance",
-    "variance_bounds",
-]
+# Mechanisms
+try:
+    from .mechanisms import (
+        MECHANISM_REGISTRY,
+        create_mechanism,
+        ensure_mechanism_supports_model,
+        get_mechanism_class,
+        normalize_mechanism,
+        registered_mechanisms_snapshot,
+    )
+
+    __all__.extend(
+        [
+            "MECHANISM_REGISTRY",
+            "create_mechanism",
+            "ensure_mechanism_supports_model",
+            "get_mechanism_class",
+            "normalize_mechanism",
+            "registered_mechanisms_snapshot",
+        ]
+    )
+except Exception:  # pragma: no cover - optional until implemented
+    MECHANISM_REGISTRY = None  # type: ignore
+    create_mechanism = None  # type: ignore
+    ensure_mechanism_supports_model = None  # type: ignore
+    get_mechanism_class = None  # type: ignore
+    normalize_mechanism = None  # type: ignore
+    registered_mechanisms_snapshot = None  # type: ignore
+
+
+# Composition / accounting
+try:
+    from .composition import (
+        AccountingMethod,
+        Allocation,
+        BudgetScheduler,
+        CDPPrivacyAccountant,
+        MomentAccountant,
+    )
+
+    __all__.extend(
+        [
+            "AccountingMethod",
+            "Allocation",
+            "BudgetScheduler",
+            "CDPPrivacyAccountant",
+            "MomentAccountant",
+        ]
+    )
+except Exception:  # pragma: no cover - optional until implemented
+    AccountingMethod = None  # type: ignore
+    Allocation = None  # type: ignore
+    BudgetScheduler = None  # type: ignore
+    CDPPrivacyAccountant = None  # type: ignore
+    MomentAccountant = None  # type: ignore

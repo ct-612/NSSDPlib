@@ -2,225 +2,126 @@
 
 from __future__ import annotations
 
-from .data import (
-    BaseDomain,
-    BucketizedDomain,
-    ClippingTransformer,
-    ContinuousDomain,
-    DataRecord,
-    DataTransformer,
-    DataValidationError,
-    Dataset,
-    DatasetError,
-    DatasetMetadata,
-    DiscreteDomain,
-    DiscretizerTransformer,
-    DomainError,
-    DomainInfo,
-    NormalizationTransformer,
-    OneHotEncoder,
-    RunningStats,
-    Schema,
-    SchemaField,
-    SchemaValidator,
-    SensitivityError,
-    SmoothSensitivityEstimate,
-    TransformationError,
-    TransformerPipeline,
-    ValidationStrategy,
-    count,
-    count_global_sensitivity,
-    detect_missing,
-    histogram,
-    histogram_global_sensitivity,
-    local_sensitivity,
-    mean,
-    mean_global_sensitivity,
-    range_global_sensitivity,
-    smooth_sensitivity_mean,
-    sum_global_sensitivity,
-    summation,
-    variance,
-    variance_global_sensitivity,
-)
-from .privacy import (
-    BaseMechanism,
-    BudgetAlert,
-    BudgetExceededError,
-    BudgetTracker,
-    BudgetTrackerError,
-    CalibrationError,
-    CompositionError,
-    CompositionResult,
-    CompositionRule,
-    HigherOrderCompositionRule,
-    MECHANISM_DEFAULT_MODEL,
-    MECHANISM_SUPPORTED_MODELS,
-    MechanismError,
-    MechanismType,
-    ModelSpec,
-    NotCalibratedError,
-    ParallelCompositionRule,
-    PrivacyAccountant,
-    PrivacyBudget,
-    PrivacyEvent,
-    PrivacyGuarantee,
-    PrivacyModel,
-    ScopeNotRegisteredError,
-    SequentialCompositionRule,
-    TrackedScope,
-    ValidationError,
-    cdp_to_zcdp,
-    ensure_supported_model,
-    gdp_to_cdp,
-    gdp_to_zcdp,
-    ldp_to_cdp,
-    mechanism_default_model,
-    mechanism_supports,
-    normalize_privacy_event,
-    normalize_privacy_events,
-    rdp_to_cdp,
-    registry_snapshot,
-    zcdp_to_cdp,
-    zcdp_to_rdp,
-)
-from .utils import (
-    ParamValidationError,
-    RNGPool,
-    RuntimeConfig,
-    Timer,
-    VersionedPayload,
-    benchmark,
-    clamp_probabilities,
-    configure,
-    configure_logging,
-    create_rng,
-    deserialize_from_json,
-    ensure,
-    ensure_type,
-    get_config,
-    get_logger,
-    logsumexp,
-    mask_sensitive_data,
-    memory_profile,
-    reseed_rng,
-    sample_noise,
-    serialize_to_json,
-    softmax,
-    split_rng,
-    stable_mean,
-    stable_variance,
-    time_function,
-    validate_arguments,
-)
+__all__: list[str] = []
 
-__all__ = [
-    # data
-    "BaseDomain",
-    "BucketizedDomain",
-    "ClippingTransformer",
-    "ContinuousDomain",
-    "DataRecord",
-    "DataTransformer",
-    "DataValidationError",
-    "Dataset",
-    "DatasetError",
-    "DatasetMetadata",
-    "DiscreteDomain",
-    "DiscretizerTransformer",
-    "DomainError",
-    "DomainInfo",
-    "NormalizationTransformer",
-    "OneHotEncoder",
-    "RunningStats",
-    "Schema",
-    "SchemaField",
-    "SchemaValidator",
-    "SensitivityError",
-    "SmoothSensitivityEstimate",
-    "TransformationError",
-    "TransformerPipeline",
-    "ValidationStrategy",
-    "count",
-    "count_global_sensitivity",
-    "detect_missing",
-    "histogram",
-    "histogram_global_sensitivity",
-    "local_sensitivity",
-    "mean",
-    "mean_global_sensitivity",
-    "range_global_sensitivity",
-    "smooth_sensitivity_mean",
-    "sum_global_sensitivity",
-    "summation",
-    "variance",
-    "variance_global_sensitivity",
-    # privacy
-    "BaseMechanism",
-    "BudgetAlert",
-    "BudgetExceededError",
-    "BudgetTracker",
-    "BudgetTrackerError",
-    "CalibrationError",
-    "CompositionError",
-    "CompositionResult",
-    "CompositionRule",
-    "HigherOrderCompositionRule",
-    "MECHANISM_DEFAULT_MODEL",
-    "MECHANISM_SUPPORTED_MODELS",
-    "MechanismError",
-    "MechanismType",
-    "ModelSpec",
-    "NotCalibratedError",
-    "ParallelCompositionRule",
-    "PrivacyAccountant",
-    "PrivacyBudget",
-    "PrivacyEvent",
-    "PrivacyGuarantee",
-    "PrivacyModel",
-    "ScopeNotRegisteredError",
-    "SequentialCompositionRule",
-    "TrackedScope",
-    "ValidationError",
-    "cdp_to_zcdp",
-    "ensure_supported_model",
-    "gdp_to_cdp",
-    "gdp_to_zcdp",
-    "ldp_to_cdp",
-    "mechanism_default_model",
-    "mechanism_supports",
-    "normalize_privacy_event",
-    "normalize_privacy_events",
-    "rdp_to_cdp",
-    "registry_snapshot",
-    "zcdp_to_cdp",
-    "zcdp_to_rdp",
-    # utils
-    "ParamValidationError",
-    "RNGPool",
-    "RuntimeConfig",
-    "Timer",
-    "VersionedPayload",
-    "benchmark",
-    "clamp_probabilities",
-    "configure",
-    "configure_logging",
-    "create_rng",
-    "deserialize_from_json",
-    "ensure",
-    "ensure_type",
-    "get_config",
-    "get_logger",
-    "logsumexp",
-    "mask_sensitive_data",
-    "memory_profile",
-    "reseed_rng",
-    "sample_noise",
-    "serialize_to_json",
-    "softmax",
-    "split_rng",
-    "stable_mean",
-    "stable_variance",
-    "time_function",
-    "validate_arguments",
-]
+# Data
+try:
+    from .data import (
+        BaseDomain,
+        BucketizedDomain,
+        ContinuousDomain,
+        DataValidationError,
+        Dataset,
+        DatasetError,
+        DiscreteDomain,
+        DomainError,
+        Schema,
+        SchemaField,
+        SchemaValidator,
+    )
+
+    __all__.extend(
+        [
+            "BaseDomain",
+            "BucketizedDomain",
+            "ContinuousDomain",
+            "DataValidationError",
+            "Dataset",
+            "DatasetError",
+            "DiscreteDomain",
+            "DomainError",
+            "Schema",
+            "SchemaField",
+            "SchemaValidator",
+        ]
+    )
+except Exception:  # pragma: no cover - optional until implemented
+    BaseDomain = None  # type: ignore
+    BucketizedDomain = None  # type: ignore
+    ContinuousDomain = None  # type: ignore
+    DataValidationError = None  # type: ignore
+    Dataset = None  # type: ignore
+    DatasetError = None  # type: ignore
+    DiscreteDomain = None  # type: ignore
+    DomainError = None  # type: ignore
+    Schema = None  # type: ignore
+    SchemaField = None  # type: ignore
+    SchemaValidator = None  # type: ignore
+
+
+# Privacy
+try:
+    from .privacy import (
+        BaseMechanism,
+        BudgetExceededError,
+        BudgetTracker,
+        CalibrationError,
+        MechanismError,
+        MechanismType,
+        NotCalibratedError,
+        PrivacyAccountant,
+        PrivacyBudget,
+        PrivacyEvent,
+        PrivacyGuarantee,
+        PrivacyModel,
+        ValidationError,
+    )
+
+    __all__.extend(
+        [
+            "BaseMechanism",
+            "BudgetExceededError",
+            "BudgetTracker",
+            "CalibrationError",
+            "MechanismError",
+            "MechanismType",
+            "NotCalibratedError",
+            "PrivacyAccountant",
+            "PrivacyBudget",
+            "PrivacyEvent",
+            "PrivacyGuarantee",
+            "PrivacyModel",
+            "ValidationError",
+        ]
+    )
+except Exception:  # pragma: no cover - optional until implemented
+    BaseMechanism = None  # type: ignore
+    BudgetExceededError = None  # type: ignore
+    BudgetTracker = None  # type: ignore
+    CalibrationError = None  # type: ignore
+    MechanismError = None  # type: ignore
+    MechanismType = None  # type: ignore
+    NotCalibratedError = None  # type: ignore
+    PrivacyAccountant = None  # type: ignore
+    PrivacyBudget = None  # type: ignore
+    PrivacyEvent = None  # type: ignore
+    PrivacyGuarantee = None  # type: ignore
+    PrivacyModel = None  # type: ignore
+    ValidationError = None  # type: ignore
+
+
+# Utils
+try:
+    from .utils import (
+        ParamValidationError,
+        RuntimeConfig,
+        configure,
+        get_config,
+        get_logger,
+    )
+
+    __all__.extend(
+        [
+            "ParamValidationError",
+            "RuntimeConfig",
+            "configure",
+            "get_config",
+            "get_logger",
+        ]
+    )
+except Exception:  # pragma: no cover - optional until implemented
+    ParamValidationError = None  # type: ignore
+    RuntimeConfig = None  # type: ignore
+    configure = None  # type: ignore
+    get_config = None  # type: ignore
+    get_logger = None  # type: ignore
