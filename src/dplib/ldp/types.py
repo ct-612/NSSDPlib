@@ -1,9 +1,18 @@
-"""Shared type definitions for the LDP subsystem."""
-# 说明：LDP 子系统中共享的类型定义与配置/结果载体，实现编码值与报表对象的统一建模。
+"""
+Shared type definitions for the LDP subsystem.
+
+Responsibilities:
+    * define report/config payloads and per-user budget tracking types
+    * provide EncodedValue serialization helpers for JSON transport
+    * normalize timestamp formats for cross-process integration
+    * expose LDP-to-CDP mapping payloads for accounting bridges
+"""
+# 说明：LDP 子系统中共享的类型定义与配置/结果载体，覆盖编码载荷与预算跟踪对象。
 # 职责：
-# - 定义本地报告、聚合估计以及客户端/服务端配置等关键数据结构
+# - 定义本地报告、聚合估计、客户端/服务端配置以及 per-user 预算统计等关键数据结构
 # - 提供 EncodedValue 的序列化与反序列化工具，适配 JSON 传输与可选 bitarray 依赖
 # - 处理时间戳的 ISO 格式转换与解析，方便跨进程与跨语言集成
+# - 提供 LDP 到 CDP 的映射载体用于会计桥接场景
 
 from __future__ import annotations
 
@@ -237,3 +246,35 @@ class AggregationConfig:
             params=data.get("params", {}),
             metadata=data.get("metadata", {}),
         )
+
+
+@dataclass
+class LocalPrivacyUsage:
+    """Record of per-user epsilon usage for a local DP event."""
+    # 表示单次 LDP 事件的 epsilon 消耗记录，包含用户、轮次与元数据
+    user_id: Optional[str]
+    epsilon: float
+    round_id: Optional[int] = None
+    metadata: Mapping[str, Any] = field(default_factory=dict)
+
+
+@dataclass
+class LDPBudgetSummary:
+    """Summary of per-user epsilon usage for LDP accounting."""
+    # 汇总 LDP 预算使用情况，包含总 epsilon 与 per-user 累计信息
+    total_epsilon: float
+    per_user_epsilon: Dict[str, float]
+    max_user_epsilon: float
+    n_events: int
+
+
+@dataclass
+class LDPToCDPEvent:
+    """Mapping payload for forwarding LDP usage into CDP accounting."""
+    # 表示将 LDP usage 映射到 CDP 会计事件的载体，包含 delta 与机制参数
+    epsilon: float
+    delta: float = 0.0
+    description: Optional[str] = None
+    metadata: Mapping[str, Any] = field(default_factory=dict)
+    mechanism: Optional[str] = None
+    parameters: Mapping[str, Any] = field(default_factory=dict)
