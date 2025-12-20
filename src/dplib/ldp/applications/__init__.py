@@ -9,6 +9,7 @@ from .range_queries import RangeQueriesApplication
 from .marginals import MarginalsApplication
 from .key_value import KeyValueApplication
 from .sequence_analysis import SequenceAnalysisApplication
+from .application_factory import ApplicationFactory, create_application, get_application_class, register_application
 
 __all__ = [
     "BaseLDPApplication",
@@ -18,4 +19,8 @@ __all__ = [
     "MarginalsApplication",
     "KeyValueApplication",
     "SequenceAnalysisApplication",
+    "ApplicationFactory",
+    "register_application",
+    "get_application_class",
+    "create_application",
 ]
