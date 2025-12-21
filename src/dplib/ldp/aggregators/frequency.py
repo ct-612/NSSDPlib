@@ -103,7 +103,14 @@ class FrequencyAggregator(StatelessAggregator):
         # 将各报告中的编码统一拉平成一维数组并堆叠成二维矩阵，形状为 [n_reports, vector_len]
         vectors = []
         for report in reports:
-            arr = np.asarray(report.encoded)
+            value = report.encoded
+            # bitarray tolist avoids numpy treating it as a packed bytes buffer
+            if hasattr(value, "tolist") and not isinstance(value, np.ndarray):
+                try:
+                    value = value.tolist()
+                except Exception:
+                    value = list(value)
+            arr = np.asarray(value)
             if arr.ndim != 1:
                 arr = arr.ravel()
             vectors.append(arr.astype(float))
