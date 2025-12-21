@@ -129,7 +129,7 @@ class CopulaGenerator(SyntheticDataGenerator):
                 else:
                     diag = np.diag(np.diag(cov)) if cov.ndim == 2 else np.eye(dim) * float(np.mean(cov))
                     cov = diag
-            self._cov = cov
+            self._cov = self._ensure_psd(cov)
         else:
             # 若不存在连续特征则不构建协方差结构，后续采样退化为独立一维情形
             self._cov = None
@@ -163,6 +163,7 @@ class CopulaGenerator(SyntheticDataGenerator):
             if cov.shape != (dim, dim):
                 # 若维度与保存的协方差不匹配，则退化为同维度的对角结构以保证形状合法
                 cov = np.eye(dim) * float(cov.flat[0])
+            cov = self._ensure_psd(cov)
             # 在潜在高斯空间按协方差结构采样多元正态向量
             gaussian_samples = rng.multivariate_normal(mean=np.zeros(dim), cov=cov, size=n)
             for idx, field in enumerate(cont_fields):
@@ -225,6 +226,18 @@ class CopulaGenerator(SyntheticDataGenerator):
         if name == "laplace":
             return LaplaceMechanism(epsilon=self.epsilon / max(len(self._domain_fields()), 1), rng=self._require_rng())
         raise ParamValidationError(f"unsupported marginal mechanism '{self.mechanism_marginal}'")
+
+    @staticmethod
+    def _ensure_psd(cov: np.ndarray, *, min_eigenvalue: float = 1e-8) -> np.ndarray:
+        # 对称化和裁剪特征值，以避免非 PSD 协方差矩阵导致多元正态采样失败
+        cov = np.asarray(cov, dtype=float)
+        cov = 0.5 * (cov + cov.T)
+        eigvals, eigvecs = np.linalg.eigh(cov)
+        if np.any(eigvals < min_eigenvalue):
+            eigvals = np.clip(eigvals, min_eigenvalue, None)
+            cov = (eigvecs * eigvals) @ eigvecs.T
+            cov = 0.5 * (cov + cov.T)
+        return cov
 
     @staticmethod
     def _to_uniform(values: np.ndarray, bins: np.ndarray, cdf: np.ndarray) -> np.ndarray:
