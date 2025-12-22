@@ -42,9 +42,9 @@ ldp = [
 
 # ML 模块：DP-SGD / 模型训练等扩展能力
 ml = [
-    # "scikit-learn>=1.4",    # 经典机器学习与评估工具
-    # "torch>=2.3",           # 通用机器学习与 DP-SGD 支持
-    # "tensorflow>=2.15",     # 深度学习训练接口
+    "scikit-learn>=1.4",    # 经典机器学习与评估工具
+    "torch>=2.3",           # 通用机器学习与 DP-SGD 支持
+    "tensorflow>=2.15",     # 深度学习训练接口
 ]
 
 # 开发依赖（开发/测试/CI 通用）
@@ -77,9 +77,9 @@ all = [
     "mmh3>=3.0.0",          # MurmurHash 实现，用于哈希机制/Sketch
 
     # ML
-    # "scikit-learn>=1.4",    # 经典机器学习与评估工具
-    # "torch>=2.3",           # 通用机器学习与 DP-SGD 支持
-    # "tensorflow>=2.15",     # 深度学习训练接口
+    "scikit-learn>=1.4",    # 经典机器学习与评估工具
+    "torch>=2.3",           # 通用机器学习与 DP-SGD 支持
+    "tensorflow>=2.15",     # 深度学习训练接口
 
     # Docs & Examples
     "sphinx>=7.3",              # 文档生成
