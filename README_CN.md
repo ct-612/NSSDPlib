@@ -5,7 +5,7 @@
 
 ## 🚀 核心特性
 
-*   **统一架构**：无缝集成核心隐私原语、CDP 机制与 LDP 工作流。
+*   **统一架构**：集成核心隐私原语、CDP 机制与 LDP 工作流。
 *   **中心化差分隐私 (CDP)**：
     *   **机制 (Mechanisms)**：Laplace, Gaussian, Geometric, Staircase, Vector, Exponential。
     *   **统计分析 (Analytics)**：查询引擎 (Count, Sum, Mean, Variance, Histogram, Range) 及隐私/效用报告。

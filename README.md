@@ -5,7 +5,7 @@
 
 ## 🚀 Key Features
 
-*   **Unified Architecture**: Seamlessly integrates Core privacy primitives, CDP mechanisms, and LDP workflows.
+*   **Unified Architecture**: Integrates Core privacy primitives, CDP mechanisms, and LDP workflows.
 *   **Central Differential Privacy (CDP)**:
     *   **Mechanisms**: Laplace, Gaussian, Geometric, Staircase, Vector, Exponential.
     *   **Analytics**: Query Engine (Count, Sum, Mean, Variance, Histogram, Range) with privacy/utility reports.
