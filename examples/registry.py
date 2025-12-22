@@ -179,4 +179,20 @@ EXAMPLES: List[ExampleMetadata] = [
         "optional_deps": [],
         "description": "Demonstrates bridging LDP budget summaries into core privacy accounting."
     },
+    {
+        "path": "end_to_end/34_cdp_pipeline.py",
+        "extras": ["cdp"],
+        "tags": ["e2e", "cdp", "p0"],
+        "experimental": False,
+        "optional_deps": [],
+        "description": "End-to-end CDP pipeline using QueryEngine, accounting, and reporting."
+    },
+    {
+        "path": "end_to_end/35_ldp_full_pipeline.py",
+        "extras": ["ldp"],
+        "tags": ["e2e", "ldp", "p0"],
+        "experimental": False,
+        "optional_deps": [],
+        "description": "End-to-end LDP pipeline with reporting and per-user accounting."
+    },
 ]
