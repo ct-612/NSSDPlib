@@ -190,13 +190,17 @@ class PrivacyReport:
         for idx, event in enumerate(self.events):
             eps += event.epsilon
             dlt += event.delta
+            if remaining_eps is not None:
+                remaining_eps = max(remaining_eps - event.epsilon, 0.0)
+            if remaining_dlt is not None:
+                remaining_dlt = max(remaining_dlt - event.delta, 0.0)
             self.timeline.append(
                 PrivacyBudgetSnapshot(
                     step=idx + 1,
                     cumulative_epsilon=eps,
                     cumulative_delta=dlt,
-                    remaining_epsilon=None if remaining_eps is None else max(remaining_eps - event.epsilon, 0.0),
-                    remaining_delta=None if remaining_dlt is None else max(remaining_dlt - event.delta, 0.0),
+                    remaining_epsilon=remaining_eps,
+                    remaining_delta=remaining_dlt,
                     event_id=event.event_id,
                 )
             )

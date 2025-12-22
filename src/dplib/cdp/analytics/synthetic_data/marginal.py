@@ -101,7 +101,8 @@ class MarginalGenerator(SyntheticDataGenerator):
             probs = np.maximum(probs, 0.0)
             total = probs.sum()
             if total <= 0:
-                continue
+                probs = np.ones_like(probs, dtype=float)
+                total = probs.sum()
             probs = probs / total
             field_marginals[fields[0]] = (values, probs)
         ensure(field_marginals, "at least one 1-D marginal is required for sampling", error=DatasetError)
