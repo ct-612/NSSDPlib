@@ -1,5 +1,5 @@
 """
-Unit tests for LDP interoperability pipelines.
+Integration tests for LDP interoperability pipelines.
 """
 # 说明：LDP 编码 机制 聚合组件互操作测试
 # 覆盖：

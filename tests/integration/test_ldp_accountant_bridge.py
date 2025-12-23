@@ -1,5 +1,5 @@
 """
-Unit tests for the LDP-to-CDP accountant bridge.
+Integration tests for the LDP-to-CDP accountant bridge.
 """
 # 说明：LDP 记账器到 CDP 记账器的桥接测试
 # 覆盖：

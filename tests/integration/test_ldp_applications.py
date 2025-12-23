@@ -1,5 +1,5 @@
 """
-Unit tests for LDP application pipelines.
+Integration tests for LDP application pipelines.
 """
 # 说明：LDP 应用端到端流程的集成测试
 # 覆盖：

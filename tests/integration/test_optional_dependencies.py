@@ -1,5 +1,5 @@
 """
-Unit tests for LDP optional dependency helpers.
+Integration tests for LDP optional dependency helpers.
 """
 # 说明：LDP 可选依赖与哈希编码器的集成测试
 # 覆盖：

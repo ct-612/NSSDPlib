@@ -1,5 +1,5 @@
 """
-Unit tests for the CDP QueryEngine accounting integration.
+Integration tests for the CDP QueryEngine accounting integration.
 """
 # 说明：QueryEngine 与 PrivacyAccountant 联动的集成测试
 # 覆盖：

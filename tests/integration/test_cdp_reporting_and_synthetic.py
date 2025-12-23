@@ -1,5 +1,5 @@
 """
-Unit tests for CDP reporting and synthetic data helpers.
+Integration tests for CDP reporting and synthetic data helpers.
 """
 # 说明：CDP 报告与合成数据生成器的集成测试
 # 覆盖：
