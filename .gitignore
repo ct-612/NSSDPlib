@@ -90,3 +90,6 @@ venv.bak/
 
 # gemini
 .gemini/
+
+# output files
+_outputs/
