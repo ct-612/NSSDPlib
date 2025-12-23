@@ -1,10 +1,18 @@
 """
 Two-sided geometric mechanism for integer-valued queries.
 
-Responsibilities:
-    * calibrate discrete noise using epsilon and global sensitivity
-    * add symmetric geometric noise to scalars or arrays while preserving shape
-    * support serialization of calibration metadata
+Responsibilities
+  - Calibrate discrete noise using epsilon and global sensitivity.
+  - Add symmetric geometric noise to scalars or arrays while preserving shape.
+  - Support serialization of calibration metadata.
+
+Usage Context
+  - Use for integer-valued queries requiring pure DP.
+  - Supports scalar and array-like numeric inputs.
+
+Limitations
+  - Assumes positive sensitivity and calibrated success probability.
+  - Noise is discrete and may not suit continuous-valued outputs.
 """
 # 说明：几何机制（离散拉普拉斯）。
 # 职责：
@@ -23,7 +31,22 @@ from dplib.core.privacy.base_mechanism import BaseMechanism, CalibrationError, M
 
 
 class GeometricMechanism(BaseMechanism):
-    """Pure-DP geometric (discrete Laplace) mechanism."""
+    """
+    Pure-DP geometric (discrete Laplace) mechanism.
+
+    - Configuration
+      - epsilon: Privacy budget for noise calibration.
+      - sensitivity: Global sensitivity of the query.
+      - rng: Optional RNG for noise sampling.
+      - name: Optional mechanism name override.
+
+    - Behavior
+      - Calibrates decay and success probability for geometric noise.
+      - Preserves integer-like outputs when possible.
+
+    - Usage Notes
+      - Call `calibrate` before `randomise`.
+    """
 
     def __init__(
         self,

@@ -1,4 +1,19 @@
-"""Categorical encoder for deterministic LDP pipelines."""
+"""
+Categorical encoder for deterministic LDP pipelines.
+
+Responsibilities
+  - Maintain a stable category-to-index vocabulary.
+  - Encode categories as integer indices or one-hot vectors.
+  - Decode indices or one-hot vectors back to categories.
+
+Usage Context
+  - Use before local mechanisms that operate on categorical indices.
+  - Intended for deterministic encoding in LDP pipelines.
+
+Limitations
+  - Unknown values require an explicit unknown_value in the vocabulary.
+  - One-hot decoding uses argmax and assumes a valid one-hot vector.
+"""
 # 说明：为 LDP pipeline 提供最基础的类别编码，负责类别与整数索引/one-hot 之间的确定性映射，典型用于 GRR / OLH 等以整数索引为输入的机制。
 # 职责：
 # - 维护类别到整数索引以及索引到类别的双向映射
@@ -21,6 +36,17 @@ class CategoricalEncoder(FittedEncoder):
     Map categorical values to stable integer indices (and back).
 
     Can be initialised with an explicit category list or learn it via fit().
+
+    - Configuration
+      - categories: Optional category list used to build the vocabulary.
+      - unknown_value: Placeholder for unseen categories if included.
+
+    - Behavior
+      - Encodes categories to integer indices and decodes them back.
+      - Supports one-hot encoding and decoding.
+
+    - Usage Notes
+      - Call fit when categories are not supplied at construction.
     """
 
     def __init__(self, categories: Optional[Sequence[Any]] = None, unknown_value: str = "<UNK>"):

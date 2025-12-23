@@ -1,10 +1,18 @@
 """
 Default LDP-to-CDP mapping strategies for accounting bridges.
 
-Responsibilities:
-    * define recommended metadata keys for delta and mechanism parameters
-    * provide default mapping from LocalPrivacyUsage to LDPToCDPEvent
-    * normalize LDP context metadata for CDP audit logs
+Responsibilities
+  - Define recommended metadata keys for delta and mechanism parameters.
+  - Provide default mapping from LocalPrivacyUsage to LDPToCDPEvent.
+  - Normalize LDP context metadata for CDP audit logs.
+
+Usage Context
+  - Use when forwarding local DP usage into CDP accounting.
+  - Intended for consistent metadata mapping across systems.
+
+Limitations
+  - Mapping relies on metadata keys provided by callers.
+  - Does not infer mechanism parameters beyond provided metadata.
 """
 # 说明：提供 LDP 到 CDP 的默认映射策略与辅助工具。
 # 职责：

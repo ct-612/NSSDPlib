@@ -3,6 +3,19 @@ Lightweight privacy reporting utilities for CDP analytics.
 
 Provides dataclasses to capture per-event usage, cumulative budget snapshots,
 annotations, and JSON/markdown serialisation helpers.
+
+Responsibilities
+  - Define reporting records for events, snapshots, and annotations.
+  - Aggregate accountant state into structured privacy reports.
+  - Provide JSON and Markdown export helpers for reporting.
+
+Usage Context
+  - Use with CDPPrivacyAccountant to summarize privacy spend.
+  - Intended for downstream reporting or dashboard rendering.
+
+Limitations
+  - Report content reflects accountant state at construction time.
+  - Exports are lightweight and do not include visualization assets.
 """
 # 说明：围绕 CDP 分析场景提供轻量级隐私预算使用记录与报告生成功能。
 # 职责：

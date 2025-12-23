@@ -1,4 +1,19 @@
-"""Bloom Filter encoder for RAPPOR-style LDP mechanisms."""
+"""
+Bloom Filter encoder for RAPPOR-style LDP mechanisms.
+
+Responsibilities
+  - Encode values into Bloom Filter bit vectors using hash families.
+  - Support configurable bit length, hash count, and seed.
+  - Provide metadata describing Bloom Filter parameters.
+
+Usage Context
+  - Use with RAPPOR-style or Bloom-filter-based LDP mechanisms.
+  - Intended for deterministic encoding before perturbation.
+
+Limitations
+  - Bloom Filter encoding is not reversible.
+  - Hash collisions are possible by design.
+"""
 # 说明：将输入值通过多路哈希映射到固定长度 Bloom Filter 的若干 bit 位，作为 RAPPOR 等机制的编码前置步骤，编码不可逆。
 # 职责：
 # - 维护 Bloom Filter 的位数、哈希函数个数与随机种子等静态配置
@@ -16,7 +31,20 @@ from dplib.ldp.types import EncodedValue
 
 
 class BloomFilterEncoder(StatelessEncoder):
-    """Encode values into Bloom Filter bit vectors using multiple hashes."""
+    """
+    Encode values into Bloom Filter bit vectors using multiple hashes.
+
+    - Configuration
+      - num_bits: Length of the Bloom Filter bit vector.
+      - num_hashes: Number of hash functions applied per value.
+      - seed: Seed used to derive hash functions.
+
+    - Behavior
+      - Hashes input values and sets corresponding bit positions.
+
+    - Usage Notes
+      - Output is intended for probabilistic mechanisms, not decoding.
+    """
 
     def __init__(self, num_bits: int, num_hashes: int, seed: int = 0):
         # 初始化 Bloom Filter 编码器的位数、哈希函数数量以及随机种子并构造内部哈希函数族

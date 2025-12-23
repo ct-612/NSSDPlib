@@ -3,6 +3,19 @@ Sensitivity bounds helpers for common CDP queries.
 
 Provides upper/lower estimates and lightweight proof metadata to aid
 testing and documentation.
+
+Responsibilities
+  - Provide lower and upper sensitivity bounds for common queries.
+  - Carry proof notes for documentation and testing.
+  - Offer a simple tightening helper using observed estimates.
+
+Usage Context
+  - Use when documenting or validating sensitivity assumptions.
+  - Intended for reporting and test utilities.
+
+Limitations
+  - Proof notes are descriptive and not formal proofs.
+  - Bounds rely on global sensitivity formulas.
 """
 # 说明：为常见中心差分隐私查询提供敏感度上下界封装与简要证明说明。
 # 职责：
@@ -29,7 +42,20 @@ from dplib.core.utils.param_validation import ensure_type
 
 @dataclass(frozen=True)
 class SensitivityBounds:
-    """Container for lower/upper bounds and optional proof note."""
+    """
+    Container for lower/upper bounds and an optional proof note.
+
+    - Configuration
+      - lower: Lower bound on sensitivity.
+      - upper: Upper bound on sensitivity.
+      - proof: Optional note describing the bound derivation.
+
+    - Behavior
+      - Stores bound values without additional validation.
+
+    - Usage Notes
+      - Use `to_dict` for simple serialization.
+    """
 
     lower: float
     upper: float

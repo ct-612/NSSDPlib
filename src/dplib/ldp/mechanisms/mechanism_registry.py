@@ -1,8 +1,18 @@
 """
-Lightweight registry mapping LDP mechanism identifiers to concrete classes.
+Registry helpers for mapping LDP mechanism identifiers to concrete classes.
 
-Mirrors the CDP registry style: normalise identifiers, expose lookup helpers,
-and validate privacy model compatibility.
+Responsibilities
+  - Maintain a mapping from mechanism identifiers to implementation classes.
+  - Normalize string or enum identifiers to MechanismType.
+  - Validate privacy model compatibility for registered mechanisms.
+
+Usage Context
+  - Used by factory helpers to resolve mechanism classes by identifier.
+  - Intended for tooling that needs a snapshot of registered mechanisms.
+
+Limitations
+  - Only mechanisms present in the registry can be resolved.
+  - Does not instantiate mechanisms or validate constructor arguments.
 """
 # 说明：为本地差分隐私（LDP）机制提供轻量级注册表与查找工具。
 # 职责：

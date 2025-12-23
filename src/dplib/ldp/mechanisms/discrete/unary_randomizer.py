@@ -1,4 +1,19 @@
-"""Generic unary/binary bit-vector randomiser for LDP."""
+"""
+Generic bit-vector randomized response for LDP.
+
+Responsibilities
+  - Apply independent bit flips using provided p and q probabilities.
+  - Support common bit-vector container types.
+  - Expose configuration via serialization helpers.
+
+Usage Context
+  - Use as a general-purpose bit-vector mechanism when p and q are chosen externally.
+  - Intended for local perturbation of binary indicator vectors.
+
+Limitations
+  - Requires explicit p and q parameters.
+  - Assumes input values are binary indicators.
+"""
 # 说明：为本地差分隐私场景提供通用一元随机响应机制的实现。
 # 职责：
 # - 基于给定的 p/q 参数对比特向量执行逐位随机响应
@@ -18,7 +33,25 @@ from dplib.core.utils.param_validation import ParamValidationError
 
 
 class UnaryRandomizer(BaseLDPMechanism):
-    """Bit-wise randomized response parameterised by p/q."""
+    """
+    Bit-wise randomized response parameterized by p and q.
+
+    - Configuration
+      - epsilon: Privacy budget for record keeping in reports.
+      - p: Probability to keep a 1 as 1.
+      - q: Probability to flip a 0 to 1.
+      - identifier: Optional stable identifier for reports and serialization.
+      - rng: Optional random generator used for sampling.
+      - name: Optional human-readable name override.
+
+    - Behavior
+      - Applies independent randomized response to each bit.
+      - Supports numpy arrays, bitarray-like objects, and Python sequences.
+
+    - Usage Notes
+      - p and q must be valid probabilities in [0, 1].
+      - Input values should be 0/1 indicators.
+    """
 
     def __init__(
         self,

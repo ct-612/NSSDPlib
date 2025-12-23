@@ -3,6 +3,19 @@ Runtime configuration utilities.
 
 Centralises the library's tunable options and exposes helpers to read
 from environment variables or update settings at runtime.
+
+Responsibilities
+  - Define a runtime configuration container for shared settings.
+  - Load configuration values from environment variables.
+  - Provide helpers for updating and accessing global config.
+
+Usage Context
+  - Use to read or update library-wide configuration defaults.
+  - Intended for lightweight runtime configuration in a single process.
+
+Limitations
+  - Global config is process-local and not persisted.
+  - Environment parsing is limited to predefined keys.
 """
 # 说明：运行时配置管理工具，集中管理库内可调选项，并支持环境变量覆写与运行期更新。
 # 职责：

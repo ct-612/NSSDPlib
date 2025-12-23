@@ -1,13 +1,18 @@
 """
 Heavy hitters pipeline for categorical data under LDP.
 
-Responsibilities:
-    * build client-side encoding and GRR perturbation for categorical values
-    * build server-side frequency aggregation for heavy hitters analysis
-    * provide a helper to extract top-k categories from frequency estimates
+Responsibilities
+  - Build client-side encoding and GRR perturbation for categorical values.
+  - Build server-side frequency aggregation for heavy hitters analysis.
+  - Provide a helper to extract top-k categories from frequency estimates.
 
-Notes:
-    The current implementation only supports GRR; OUE/OLH/RAPPOR can be added later.
+Usage Context
+  - Use for heavy hitters discovery under local DP.
+  - Intended for end-to-end client/aggregator pipelines.
+
+Limitations
+  - Only GRR is supported in the current implementation.
+  - Top-k extraction uses estimated frequencies without additional debiasing.
 """
 # 说明：封装类别值到 LDP 频率估计与 top-k 输出的端到端应用。
 # 职责：
@@ -34,7 +39,21 @@ from dplib.ldp.types import Estimate, LDPReport
 
 @dataclass
 class HeavyHittersClientConfig:
-    """Client-side configuration for heavy hitters."""
+    """
+    Client-side configuration for heavy hitters.
+
+    - Configuration
+      - epsilon: Privacy budget for the local mechanism.
+      - categories: Optional list of categories for the encoder.
+      - top_k: Number of heavy hitters to retain.
+      - mechanism: Mechanism identifier; currently only "grr".
+
+    - Behavior
+      - Validates epsilon, top_k, and mechanism identifiers.
+
+    - Usage Notes
+      - Provide categories or ensure the encoder is fitted elsewhere.
+    """
 
     epsilon: float
     categories: Optional[Sequence[Any]] = None
@@ -57,7 +76,19 @@ class HeavyHittersClientConfig:
 
 @dataclass
 class HeavyHittersServerConfig:
-    """Server-side configuration for heavy hitters."""
+    """
+    Server-side configuration for heavy hitters.
+
+    - Configuration
+      - top_k: Number of heavy hitters to retain.
+      - min_support: Minimum estimated frequency to include.
+
+    - Behavior
+      - Validates top_k and min_support bounds.
+
+    - Usage Notes
+      - min_support filters low-frequency categories.
+    """
 
     top_k: int = 10
     min_support: float = 0.0
@@ -71,7 +102,19 @@ class HeavyHittersServerConfig:
 
 
 class HeavyHittersAggregator(BaseAggregator):
-    """Wrap FrequencyAggregator and attach category metadata."""
+    """
+    Wrap FrequencyAggregator and attach category metadata.
+
+    - Configuration
+      - inner_aggregator: FrequencyAggregator used for estimation.
+      - categories: Optional category list for labeling outputs.
+
+    - Behavior
+      - Delegates aggregation and appends category metadata when available.
+
+    - Usage Notes
+      - Use in conjunction with a categorical encoder.
+    """
 
     def __init__(self, inner_aggregator: FrequencyAggregator, categories: Optional[Sequence[Any]] = None) -> None:
         # 组合频率聚合器并可选附加类别元数据
@@ -145,12 +188,16 @@ class HeavyHittersApplication(BaseLDPApplication):
     """
     End-to-end heavy hitters application.
 
-    Notes:
-        The current implementation only supports GRR.
+    - Configuration
+      - client_config: Client configuration for encoding and perturbation.
+      - server_config: Server configuration for top-k extraction.
 
-    TODO:
-        * add OUE/OLH/RAPPOR and hashing-based encoders
-        * decide whether to expose encoder fit helpers or accept pre-fitted encoder injection with validation rules
+    - Behavior
+      - Builds a client that encodes categories and applies GRR.
+      - Builds a server-side frequency aggregator with category metadata.
+
+    - Usage Notes
+      - Categories must be provided or the encoder must be fitted before use.
     """
 
     def __init__(self, client_config: HeavyHittersClientConfig, server_config: Optional[HeavyHittersServerConfig] = None) -> None:

@@ -1,9 +1,19 @@
 """
 Numerical utilities for basic dataset statistics.
+This module provides basic aggregates and an online running-statistics container for streaming inputs.
 
-Responsibilities:
-    * Implemented with numerical stability in mind
-    * Accept either scalar sequences or iterable mappings.
+Responsibilities
+  - Provide numerically stable implementations for basic statistics like sum and variance.
+  - Accept either scalar sequences or iterable mappings as input sources.
+  - Offer online algorithms for streaming data processing.
+
+Usage Context
+  - Use for simple descriptive statistics on numeric data or record fields.
+  - Supports in-memory iterables and mapping-based records.
+
+Limitations
+  - Functions assume numeric inputs or values convertible to float.
+  - Field extraction requires mapping-based records when a field is specified.
 """
 # 说明：用于基础数据集统计的数值工具。
 # 职责：
@@ -94,7 +104,23 @@ def histogram(values: Iterable[Any], *, bins: Sequence[float]) -> Tuple[List[int
 
 @dataclass
 class RunningStats:
-    """Online algorithm for mean/variance using Welford's method."""
+    """
+    Online algorithm for mean/variance using Welford's method.
+
+    - Configuration
+        - count: Track the number of items processed
+        - mean: Maintain the running mean of observations
+        - _m2: Accumulate the sum of squares of differences from the current mean
+
+    - Behavior
+        - Updates statistics incrementally with each new value
+        - Ensures numerical stability through Welford's algorithm
+        - Computes variance and standard deviation on demand in O(1) time
+
+    - Usage Notes
+        - Ideal for single-pass processing of large streams
+        - Provides robust statistics without loading all data into memory
+    """
     # 在线均值/方差（Welford）：单次遍历、数值稳定、适合流式数据
 
     count: int = 0

@@ -1,11 +1,19 @@
 """
 Shared type definitions for the LDP subsystem.
 
-Responsibilities:
-    * define report/config payloads and per-user budget tracking types
-    * provide EncodedValue serialization helpers for JSON transport
-    * normalize timestamp formats for cross-process integration
-    * expose LDP-to-CDP mapping payloads for accounting bridges
+Responsibilities
+  - Define report, configuration, and per-user budget tracking types.
+  - Provide EncodedValue serialization helpers for JSON transport.
+  - Normalize timestamp formats for cross-process integration.
+  - Expose LDP-to-CDP mapping payloads for accounting bridges.
+
+Usage Context
+  - Use as shared payload types between LDP clients, aggregators, and accounting.
+  - Intended for serialization and inter-process transport.
+
+Limitations
+  - EncodedValue serialization relies on optional bitarray support when available.
+  - Payloads store declared values and do not validate mechanism behavior.
 """
 # 说明：LDP 子系统中共享的类型定义与配置/结果载体，覆盖编码载荷与预算跟踪对象。
 # 职责：
@@ -92,7 +100,26 @@ def _parse_timestamp(value: Any) -> Optional[datetime]:
 
 @dataclass
 class LDPReport:
-    """Structured local LDP report exchanged between client and aggregator."""
+    """
+    Structured local LDP report exchanged between client and aggregator.
+
+    - Configuration
+      - user_id: Optional user identifier for per-user accounting.
+      - mechanism_id: Identifier of the local mechanism used to perturb data.
+      - encoded: Encoded or perturbed value payload.
+      - epsilon: Local privacy budget for the report.
+      - delta: Optional delta for approximate local DP.
+      - round_id: Optional round identifier for repeated collection.
+      - timestamp: Optional event timestamp.
+      - metadata: Additional metadata for auditing or routing.
+
+    - Behavior
+      - Serializes encoded values with a type tag for JSON transport.
+      - Restores encoded values and timestamps when deserializing.
+
+    - Usage Notes
+      - Use for client-to-aggregator payload exchange.
+    """
     # 表示客户端与聚合端之间交换的本地 LDP 报告载体，包含编码值与隐私参数等信息
 
     user_id: Optional[Union[str, int]]
@@ -138,7 +165,22 @@ class LDPReport:
 
 @dataclass
 class Estimate:
-    """Container for aggregated estimates such as frequency, mean, variance, or quantile."""
+    """
+    Container for aggregated estimates such as frequency, mean, variance, or quantile.
+
+    - Configuration
+      - metric: Name of the estimated statistic.
+      - point: Point estimate value.
+      - variance: Optional variance or uncertainty measure.
+      - confidence_interval: Optional confidence interval representation.
+      - metadata: Additional metadata about the estimate.
+
+    - Behavior
+      - Stores estimate components and optionally converts array-like fields to numpy.
+
+    - Usage Notes
+      - Use as a standard output container for aggregators.
+    """
     # 用于承载聚合后的估计结果，例如频率、均值、方差或分位数等统计量
 
     metric: str
@@ -178,7 +220,24 @@ class Estimate:
 
 @dataclass
 class LDPClientConfig:
-    """Client-side configuration bundling encoder and mechanism choices."""
+    """
+    Client-side configuration bundling encoder and mechanism choices.
+
+    - Configuration
+      - encoder_id: Identifier of the encoder used on raw values.
+      - mechanism_id: Identifier of the local mechanism used on encoded values.
+      - epsilon: Local privacy budget.
+      - delta: Optional delta for approximate local DP.
+      - encoder_params: Encoder-specific parameters.
+      - mechanism_params: Mechanism-specific parameters.
+      - metadata: Optional metadata for client configuration.
+
+    - Behavior
+      - Provides JSON-friendly serialization and deserialization helpers.
+
+    - Usage Notes
+      - Use to configure client-side encoding and perturbation.
+    """
     # 本地客户端配置对象，打包 encoder 与 mechanism 选择及其参数和隐私预算
 
     encoder_id: str
@@ -217,7 +276,22 @@ class LDPClientConfig:
 
 @dataclass
 class AggregationConfig:
-    """Server-side aggregation configuration, covering metric and aggregator parameters."""
+    """
+    Server-side aggregation configuration covering metric and aggregator parameters.
+
+    - Configuration
+      - metric: Name of the metric to aggregate.
+      - aggregator_id: Identifier of the aggregator implementation.
+      - mechanism_id: Optional identifier of the aggregator-side mechanism.
+      - params: Aggregator-specific parameters.
+      - metadata: Additional metadata for aggregation.
+
+    - Behavior
+      - Provides JSON-friendly serialization and deserialization helpers.
+
+    - Usage Notes
+      - Use to configure server-side aggregation pipelines.
+    """
     # 聚合端的配置对象，用于描述聚合指标、聚合器实现及其参数
 
     metric: str
@@ -250,7 +324,21 @@ class AggregationConfig:
 
 @dataclass
 class LocalPrivacyUsage:
-    """Record of per-user epsilon usage for a local DP event."""
+    """
+    Record of per-user epsilon usage for a local DP event.
+
+    - Configuration
+      - user_id: Optional user identifier.
+      - epsilon: Epsilon spent for the event.
+      - round_id: Optional round identifier.
+      - metadata: Additional metadata for accounting.
+
+    - Behavior
+      - Stores a single usage record without additional validation.
+
+    - Usage Notes
+      - Use for per-user accounting summaries.
+    """
     # 表示单次 LDP 事件的 epsilon 消耗记录，包含用户、轮次与元数据
     user_id: Optional[str]
     epsilon: float
@@ -260,7 +348,21 @@ class LocalPrivacyUsage:
 
 @dataclass
 class LDPBudgetSummary:
-    """Summary of per-user epsilon usage for LDP accounting."""
+    """
+    Summary of per-user epsilon usage for LDP accounting.
+
+    - Configuration
+      - total_epsilon: Total epsilon spent across all events.
+      - per_user_epsilon: Mapping of user IDs to cumulative epsilon.
+      - max_user_epsilon: Maximum epsilon spent by any single user.
+      - n_events: Total number of events recorded.
+
+    - Behavior
+      - Stores summary values for reporting.
+
+    - Usage Notes
+      - Use for reporting per-user budget usage.
+    """
     # 汇总 LDP 预算使用情况，包含总 epsilon 与 per-user 累计信息
     total_epsilon: float
     per_user_epsilon: Dict[str, float]
@@ -270,7 +372,23 @@ class LDPBudgetSummary:
 
 @dataclass
 class LDPToCDPEvent:
-    """Mapping payload for forwarding LDP usage into CDP accounting."""
+    """
+    Mapping payload for forwarding LDP usage into CDP accounting.
+
+    - Configuration
+      - epsilon: Epsilon value for the mapped event.
+      - delta: Delta value for the mapped event.
+      - description: Optional event description.
+      - metadata: Additional metadata for auditing.
+      - mechanism: Optional mechanism identifier.
+      - parameters: Mechanism parameter mapping.
+
+    - Behavior
+      - Carries declared values for downstream CDP accounting.
+
+    - Usage Notes
+      - Use when bridging LDP usage into CDP accounting workflows.
+    """
     # 表示将 LDP usage 映射到 CDP 会计事件的载体，包含 delta 与机制参数
     epsilon: float
     delta: float = 0.0

@@ -1,14 +1,18 @@
 """
 LDP composition helpers for per-user accounting.
 
-Responsibilities:
-    * add up epsilon values with non-negative checks
-    * aggregate per-user usage and return budget summaries
-    * offer sequential and parallel views over LocalPrivacyUsage
+Responsibilities
+  - Sum epsilon values with non-negative checks.
+  - Aggregate per-user usage and return budget summaries.
+  - Provide sequential and parallel views over LocalPrivacyUsage.
 
-Notes:
-    The entry points share linear aggregation, but different names signal
-    intent and expected return shapes for sequential/parallel views.
+Usage Context
+  - Use for lightweight per-user LDP accounting.
+  - Intended for aggregation of LocalPrivacyUsage records.
+
+Limitations
+  - Composition is linear and does not apply advanced bounds.
+  - Anonymous users are grouped under a single placeholder key.
 """
 # 说明：LDP 组合规则的统一入口，提供基础、顺序与并行视角的工具函数。
 # 职责：

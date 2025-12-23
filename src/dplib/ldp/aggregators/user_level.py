@@ -1,4 +1,19 @@
-"""User-level wrapper to group reports per user and merge per-user estimates."""
+"""
+User-level wrapper to group reports per user and merge per-user estimates.
+
+Responsibilities
+  - Group reports by user identifier and aggregate per-user estimates.
+  - Merge per-user estimates into a single aggregate.
+  - Provide configurable handling for anonymous users and weighting.
+
+Usage Context
+  - Use when multiple reports per user should be combined before aggregation.
+  - Intended for server-side aggregation with per-user grouping.
+
+Limitations
+  - Merging assumes compatible estimate shapes across users.
+  - Anonymous handling is based on configured strategy only.
+"""
 # 说明：在服务端按 user_id 维度对 LDP 报告做用户级聚合并将各用户估计结果合并为全局估计。
 # 职责：
 # - 将同一用户的多轮或多维 LDPReport 分组交给内部聚合器生成 per-user 级别 Estimate
@@ -17,7 +32,22 @@ from dplib.ldp.types import Estimate, LDPReport
 
 
 class UserLevelAggregator(BaseAggregator):
-    """Group reports by user_id, aggregate per-user with an inner aggregator, then merge."""
+    """
+    Group reports by user_id, aggregate per-user with an inner aggregator, then merge.
+
+    - Configuration
+      - inner_aggregator: Aggregator applied to each user's reports.
+      - reducer: Optional reducer for merging per-user points.
+      - anonymous_strategy: Strategy for reports without user_id.
+      - weight_mode: Weighting method for merging per-user points.
+
+    - Behavior
+      - Aggregates per user using the inner aggregator.
+      - Merges per-user points using weights or a custom reducer.
+
+    - Usage Notes
+      - Use when per-user averaging is required before global aggregation.
+    """
 
     def __init__(
         self,

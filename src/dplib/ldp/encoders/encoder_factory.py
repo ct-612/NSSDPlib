@@ -1,4 +1,19 @@
-"""Factory and registry helpers for LDP encoders."""
+"""
+Factory and registry helpers for LDP encoders.
+
+Responsibilities
+  - Maintain a registry mapping names to encoder classes.
+  - Provide helpers to register, resolve, and instantiate encoders.
+  - Build encoder pipelines from configuration mappings.
+
+Usage Context
+  - Use to construct encoders by name in configuration-driven flows.
+  - Intended for wiring encoder pipelines in LDP applications.
+
+Limitations
+  - Only registered encoders can be instantiated.
+  - Does not validate encoder-specific constructor arguments.
+"""
 # 说明：提供编码器的注册与按名称实例化能力，可根据配置构建编码 pipeline。
 # 职责：
 # - 维护从字符串名称到编码器类的注册表用于集中管理
@@ -68,7 +83,19 @@ def build_encoder_pipeline(config: Mapping[str, Any]) -> List[BaseEncoder]:
 
 
 class EncoderFactory:
-    """Convenience wrapper mirroring the function-based factory helpers."""
+    """
+    Convenience wrapper mirroring the function-based factory helpers.
+
+    - Configuration
+      - No instance configuration; exposes static helper methods.
+
+    - Behavior
+      - Registers, resolves, and instantiates encoders by name.
+      - Builds encoder pipelines from configuration mappings.
+
+    - Usage Notes
+      - Use when a class-based factory interface is preferred.
+    """
     # 提供面向对象封装的编码器工厂接口，便于在应用层以类方法形式调用
 
     @staticmethod

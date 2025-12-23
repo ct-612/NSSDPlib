@@ -1,16 +1,19 @@
 """
 Per-user LDP privacy accountant with optional CDP bridging.
 
-Responsibilities:
-    * track per-user epsilon usage for local DP workflows
-    * enforce optional per-user and global epsilon limits
-    * provide summary snapshots for monitoring and reporting
-    * forward usage to a CDP accountant via a configurable mapping strategy
+Responsibilities
+  - Track per-user epsilon usage for local DP workflows.
+  - Enforce optional per-user and global epsilon limits.
+  - Provide summary snapshots for monitoring and reporting.
+  - Forward usage to a CDP accountant via a configurable mapping strategy.
 
-Notes:
-    The default mapping forwards each local usage as a single event, derives
-    delta and mechanism parameters from metadata when available, and attaches
-    LDP context in metadata for auditing and debugging.
+Usage Context
+  - Use for per-user LDP accounting with optional CDP bridging.
+  - Intended for server-side tracking of LocalPrivacyUsage records.
+
+Limitations
+  - Bridging relies on the configured mapper and metadata.
+  - Composition is linear and does not apply advanced bounds.
 """
 # 说明：面向 per-user epsilon 视角的 LDP 隐私会计器，支持可配置的 CDP 桥接。
 # 职责：
@@ -45,17 +48,18 @@ class LDPPrivacyAccountant:
     """
     Per-user LDP privacy accountant.
 
-    Responsibilities:
-        * track per-user epsilon usage and enforce optional limits
-        * expose total and per-user spending summaries
-        * forward local usage to a CDP accountant using an injected mapper
+    - Configuration
+      - per_user_epsilon_limit: Optional per-user epsilon budget cap.
+      - global_epsilon_limit: Optional global epsilon budget cap.
+      - cdp_accountant: Optional CDP accountant for bridging events.
+      - ldp_to_cdp_mapper: Optional mapper from local usage to CDP events.
 
-    Notes:
-        The mapper can supply delta and mechanism parameters, which are
-        embedded into ldp_context for auditing.
+    - Behavior
+      - Tracks per-user and total epsilon usage with budget checks.
+      - Forwards mapped events to a CDP accountant when configured.
 
-    TODO:
-        * support richer mappings that translate mechanism-specific delta formulas
+    - Usage Notes
+      - Mapping behavior depends on metadata and the configured mapper.
     """
 
     def __init__(

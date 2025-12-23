@@ -1,11 +1,19 @@
 """
 Advanced composition utilities for central differential privacy.
+Provides composition rules, model conversions, and amplification helpers.
 
-Implements:
-    * Dwork–Roth heterogeneous advanced composition for pure DP events
-    * DRV10 strong composition for homogeneous (ε, δ)-DP events
-    * zCDP/RDP/GDP based composition plus conversions back to (ε, δ)-DP
-    * lightweight amplification helpers for subsampling and shuffling
+Responsibilities
+  - Provide composition rules and helper functions for CDP events.
+  - Support multiple privacy models and conversions to (epsilon, delta)-DP.
+  - Offer heuristic amplification utilities for sampling and shuffling.
+
+Usage Context
+  - Use in privacy accounting or analysis pipelines.
+  - Intended for central DP composition across multiple events.
+
+Limitations
+  - Amplification helpers use simplified heuristics.
+  - Optimal composition is a fallback, not a full optimizer.
 """
 # 说明：实现中心差分隐私场景下多种高级组合与隐私放大工具函数。
 # 职责：
@@ -65,7 +73,20 @@ def advanced_composition(
 
 class AdvancedCompositionRule(CompositionRule):
     # 将 advanced_composition 封装为 CompositionRule 以便在记账器中复用
-    """Rule wrapper around `advanced_composition` with a default δ'."""
+    """
+    Rule wrapper around `advanced_composition` with a default delta_prime.
+
+    - Configuration
+      - delta_prime: Default delta_prime used in advanced composition.
+      - name: Optional rule name override.
+
+    - Behavior
+      - Applies advanced composition to provided events.
+      - Records the rule name in the result detail.
+
+    - Usage Notes
+      - Override delta_prime per call via `apply` kwargs.
+    """
 
     def __init__(self, delta_prime: float = 1e-6, *, name: Optional[str] = None):
         # 在规则实例上固定默认 δ' 并允许调用时覆盖
@@ -119,7 +140,21 @@ def rho_zcdp_composition(rhos: Iterable[float], *, target_delta: float) -> Compo
 
 class RhoZCDPCompositionRule(CompositionRule):
     # 从事件元数据中提取 rho 并在 zCDP 模型下组合然后还原为 (ε, δ)-DP
-    """Extract ρ from event metadata and compose under zCDP."""
+    """
+    Extract rho from event metadata and compose under zCDP.
+
+    - Configuration
+      - target_delta: Delta used when converting zCDP to (epsilon, delta)-DP.
+      - rho_key: Metadata key used to fetch rho values.
+      - name: Optional rule name override.
+
+    - Behavior
+      - Collects rho values from events and composes in zCDP space.
+      - Converts the result back to (epsilon, delta)-DP.
+
+    - Usage Notes
+      - Provide a custom rho_getter via `apply` kwargs when needed.
+    """
 
     def __init__(
         self,

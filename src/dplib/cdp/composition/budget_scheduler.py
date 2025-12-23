@@ -2,8 +2,21 @@
 Budget scheduler for allocating CDP budgets across tasks or time windows.
 
 Designed to sit on top of the core PrivacyAccountant primitives and
-provide light-weight strategies for dividing a total (ε, δ) into
+provide light-weight strategies for dividing a total (epsilon, delta) into
 sub-allocations (tasks, batches, windows).
+
+Responsibilities
+  - Allocate total privacy budgets across tasks or time windows.
+  - Provide uniform, proportional, and geometric decay strategies.
+  - Return allocations compatible with PrivacyBudget usage.
+
+Usage Context
+  - Use when distributing a fixed CDP budget across multiple activities.
+  - Intended for simple, deterministic scheduling of epsilon and delta.
+
+Limitations
+  - Does not perform dynamic budgeting or adaptive reallocation.
+  - Assumes positive total budgets and well-formed inputs.
 """
 # 说明：在总 (ε, δ) 预算之上为任务或时间窗口进行差分隐私预算切分的调度器。
 # 职责：
@@ -22,7 +35,19 @@ from dplib.core.utils.param_validation import ParamValidationError, ensure
 
 @dataclass(frozen=True)
 class Allocation:
-    """Immutable allocation container."""
+    """
+    Immutable allocation container.
+
+    - Configuration
+      - epsilon: Allocated epsilon budget.
+      - delta: Allocated delta budget.
+
+    - Behavior
+      - Converts to PrivacyBudget for accounting compatibility.
+
+    - Usage Notes
+      - Use as an immutable result of scheduler allocations.
+    """
 
     epsilon: float
     delta: float
@@ -34,12 +59,18 @@ class Allocation:
 
 class BudgetScheduler:
     """
-    Schedule ε/δ budgets over tasks or time windows.
+    Schedule epsilon/delta budgets over tasks or time windows.
 
-    Strategies:
-        * uniform: equal split
-        * proportional: split by user-provided weights
-        * geometric_decay: for ordered windows (earlier windows get more)
+    - Configuration
+      - total_epsilon: Total epsilon budget to allocate.
+      - total_delta: Total delta budget to allocate.
+
+    - Behavior
+      - Allocates budgets uniformly, proportionally, or with geometric decay.
+      - Provides remaining budget computation after allocations.
+
+    - Usage Notes
+      - Geometric decay emphasizes earlier windows when decay < 1.
     """
 
     def __init__(self, total_epsilon: float, total_delta: float = 0.0):

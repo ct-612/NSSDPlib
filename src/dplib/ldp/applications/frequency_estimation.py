@@ -1,12 +1,18 @@
 """
 Frequency estimation pipeline for categorical data under LDP.
 
-Responsibilities:
-    * build client-side encoding and GRR perturbation
-    * build server-side frequency aggregation with optional normalization
+Responsibilities
+  - Build client-side encoding and GRR perturbation.
+  - Build server-side frequency aggregation with optional normalization.
+  - Provide an end-to-end application wrapper for categorical frequencies.
 
-Notes:
-    Heavy hitters can be derived by applying top-k selection to the output.
+Usage Context
+  - Use for categorical frequency estimation under local DP.
+  - Intended for end-to-end client/aggregator pipelines.
+
+Limitations
+  - Only GRR is supported in the current implementation.
+  - Heavy hitters require external top-k selection on the output.
 """
 # 说明：封装类别值到完整频率分布估计的 LDP 端到端应用。
 # 职责：
@@ -32,7 +38,20 @@ from dplib.ldp.types import LDPReport
 
 @dataclass
 class FrequencyEstimationClientConfig:
-    """Client-side configuration for frequency estimation."""
+    """
+    Client-side configuration for frequency estimation.
+
+    - Configuration
+      - epsilon: Privacy budget for the local mechanism.
+      - categories: Optional list of categories for the encoder.
+      - mechanism: Mechanism identifier; currently only "grr".
+
+    - Behavior
+      - Validates epsilon and mechanism identifiers.
+
+    - Usage Notes
+      - Provide categories or ensure the encoder is fitted elsewhere.
+    """
 
     epsilon: float
     categories: Optional[Sequence[Any]] = None
@@ -52,7 +71,18 @@ class FrequencyEstimationClientConfig:
 
 @dataclass
 class FrequencyEstimationServerConfig:
-    """Server-side configuration for frequency estimation."""
+    """
+    Server-side configuration for frequency estimation.
+
+    - Configuration
+      - normalize: Whether to apply consistency post-processing.
+
+    - Behavior
+      - Controls whether a post-processor wraps the frequency aggregator.
+
+    - Usage Notes
+      - Normalization is a post-processing step and does not affect privacy.
+    """
 
     normalize: bool = True
 
@@ -61,12 +91,16 @@ class FrequencyEstimationApplication(BaseLDPApplication):
     """
     End-to-end frequency estimation application.
 
-    Notes:
-        The current implementation only supports GRR.
+    - Configuration
+      - client_config: Client configuration for encoding and perturbation.
+      - server_config: Server configuration for aggregation and post-processing.
 
-    TODO:
-        * add OUE/OLH/RAPPOR mechanisms and hashing encoders
-        * decide whether to expose encoder fit helpers or accept pre-fitted encoder injection with validation rules
+    - Behavior
+      - Builds a client that encodes categories and applies GRR.
+      - Builds a server-side frequency aggregator with optional normalization.
+
+    - Usage Notes
+      - Categories must be provided or the encoder must be fitted before use.
     """
 
     def __init__(self, client_config: FrequencyEstimationClientConfig, server_config: Optional[FrequencyEstimationServerConfig] = None) -> None:

@@ -1,7 +1,16 @@
 """
-Privacy guarantee representations used for audit/reporting.
-Provides a structured container with validation, conversion, and serialisation
-helpers that align with the privacy model registry.
+Privacy guarantee representations used for audit and reporting.
+
+Responsibilities
+  - Define a structured container for model parameters and mechanism metadata.
+  - Validate guarantees against model requirements and supported mechanisms.
+  - Provide conversion and serialization helpers aligned with the model registry.
+
+Usage Context
+  - Used by accountants and reporting pipelines to emit auditable guarantees.
+
+Limitations
+  - Does not derive guarantees from data or mechanism execution; it stores declared values.
 """
 # 说明：审计 / 报告阶段使用的隐私保证表示容器，实现与隐私模型注册表对齐的结构化描述。
 # 职责：
@@ -27,7 +36,19 @@ from dplib.core.utils.param_validation import ParamValidationError
 
 @dataclass
 class PrivacyGuarantee:
-    """Container describing a privacy guarantee for audit/reporting."""
+    """
+    Structured container describing a privacy guarantee for audit and reporting.
+
+    - Configuration
+      - Stores a PrivacyModel, optional MechanismType, and model-specific parameters.
+    
+    - Behavior
+      - Validates parameters via ModelSpec and checks mechanism support when provided.
+      - Provides conversion to CDP view and structured dictionary payloads.
+    
+    - Usage Notes
+      - Use to record or report guarantees alongside mechanisms and metadata.
+    """
 
     model: PrivacyModel
     mechanism: Optional[MechanismType] = None
@@ -103,7 +124,7 @@ class PrivacyGuarantee:
         raise ParamValidationError("unsupported model spec")
 
     def to_model_spec(self) -> ModelSpec:
-        """Materialise the underlying ModelSpec for validation/conversion."""
+        """Materialise the underlying ModelSpec for validation and conversion operations."""
         # 将当前实例中的数值参数打包为 ModelSpec，用于统一的校验和模型转换逻辑
         return ModelSpec(
             model=self.model,
@@ -118,6 +139,7 @@ class PrivacyGuarantee:
         """
         Convert guarantee to (epsilon, delta)-DP form when possible.
         For zCDP/RDP/GDP, requires a target delta to compute equivalent epsilon.
+        Returns a new PrivacyGuarantee with the CDP model and copied metadata.
         """
         # 将当前保证转换为 CDP 视图，并保留说明、证明与元数据
         spec = self.to_model_spec().as_cdp(delta=delta, rdp_order=rdp_order)
@@ -134,6 +156,7 @@ class PrivacyGuarantee:
     def to_report(self) -> Dict[str, Any]:
         """
         Structured report payload for logging or audit sinks.
+        Includes a compact parameter summary string and validated metadata.
         """
         # 生成适合审计 / 日志下游消费的结构化报告负载，并内联参数摘要字符串
         self.validate()

@@ -1,12 +1,16 @@
 """
-Privacy model and mechanism registry plus common conversion helpers.
+Privacy model and mechanism registry with validation and conversion helpers.
 
-The module centralises:
-- Supported privacy models (central/local/RDP/zCDP/GDP/pure) and validation.
-- Supported mechanism identifiers used throughout the library.
-- Canonical mappings between mechanisms and the privacy models they natively
-  deliver (e.g. Gaussian -> CDP/zCDP/RDP/GDP, GRR -> LDP).
-- Lightweight conversion helpers across model families.
+Responsibilities
+  - Define supported privacy model identifiers and mechanism identifiers.
+  - Provide default and supported model mappings for mechanisms.
+  - Offer conversion helpers between model families and basic validation rules.
+
+Usage Context
+  - Used by configuration, accounting, and reporting to resolve model semantics.
+
+Limitations
+  - Uses standard analytical bounds for conversions rather than mechanism-specific proofs.
 """
 # 说明：隐私模型与机制类型的注册表模块，集中管理支持的隐私模型/机制标识及其映射关系。
 # 职责：
@@ -29,7 +33,18 @@ from dplib.core.utils.param_validation import ensure
 
 
 class PrivacyModel(enum.Enum):
-    """Supported privacy models."""
+    """
+    Enumeration of supported privacy model identifiers.
+
+    - Configuration
+      - Values are lowercase identifiers used in configuration and serialization.
+    
+    - Behavior
+      - Provides parsing from case-insensitive string names via from_str.
+    
+    - Usage Notes
+      - Use to select accounting and conversion paths throughout the library.
+    """
     # 枚举库中支持的隐私模型类型，统一内部表示与字符串 value
 
     CDP = "cdp"            # (ε, δ)-DP
@@ -49,7 +64,18 @@ class PrivacyModel(enum.Enum):
 
 
 class MechanismType(enum.Enum):
-    """Supported mechanism identifiers."""
+    """
+    Enumeration of supported mechanism identifiers.
+
+    - Configuration
+      - Values are lowercase identifiers used in configuration and serialization.
+    
+    - Behavior
+      - Provides normalization of common aliases via from_str.
+    
+    - Usage Notes
+      - Use to tag mechanisms and validate supported privacy models.
+    """
     # 枚举库内常见 DP 机制的短名称，用于机制注册与配置接口
 
     LAPLACE = "laplace"
@@ -124,19 +150,19 @@ MECHANISM_SUPPORTED_MODELS: Dict[MechanismType, Tuple[PrivacyModel, ...]] = {
 
 
 def mechanism_default_model(mechanism: MechanismType) -> PrivacyModel:
-    """Return the canonical privacy model delivered by the mechanism."""
+    """Return the canonical privacy model delivered by the mechanism as defined by the registry defaults."""
     # 查询给定机制的“默认”隐私模型，用于简化常见配置场景
     return MECHANISM_DEFAULT_MODEL[mechanism]
 
 
 def mechanism_supports(mechanism: MechanismType, model: PrivacyModel) -> bool:
-    """Check whether a mechanism can be analysed under a target model."""
+    """Check whether a mechanism can be analysed under a target model according to the declared support table."""
     # 检查机制在声明的支持列表中是否包含目标隐私模型
     return model in MECHANISM_SUPPORTED_MODELS.get(mechanism, ())
 
 
 def ensure_supported_model(mechanism: MechanismType, model: PrivacyModel) -> None:
-    """Raise when a mechanism cannot emit the requested privacy model."""
+    """Raise when a mechanism cannot emit the requested privacy model under the declared support table."""
     # 若机制不支持目标隐私模型，则给出包含支持列表的明确错误提示
     if not mechanism_supports(mechanism, model):
         supported = ", ".join(m.value for m in MECHANISM_SUPPORTED_MODELS.get(mechanism, ()))
@@ -147,8 +173,9 @@ def ensure_supported_model(mechanism: MechanismType, model: PrivacyModel) -> Non
 
 def zcdp_to_cdp(rho: float, delta: float) -> float:
     """
-    Convert ρ-zCDP to (ε, δ)-DP using standard bound:
-        ε = ρ + 2 * sqrt(ρ * ln(1/δ))
+    Convert rho-zCDP to (epsilon, delta)-DP using a standard bound:
+        epsilon = rho + 2 * sqrt(rho * ln(1/delta))
+    The result is a sufficient condition for (epsilon, delta)-DP given rho and delta.
     """
     # 使用标准上界将 ρ-zCDP 转换为 (ε, δ)-DP，并对参数范围做基本校验
     if rho < 0 or delta <= 0 or delta >= 1:
@@ -158,8 +185,9 @@ def zcdp_to_cdp(rho: float, delta: float) -> float:
 
 def cdp_to_zcdp(epsilon: float, delta: float) -> float:
     """
-    Approximate conversion from (ε, δ)-DP to ρ-zCDP (loose upper bound):
-        ρ = (ε + ln(1/δ))^2 / (2 ln(1/δ))
+    Approximate conversion from (epsilon, delta)-DP to rho-zCDP (loose upper bound):
+        rho = (epsilon + ln(1/delta))^2 / (2 ln(1/delta))
+    This bound is conservative and intended for coarse accounting.
     """
     # 给出从 (ε, δ)-DP 到 ρ-zCDP 的宽松上界，用于保守估计
     if epsilon < 0 or delta <= 0 or delta >= 1:
@@ -169,7 +197,7 @@ def cdp_to_zcdp(epsilon: float, delta: float) -> float:
 
 
 def zcdp_to_rdp(rho: float, order: float) -> float:
-    """Convert ρ-zCDP to (α, ε)-RDP via ε = α·ρ."""
+    """Convert rho-zCDP to (alpha, epsilon)-RDP via epsilon = alpha * rho."""
     # 使用简单线性关系将 ρ-zCDP 转换为给定阶 alpha 的 RDP 参数
     if rho < 0:
         raise ParamValidationError("rho must be >=0")
@@ -180,7 +208,9 @@ def zcdp_to_rdp(rho: float, order: float) -> float:
 
 def rdp_to_cdp(order: float, rdp_epsilon: float, delta: float) -> float:
     """
-    Convert (α, ε)-RDP to (ε', δ)-DP using ε' = ε + ln(1/δ)/(α-1).
+    Convert (alpha, epsilon)-RDP to (epsilon', delta)-DP using
+    epsilon' = epsilon + ln(1/delta)/(alpha - 1).
+    The conversion uses the standard RDP-to-DP bound at fixed order.
     """
     # 根据标准不等式将 RDP 保证换算为 (ε', δ)-DP，便于与 CDP 会计对齐
     if order <= 1:
@@ -193,7 +223,7 @@ def rdp_to_cdp(order: float, rdp_epsilon: float, delta: float) -> float:
 
 
 def gdp_to_zcdp(mu: float) -> float:
-    """Convert μ-GDP to ρ-zCDP using ρ = μ^2 / 2."""
+    """Convert mu-GDP to rho-zCDP using rho = mu^2 / 2 under the standard relation."""
     # 将 μ-GDP 转换为 ρ-zCDP，后者可进一步转换到 CDP 或 RDP 框架
     if mu <= 0:
         raise ParamValidationError("mu must be > 0")
@@ -202,7 +232,8 @@ def gdp_to_zcdp(mu: float) -> float:
 
 def gdp_to_cdp(mu: float, delta: float) -> float:
     """
-    Convert μ-GDP to (ε, δ)-DP via the zCDP bridge (ρ = μ^2/2).
+    Convert mu-GDP to (epsilon, delta)-DP via the zCDP bridge (rho = mu^2/2).
+    Requires a target delta to complete the conversion.
     """
     # 通过“GDP → zCDP → CDP”桥接链路，得到等价的 (ε, δ)-DP 预算
     rho = gdp_to_zcdp(mu)
@@ -210,7 +241,7 @@ def gdp_to_cdp(mu: float, delta: float) -> float:
 
 
 def ldp_to_cdp(epsilon: float) -> Tuple[float, float]:
-    """Map local DP budget to its central counterpart with δ=0."""
+    """Map local DP budget to its central counterpart with delta=0 for reporting."""
     # 将局部 ε-LDP 映射为中心 DP 模型下的 (ε, 0)-DP
     if epsilon < 0:
         raise ParamValidationError("epsilon must be >=0")
@@ -219,7 +250,19 @@ def ldp_to_cdp(epsilon: float) -> Tuple[float, float]:
 
 @dataclass(frozen=True)
 class ModelSpec:
-    """Explicit model parameters wrapper."""
+    """
+    Immutable wrapper for explicit privacy model parameters.
+
+    - Configuration
+      - Stores exactly one model identifier and its required numeric parameters.
+    
+    - Behavior
+      - Validates parameter presence and ranges based on the selected model.
+      - Supports conversion to tuple or parameter dictionaries for reporting.
+    
+    - Usage Notes
+      - Use as a typed carrier between mechanisms, accountants, and reports.
+    """
     # 用于携带“模型类型 + 对应参数”的不可变配置体，方便在 API 与会计器之间传递
 
     model: PrivacyModel
@@ -269,7 +312,7 @@ class ModelSpec:
         raise ParamValidationError("unsupported privacy model")
 
     def to_parameters(self) -> Dict[str, float]:
-        """Return the numeric parameters attached to this spec."""
+        """Return the numeric parameters attached to this spec as a name-to-float mapping."""
         # 以 {参数名: 数值} 的形式导出当前 spec 中实际存在的数值参数
         params = {
             "epsilon": self.epsilon,
@@ -283,8 +326,10 @@ class ModelSpec:
     def as_cdp(self, *, delta: Optional[float] = None, rdp_order: Optional[float] = None) -> "ModelSpec":
         """
         Convert the current spec to (epsilon, delta)-DP representation where possible.
-        - delta: optional target delta when converting from zCDP/RDP/GDP.
+        - delta: optional target delta when converting from zCDP, RDP, or GDP.
         - rdp_order: override RDP order; defaults to the spec's alpha.
+        
+        Returns a CDP ModelSpec or raises when conversion is not defined.
         """
         # 尝试将当前模型统一表示为 CDP（如已是 CDP 则原样返回），无法转换时抛出错误
         self.validate()
@@ -317,6 +362,7 @@ class ModelSpec:
 def registry_snapshot() -> Dict[str, Iterable[str]]:
     """
     Snapshot of supported identifiers for external tooling or documentation.
+    Returns lowercase string values for both privacy models and mechanisms.
     """
     # 返回当前注册表中支持的隐私模型和机制标识快照，便于外部工具或文档生成使用
     return {

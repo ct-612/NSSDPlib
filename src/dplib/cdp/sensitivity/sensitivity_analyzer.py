@@ -4,6 +4,19 @@ Sensitivity analyzer for common CDP queries.
 Provides light wrappers over core data sensitivity utilities to
 automatically or manually compute sensitivities for standard queries and
 local/smooth estimates.
+
+Responsibilities
+  - Provide structured sensitivity reports for common queries.
+  - Wrap global, local, and smooth sensitivity utilities.
+  - Dispatch analysis by query name with parameter validation.
+
+Usage Context
+  - Use to standardize sensitivity computation in CDP workflows.
+  - Intended for lightweight reporting and configuration.
+
+Limitations
+  - Local and smooth sensitivities are estimates, not guarantees.
+  - Requires ContinuousDomain for bounded numeric queries.
 """
 # 说明：针对常见中心差分隐私查询提供敏感度计算与封装的分析器组件。
 # 职责：
@@ -32,7 +45,20 @@ from dplib.core.utils.param_validation import ParamValidationError
 
 @dataclass
 class SensitivityReport:
-    """Structured sensitivity result."""
+    """
+    Structured sensitivity result.
+
+    - Configuration
+      - query: Query identifier used to compute the sensitivity.
+      - sensitivity: Computed sensitivity value.
+      - metadata: Additional numeric metadata describing the computation.
+
+    - Behavior
+      - Stores sensitivity outputs without additional validation.
+
+    - Usage Notes
+      - Returned by SensitivityAnalyzer methods.
+    """
 
     query: str
     sensitivity: float
@@ -40,7 +66,19 @@ class SensitivityReport:
 
 
 class SensitivityAnalyzer:
-    """Analyze sensitivities for standard queries or delegate to custom calculators."""
+    """
+    Analyze sensitivities for standard queries or delegate to custom calculators.
+
+    - Configuration
+      - No persistent configuration; methods accept parameters per call.
+
+    - Behavior
+      - Computes sensitivity reports for built-in query types.
+      - Validates required parameters and dispatches by query name.
+
+    - Usage Notes
+      - Use `analyze` for dynamic dispatch in configurable pipelines.
+    """
 
     def count(self, *, max_contribution: int = 1) -> SensitivityReport:
         # 针对计数查询在给定单用户最大贡献次数约束下计算全局敏感度并生成报告

@@ -1,10 +1,18 @@
 """
 Staircase mechanism delivering pure differential privacy with discrete noise.
 
-Responsibilities:
-    * calibrate staircase parameters from epsilon, sensitivity, and gamma
-    * sample symmetric staircase noise with geometric tails and fractional offsets
-    * maintain serialization hooks for reproducibility
+Responsibilities
+  - Calibrate staircase parameters from epsilon, sensitivity, and gamma.
+  - Sample symmetric staircase noise with geometric tails and fractional offsets.
+  - Maintain serialization hooks for reproducibility.
+
+Usage Context
+  - Use for pure DP noise on numeric queries.
+  - Supports scalar and array-like numeric inputs.
+
+Limitations
+  - Requires gamma in [0, 1] and calibrated parameters.
+  - Produces discrete noise with fractional offsets.
 """
 # 说明：阶梯机制实现。
 # 职责：
@@ -23,7 +31,23 @@ from dplib.core.privacy.base_mechanism import BaseMechanism, CalibrationError, M
 
 
 class StaircaseMechanism(BaseMechanism):
-    """Pure-DP staircase mechanism."""
+    """
+    Pure-DP staircase mechanism.
+
+    - Configuration
+      - epsilon: Privacy budget for noise calibration.
+      - sensitivity: Global sensitivity of the query.
+      - gamma: Fractional offset parameter in [0, 1].
+      - rng: Optional RNG for noise sampling.
+      - name: Optional mechanism name override.
+
+    - Behavior
+      - Calibrates decay and success probability for staircase noise.
+      - Samples symmetric staircase noise with geometric tails.
+
+    - Usage Notes
+      - Call `calibrate` before `randomise`.
+    """
 
     def __init__(
         self,

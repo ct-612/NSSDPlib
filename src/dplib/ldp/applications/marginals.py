@@ -1,13 +1,18 @@
 """
 Marginals estimation pipeline for multi-dimensional categorical data.
 
-Responsibilities:
-    * build per-dimension encoders and GRR perturbation
-    * aggregate per-dimension frequency estimates into a marginals summary
-    * expose metadata for each dimension to aid downstream analysis
+Responsibilities
+  - Build per-dimension encoders and GRR perturbation.
+  - Aggregate per-dimension frequency estimates into a marginals summary.
+  - Expose metadata for each dimension to aid downstream analysis.
 
-Notes:
-    Each dimension is reported independently without joint estimation.
+Usage Context
+  - Use for per-dimension marginal estimation under local DP.
+  - Intended for end-to-end client/aggregator pipelines.
+
+Limitations
+  - Each dimension is reported independently without joint estimation.
+  - Only GRR is supported in the current implementation.
 """
 # 说明：封装多维离散特征的逐维频率估计应用。
 # 职责：
@@ -33,7 +38,22 @@ from dplib.ldp.types import Estimate, LDPReport
 
 @dataclass
 class MarginalSpec:
-    """Specification for a single marginal dimension."""
+    """
+    Specification for a single marginal dimension.
+
+    - Configuration
+      - name: Dimension name used in input records.
+      - type: "categorical" or "numerical".
+      - categories: Optional categories for categorical dimensions.
+      - num_buckets: Optional bucket count for numerical dimensions.
+      - clip_range: Optional clipping range for numerical dimensions.
+
+    - Behavior
+      - Validates configuration for the selected dimension type.
+
+    - Usage Notes
+      - Numerical dimensions require num_buckets and an optional clip_range.
+    """
 
     name: str
     type: str = "categorical"
@@ -59,7 +79,20 @@ class MarginalSpec:
 
 @dataclass
 class MarginalsClientConfig:
-    """Client-side configuration for marginals."""
+    """
+    Client-side configuration for marginals.
+
+    - Configuration
+      - epsilon_per_dimension: Privacy budget for each dimension.
+      - marginals: Sequence of MarginalSpec entries.
+      - mechanism: Mechanism identifier; currently only "grr".
+
+    - Behavior
+      - Validates epsilon and mechanism identifiers.
+
+    - Usage Notes
+      - Each marginal is reported independently.
+    """
 
     epsilon_per_dimension: float
     marginals: Sequence[MarginalSpec]
@@ -79,13 +112,36 @@ class MarginalsClientConfig:
 
 @dataclass
 class MarginalsServerConfig:
-    """Server-side configuration for marginals."""
+    """
+    Server-side configuration for marginals.
+
+    - Configuration
+      - normalize: Whether to apply consistency post-processing.
+
+    - Behavior
+      - Controls whether a post-processor wraps per-dimension aggregators.
+
+    - Usage Notes
+      - Normalization is a post-processing step and does not affect privacy.
+    """
 
     normalize: bool = True
 
 
 class MarginalsAggregator(BaseAggregator):
-    """Aggregate per-dimension reports into a marginals summary."""
+    """
+    Aggregate per-dimension reports into a marginals summary.
+
+    - Configuration
+      - per_dimension: Mapping of dimension names to aggregators.
+
+    - Behavior
+      - Aggregates reports per dimension and returns a combined estimate.
+      - Records per-dimension metadata and missing dimensions.
+
+    - Usage Notes
+      - Expects each report to include a "dimension" metadata field.
+    """
 
     def __init__(self, per_dimension: Mapping[str, BaseAggregator]) -> None:
         # 记录每个维度的聚合器用于按维度汇总
@@ -154,13 +210,16 @@ class MarginalsApplication(BaseLDPApplication):
     """
     End-to-end per-dimension marginals application.
 
-    Notes:
-        Each dimension is reported independently without joint estimation.
+    - Configuration
+      - client_config: Client configuration for per-dimension reporting.
+      - server_config: Server configuration for aggregation.
 
-    TODO:
-        * add joint distribution estimators for multi-dimensional marginals
-        * add optimized encoding strategies to reduce report volume
-        * decide whether to expose encoder fit helpers or accept pre-fitted encoder injection with validation rules
+    - Behavior
+      - Builds per-dimension clients and aggregators for marginal estimation.
+      - Reports each dimension independently using GRR.
+
+    - Usage Notes
+      - Encoders must be fitted or provided with categories as needed.
     """
 
     def __init__(self, client_config: MarginalsClientConfig, server_config: Optional[MarginalsServerConfig] = None) -> None:

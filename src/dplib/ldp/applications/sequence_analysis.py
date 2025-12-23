@@ -1,13 +1,18 @@
 """
 Sequence analysis pipeline for event streams under LDP.
 
-Responsibilities:
-    * encode event sequences and perturb each position under GRR
-    * aggregate unigram distributions per position or across positions
-    * provide extension points for bigram or n-gram analysis
+Responsibilities
+  - Encode event sequences and perturb each position under GRR.
+  - Aggregate unigram distributions per position or across positions.
+  - Provide extension points for bigram or n-gram analysis.
 
-Notes:
-    The current implementation only supports unigram statistics.
+Usage Context
+  - Use for event sequence analysis with per-position reporting.
+  - Intended for end-to-end client/aggregator pipelines.
+
+Limitations
+  - Only unigram statistics are supported in the current implementation.
+  - Bigram estimation is not implemented.
 """
 # 说明：封装事件序列的 LDP 上报与位置频率统计应用。
 # 职责：
@@ -32,7 +37,20 @@ from dplib.ldp.types import Estimate, LDPReport
 
 @dataclass
 class SequenceAnalysisClientConfig:
-    """Client-side configuration for sequence analysis."""
+    """
+    Client-side configuration for sequence analysis.
+
+    - Configuration
+      - epsilon_per_event: Privacy budget per event position.
+      - max_length: Maximum number of positions to report.
+      - categories: Optional categories for the encoder.
+
+    - Behavior
+      - Validates epsilon, max_length, and categories.
+
+    - Usage Notes
+      - Categories must be provided or the encoder must be fitted elsewhere.
+    """
 
     epsilon_per_event: float
     max_length: int
@@ -49,14 +67,38 @@ class SequenceAnalysisClientConfig:
 
 @dataclass
 class SequenceAnalysisServerConfig:
-    """Server-side configuration for sequence analysis."""
+    """
+    Server-side configuration for sequence analysis.
+
+    - Configuration
+      - estimate_unigram: Whether to estimate unigram distributions.
+      - estimate_bigram: Whether to estimate bigram distributions.
+
+    - Behavior
+      - Controls which sequence statistics are enabled.
+
+    - Usage Notes
+      - Bigram estimation is not implemented and will raise if enabled.
+    """
 
     estimate_unigram: bool = True
     estimate_bigram: bool = False
 
 
 class SequenceAggregator(BaseAggregator):
-    """Aggregate per-position unigram distributions."""
+    """
+    Aggregate per-position unigram distributions.
+
+    - Configuration
+      - per_position: Mapping of positions to frequency aggregators.
+
+    - Behavior
+      - Aggregates reports per position and returns a combined estimate.
+      - Records per-position metadata and missing positions.
+
+    - Usage Notes
+      - Expects each report to include a "position" metadata field.
+    """
 
     def __init__(self, per_position: Mapping[int, FrequencyAggregator]) -> None:
         # 记录每个位置的聚合器以生成按位置统计结果
@@ -125,12 +167,16 @@ class SequenceAnalysisApplication(BaseLDPApplication):
     """
     End-to-end sequence analysis application for event streams.
 
-    Notes:
-        The current implementation only supports unigram statistics.
+    - Configuration
+      - client_config: Client configuration for sequence perturbation.
+      - server_config: Server configuration for aggregation.
 
-    TODO:
-        * add bigram and n-gram encoding with dedicated aggregators
-        * decide whether to expose encoder fit helpers or accept pre-fitted encoder injection with validation rules
+    - Behavior
+      - Builds a client that perturbs events per position with GRR.
+      - Builds a server-side aggregator for per-position unigram estimates.
+
+    - Usage Notes
+      - Bigram estimation will raise until implemented.
     """
 
     def __init__(self, client_config: SequenceAnalysisClientConfig, server_config: Optional[SequenceAnalysisServerConfig] = None) -> None:

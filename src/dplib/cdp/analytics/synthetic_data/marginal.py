@@ -1,10 +1,18 @@
 """
 Marginal-based DP synthetic data generator.
 
-Responsibilities:
-    * estimate DP marginals (1-D or low-order) from discrete datasets
-    * add calibrated noise via selected mechanism
-    * independently sample columns from noisy marginals (MVP)
+Responsibilities
+  - Estimate DP marginals (1-D or low-order) from discrete datasets.
+  - Add calibrated noise via the selected mechanism.
+  - Independently sample columns from noisy marginals.
+
+Usage Context
+  - Use for discrete or bucketized domains with mapping-based records.
+  - Designed for lightweight synthetic generation via marginals.
+
+Limitations
+  - Sampling uses only 1-D marginals and ignores higher-order dependencies.
+  - Marginal estimation assumes discrete or bucketized domains.
 """
 # 说明：使用差分隐私边际直方图生成合成数据的实现（MVP 版），侧重接口与数据流打通，算法可后续替换。
 # 职责：
@@ -29,7 +37,25 @@ from dplib.cdp.mechanisms.laplace import LaplaceMechanism
 
 
 class MarginalGenerator(SyntheticDataGenerator):
-    """Synthetic generator using DP marginal histograms."""
+    """
+    Synthetic generator using DP marginal histograms.
+
+    - Configuration
+      - domain: Mapping of field names to domains.
+      - epsilon: Privacy budget for marginal estimation.
+      - delta: Optional delta parameter for approximate DP.
+      - marginals: Optional explicit list of marginals to estimate.
+      - max_order: Maximum order used for auto-generated marginals.
+      - mechanism: Mechanism or name used for count noise.
+      - epsilon_split: Strategy name for epsilon allocation.
+
+    - Behavior
+      - Estimates noisy marginals and caches value grids.
+      - Samples columns independently using 1-D marginals.
+
+    - Usage Notes
+      - Provide explicit marginals to control estimation scope.
+    """
     # 使用差分隐私边际直方图的合成数据生成器，实现简单独立列采样策略
 
     method = "marginal"

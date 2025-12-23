@@ -1,10 +1,18 @@
 """
 Gaussian mechanism for approximate differential privacy.
 
-Responsibilities:
-    * calibrate sigma from epsilon, delta, and sensitivity
-    * add Gaussian noise to scalars and arrays
-    * persist calibration metadata for reproducibility
+Responsibilities
+  - Calibrate sigma from epsilon, delta, and sensitivity.
+  - Add Gaussian noise to scalars and arrays.
+  - Persist calibration metadata for reproducibility.
+
+Usage Context
+  - Use for (epsilon, delta)-DP with numeric inputs.
+  - Supports scalars and numpy-compatible arrays.
+
+Limitations
+  - Requires delta in (0, 1) during calibration.
+  - Uses the standard 1.25 calibration constant.
 """
 # 说明：实现近似差分隐私 (ε, δ)-DP 的高斯机制。
 # 职责：
@@ -28,7 +36,23 @@ from dplib.core.utils.random import sample_noise
 
 
 class GaussianMechanism(BaseMechanism):
-    """Gaussian mechanism with the common 1.25 calibration constant."""
+    """
+    Gaussian mechanism with the common 1.25 calibration constant.
+
+    - Configuration
+      - epsilon: Privacy budget for noise calibration.
+      - delta: Target delta for approximate DP.
+      - sensitivity: Global sensitivity of the query.
+      - rng: Optional RNG for noise sampling.
+      - name: Optional mechanism name override.
+
+    - Behavior
+      - Calibrates sigma and injects i.i.d. Gaussian noise.
+      - Serializes calibrated parameters for reproducibility.
+
+    - Usage Notes
+      - Call `calibrate` before `randomise`.
+    """
 
     def __init__(
         self,

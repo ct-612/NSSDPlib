@@ -1,10 +1,20 @@
 """
 Frequency estimation aggregator for categorical LDP mechanisms.
 
-Server-side estimator to recover category frequencies from LDP reports:
-    - GRR: integer indices with closed-form p/q debiasing, then non-negativity and normalisation.
-    - Bit vectors: debias per-bit when p/q are provided (OUE defaults supported), 
-      otherwise return per-bit mean as an approximation (no exact RAPPOR/OLH debiasing yet).
+Server-side estimator to recover category frequencies from LDP reports.
+
+Responsibilities
+  - Aggregate integer or bit-vector reports into frequency estimates.
+  - Apply debiasing when p/q parameters are available.
+  - Provide metadata describing the aggregation assumptions.
+
+Usage Context
+  - Use with categorical LDP mechanisms such as GRR or bit-vector encodings.
+  - Intended for server-side aggregation of LDPReport batches.
+
+Limitations
+  - Bit-vector debiasing falls back to raw means when p/q are unavailable.
+  - Exact debiasing for some mechanisms is not implemented in this aggregator.
 """
 # 说明：为多种本地差分隐私机制提供统一的类别频率估计聚合器，支持 GRR 与基于比特向量的编码。
 # 职责：
@@ -27,10 +37,17 @@ class FrequencyAggregator(StatelessAggregator):
     """
     Aggregate categorical LDP reports into frequency estimates.
 
-    Supports:
-    - GRR: integer indices, prefers prob_true/prob_false from metadata; falls back to epsilon-based p/q.
-    - Bit vectors: debias per-bit when p/q are available (OUE defaults supported); 
-      otherwise return per-bit mean as approximation (RAPPOR/OLH debiasing not implemented).
+    - Configuration
+      - num_categories: Optional explicit number of categories.
+      - mechanism: Optional mechanism name used for metadata.
+
+    - Behavior
+      - Uses GRR debiasing for integer reports when p/q are available.
+      - Uses per-bit debiasing for bit vectors when p/q are available.
+      - Falls back to raw bit means when debiasing parameters are missing.
+
+    - Usage Notes
+      - Expects reports to be from a single mechanism and category space.
     """
 
     def __init__(self, num_categories: Optional[int] = None, mechanism: Optional[str] = None):

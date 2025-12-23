@@ -1,9 +1,19 @@
 """
 Sensitivity helpers for common queries.
+This module provides global sensitivity bounds and lightweight
+estimators for local and smooth sensitivity.
 
-Responsibilities:
-    * Implements closed-form global sensitivity
-    * Implements lightweight estimators for local/smooth sensitivity based on sample statistics
+Responsibilities
+  - Provide closed-form global sensitivity bounds for common aggregates.
+  - Offer local and smooth sensitivity estimators based on sample values.
+
+Usage Context
+  - Used when configuring differential privacy mechanisms for aggregate queries.
+  - Supports bounded numeric domains and contribution limits where applicable.
+
+Limitations
+  - Local and smooth sensitivity helpers are estimators, not guarantees.
+  - Functions operate on in-memory sequences and assume numeric inputs.
 """
 # 说明：为常见查询提供全局敏感度、局部敏感度和平滑敏感度等多种计算形式的工具。
 # 职责：
@@ -21,7 +31,17 @@ from .domain import ContinuousDomain
 
 class SensitivityError(ValueError):
     # 表示在参数不合法或无法定义合理敏感度时使用的异常类型
-    """Raised when sensitivity cannot be computed."""
+    """Error raised when sensitivity cannot be computed.
+
+    - Configuration
+      - No additional fields beyond the standard exception message.
+
+    - Behavior
+      - Signals invalid inputs or unsupported sensitivity settings.
+
+    - Usage Notes
+      - Raised by sensitivity helpers when preconditions are not met.
+    """
 
 
 def count_global_sensitivity(max_contribution: int = 1) -> float:
@@ -137,7 +157,18 @@ def local_sensitivity(values: Sequence[float], *, metric: str = "l1") -> float:
 
 @dataclass
 class SmoothSensitivityEstimate:
-    """Result of smooth sensitivity computation."""
+    """Result container for smooth sensitivity estimation.
+
+    - Configuration
+      - beta: Smoothness parameter used by the estimator.
+      - estimate: Estimated smooth sensitivity value.
+
+    - Behavior
+      - Stores the estimator outputs without additional validation.
+
+    - Usage Notes
+      - Returned by ``smooth_sensitivity_mean``.
+    """
 
     beta: float
     estimate: float

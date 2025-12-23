@@ -1,4 +1,19 @@
-"""Base class for Local Differential Privacy mechanisms."""
+"""
+Base abstractions for local differential privacy mechanisms.
+
+Responsibilities
+  - Define shared validation and reporting behavior for LDP mechanisms.
+  - Standardize privacy model metadata and calibration hooks.
+  - Provide a common interface for randomized local perturbation.
+
+Usage Context
+  - Use as the base for client-side mechanisms that randomise encoded values.
+  - Intended for LDP reports consumed by downstream aggregators.
+
+Limitations
+  - Does not implement any concrete perturbation strategy.
+  - Requires subclasses to define the randomise operation.
+"""
 # 说明：本地差分隐私（LDP）机制的统一基类，约定隐私模型、参数校验与报表封装接口。
 # 职责：
 # - 将 privacy_model 固定为 LDP 并在构造阶段校验 epsilon 合法性与类型
@@ -19,10 +34,24 @@ from dplib.ldp.types import EncodedValue, LDPReport
 
 class BaseLDPMechanism(BaseMechanism, ABC):
     """
-    Common base class for all LDP mechanisms.
+    Common base class for LDP mechanisms with shared validation and reporting.
 
-    Guarantees `privacy_model = PrivacyModel.LDP`, validates epsilon, and
-    provides a unified report constructor for downstream aggregators.
+    - Configuration
+      - epsilon: Privacy budget for local randomization.
+      - delta: Optional delta parameter, defaulting to 0.0.
+      - identifier: Optional stable identifier for reports and serialization.
+      - rng: Optional random generator used for sampling.
+      - name: Optional human-readable name override.
+
+    - Behavior
+      - Fixes privacy_model to LDP and validates epsilon.
+      - Exposes generate_report to wrap perturbed values with metadata.
+      - Serializes privacy model and identifier alongside base fields.
+      - Ignores sensitivity-based calibration parameters.
+
+    - Usage Notes
+      - Subclasses must implement randomise for encoded inputs.
+      - Use generate_report to produce LDPReport objects for aggregation.
     """
 
     privacy_model: PrivacyModel = PrivacyModel.LDP

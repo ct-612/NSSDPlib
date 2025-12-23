@@ -1,4 +1,19 @@
-"""Sketch encoding placeholder for Count-Min / Count-Sketch style structures."""
+"""
+Sketch encoding placeholder for Count-Min / Count-Sketch style structures.
+
+Responsibilities
+  - Encode values into row and bucket coordinates for sketch structures.
+  - Maintain sketch parameters such as rows, buckets, and seed.
+  - Provide metadata describing sketch configuration.
+
+Usage Context
+  - Use as a simplified encoder for sketch-style LDP pipelines.
+  - Intended for server-side aggregation with sketch-based estimators.
+
+Limitations
+  - Encoding is a placeholder and does not include sign hashes.
+  - Sketch encoding is not reversible.
+"""
 # 说明：为未来的 sketch-based LDP 聚合提供编码组件，当前实现仅返回简化的 (row, bucket) 对列表，未包含 sign 等高级特性且不可逆。
 # 职责：
 # - 维护 sketch 结构的行数、桶数与哈希种子等配置
@@ -19,11 +34,17 @@ class SketchEncoder(StatelessEncoder):
     """
     Encode values into sketch row/bucket coordinates (simplified placeholder).
 
-    TODO (future implementation):
-    - Add optional sign hash per row to support Count-Sketch.
-    - Support configurable hash families/independent seeds per row.
-    - Provide helper to emit dense sparse-row vectors for aggregator consumption.
-    - Consider reversible metadata for aligning server-side reconstruction.
+    - Configuration
+      - num_rows: Number of sketch rows.
+      - num_buckets: Number of buckets per row.
+      - seed: Seed used to derive hash functions.
+
+    - Behavior
+      - Emits row and bucket index pairs per input value.
+      - Uses one hash function per row.
+
+    - Usage Notes
+      - This is a simplified placeholder encoder for sketch structures.
     """
 
     def __init__(self, num_rows: int, num_buckets: int, seed: int = 0):

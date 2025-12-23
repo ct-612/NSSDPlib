@@ -1,10 +1,16 @@
 """
 Generic composition abstractions for differential privacy theorems.
 
-Responsibilities:
-    * normalise privacy events regardless of their original representation
-    * provide reusable sequential, parallel, and higher-order composition rules
-    * return structured CompositionResult objects for downstream accountants
+Responsibilities
+  - Normalise privacy event inputs into a common representation.
+  - Provide reusable sequential, parallel, and higher-order composition rules.
+  - Return structured CompositionResult objects for downstream accounting.
+
+Usage Context
+  - Used when combining multiple privacy events into a single allocation.
+
+Limitations
+  - Implements simple, generic composition logic rather than specialized bounds.
 """
 # 说明：差分隐私定理的通用组合抽象。
 # 职责：
@@ -41,7 +47,18 @@ Reducer = Callable[[Sequence["CompositionResult"]], "CompositionResult"]
 
 
 class CompositionError(MechanismError):
-    """Raised when a composition rule cannot be evaluated."""
+    """
+    Error raised when a composition rule cannot be evaluated.
+
+    - Configuration
+      - No additional fields beyond the base exception message.
+    
+    - Behavior
+      - Signals invalid inputs or rule-specific failures during composition.
+    
+    - Usage Notes
+      - Catch to handle composition failures in accounting workflows.
+    """
     # 组合规则无法评估时抛出
 
 
@@ -57,7 +74,7 @@ def _coerce_non_negative(value: Any, label: str) -> float:
 
 
 def normalize_privacy_event(event: PrivacyEventLike) -> PrivacyEvent:
-    """Convert supported shorthand inputs into a PrivacyEvent instance."""
+    """Convert supported shorthand inputs into a PrivacyEvent instance with validated epsilon/delta."""
     # 单个事件标准化：接受对象/字典/二元组(或含描述的三元组)，输出 PrivacyEvent
     if isinstance(event, PrivacyEvent):
         return event
@@ -78,14 +95,25 @@ def normalize_privacy_event(event: PrivacyEventLike) -> PrivacyEvent:
 
 
 def normalize_privacy_events(events: Iterable[PrivacyEventLike]) -> Tuple[PrivacyEvent, ...]:
-    """Normalise an iterable of privacy events."""
+    """Normalise an iterable of privacy events into an immutable tuple."""
     # 批量标准化：返回不可变元组，便于后续规则安全处理
     return tuple(normalize_privacy_event(event) for event in events)
 
 
 @dataclass(frozen=True)
 class CompositionResult:
-    """Container for the outcome of a composition rule."""
+    """
+    Container for the outcome of a composition rule.
+
+    - Configuration
+      - Stores epsilon/delta totals and an optional detail mapping.
+    
+    - Behavior
+      - Supports addition and JSON-friendly serialization.
+    
+    - Usage Notes
+      - Use to pass composed results into accountants or reports.
+    """
     # 组合结果：保存聚合后的 ε、δ 与可选细节字典；支持结果相加与 dict 序列化
 
     epsilon: float = 0.0
@@ -106,13 +134,24 @@ class CompositionResult:
         return cls(0.0, 0.0, detail=detail or {})
 
     def to_dict(self) -> Dict[str, Any]:
-        """Return a JSON-friendly representation."""
+        """Return a JSON-friendly representation of epsilon, delta, and detail."""
         # JSON 友好导出
         return {"epsilon": float(self.epsilon), "delta": float(self.delta), "detail": dict(self.detail)}
 
 
 class CompositionRule:
-    """Base class for all composition rules."""
+    """
+    Base class for all composition rules.
+
+    - Configuration
+      - Uses an optional name for identification in reports.
+    
+    - Behavior
+      - Normalises inputs via compose and delegates to apply.
+    
+    - Usage Notes
+      - Subclasses implement apply to define specific composition logic.
+    """
     # 组合规则基类：提供统一 compose 入口并委托 apply 实现
 
     def __init__(self, name: Optional[str] = None):
@@ -129,7 +168,18 @@ class CompositionRule:
 
 
 class SequentialCompositionRule(CompositionRule):
-    """Sequential composition that aggregates privacy loss additively."""
+    """
+    Sequential composition that aggregates privacy loss additively.
+
+    - Configuration
+      - Optional aggregator for custom epsilon/delta accumulation.
+    
+    - Behavior
+      - Applies the aggregator and returns a CompositionResult with counts.
+    
+    - Usage Notes
+      - Use for simple linear composition across independent events.
+    """
     # 顺序组合规则：ε、δ 逐事件线性累加
 
     def __init__(
@@ -155,7 +205,18 @@ class SequentialCompositionRule(CompositionRule):
 
 
 class ParallelCompositionRule(CompositionRule):
-    """Parallel composition over disjoint sub-populations."""
+    """
+    Parallel composition over disjoint sub-populations.
+
+    - Configuration
+      - Optional group key, inner rule, and reducer for aggregation.
+    
+    - Behavior
+      - Groups events, composes per group, and reduces group results.
+    
+    - Usage Notes
+      - Use when events apply to disjoint subsets of records.
+    """
     # 并行组合：对不相交子群体分别合成，再用归约器聚合（默认取分量最大）
 
     def __init__(
@@ -207,7 +268,18 @@ class ParallelCompositionRule(CompositionRule):
 
 
 class HigherOrderCompositionRule(CompositionRule):
-    """Higher-order composition that reuses a base rule and applies a transform."""
+    """
+    Higher-order composition that reuses a base rule and applies a transform.
+
+    - Configuration
+      - Requires a positive integer order and optional base rule and transform.
+    
+    - Behavior
+      - Composes events with the base rule, then applies the transform.
+    
+    - Usage Notes
+      - Use to build parameterized composition schemes from simpler rules.
+    """
     # 高阶组合：复用基础规则（默认顺序组合）获得 base_result，再按阶数与变换函数修正
     # 实际可替换为更保守/精确的组合（如 advanced composition / zCDP 转换等）
 

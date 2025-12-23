@@ -1,10 +1,18 @@
 """
 DP-GAN synthetic data generator (MVP stub).
 
-Responsibilities:
-    * provide a DP-aware entry point for GAN training hooks (DP-SGD etc.)
-    * manage latent sampling and generator invocation
-    * leave heavy ML backend to external trainer while keeping stable interface
+Responsibilities
+  - Provide a DP-aware entry point for GAN training hooks (e.g., DP-SGD).
+  - Manage latent sampling and generator invocation.
+  - Keep a stable, serializable interface for external trainers.
+
+Usage Context
+  - Use as a lightweight wrapper around external GAN training pipelines.
+  - Intended for MVP workflows where training is handled elsewhere.
+
+Limitations
+  - Training logic is a stub and does not implement DP-SGD.
+  - Only the "torch" backend is accepted in the current implementation.
 """
 # 说明：差分隐私 GAN 合成数据生成器的骨架实现，当前不包含完整训练逻辑，侧重接口与配置打通。
 # 职责：
@@ -24,7 +32,26 @@ from dplib.core.utils.param_validation import ParamValidationError, ensure
 
 
 class DPSyntheticGAN(SyntheticDataGenerator):
-    """GAN-based synthetic generator using DP-SGD training hooks."""
+    """
+    GAN-based synthetic generator using DP-SGD training hooks.
+
+    - Configuration
+      - domain: Domain describing dataset fields.
+      - epsilon: Privacy budget for training.
+      - delta: Optional delta parameter for approximate DP.
+      - generator_model: Optional callable generator for latent sampling.
+      - discriminator_model: Optional discriminator reference.
+      - dp_sgd_config: Optional DP-SGD configuration mapping.
+      - backend: Backend identifier; only "torch" is supported.
+      - latent_dim: Dimensionality of the latent input space.
+
+    - Behavior
+      - Stores a numeric data template during fit and marks trained state.
+      - Samples latent vectors and invokes the generator when available.
+
+    - Usage Notes
+      - Sampling falls back to Gaussian noise when no generator is available.
+    """
     # 以差分隐私 SGD 训练为前提的 GAN 合成生成器封装，实现与底层 ML 框架解耦的高层接口
 
     method = "gan"

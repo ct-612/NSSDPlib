@@ -1,10 +1,18 @@
 """
 Numerical utilities shared across the library.
 
-Responsibilities:
-    * provide numerically stable aggregations (logsumexp/softmax)
-    * expose helper statistics (online variance, clamped probabilities)
-    * guard against floating point issues when dealing with DP parameters
+Responsibilities
+  - Provide numerically stable aggregations (logsumexp, softmax).
+  - Expose helper statistics such as stable mean and variance.
+  - Guard against floating point issues in probability utilities.
+
+Usage Context
+  - Use in DP mechanisms or analytics where numerical stability matters.
+  - Intended for small utility helpers reused across modules.
+
+Limitations
+  - Assumes numeric inputs convertible to numpy arrays.
+  - Does not validate probability semantics beyond clamping and normalization.
 """
 # 说明：库内共享的数值工具函数集合，集中实现数值稳定的聚合与统计运算。
 # 职责：

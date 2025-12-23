@@ -1,4 +1,19 @@
-"""Base abstractions for deterministic LDP encoders."""
+"""
+Base abstractions for deterministic LDP encoders.
+
+Responsibilities
+  - Define a deterministic encoder interface for LDP pipelines.
+  - Distinguish stateless and fitted encoder behaviors.
+  - Provide common metadata and fit patterns for encoders.
+
+Usage Context
+  - Use as base classes for LDP encoders used before perturbation.
+  - Intended for deterministic mappings from raw values to EncodedValue.
+
+Limitations
+  - Base classes do not implement encoding or decoding logic.
+  - Fitted encoders require explicit fit before use.
+"""
 # 说明：定义 LDP 编码层的基础接口，负责原始值与 EncodedValue 之间的确定性映射，不引入任何随机性，供编码器与聚合器复用。
 # 职责：
 # - 为本地差分隐私流水线中的编码器定义统一的抽象基类
@@ -19,6 +34,15 @@ class BaseEncoder(ABC):
 
     Encoders should transform raw values into EncodedValue without adding noise,
     and, when possible, support decoding back to the original representation.
+
+    - Configuration
+      - No base configuration; subclasses define parameters.
+
+    - Behavior
+      - Defines fit, encode, decode, and metadata interfaces.
+
+    - Usage Notes
+      - Encoders are deterministic and do not introduce noise.
     """
 
     @abstractmethod
@@ -52,6 +76,16 @@ class StatelessEncoder(BaseEncoder):
 
     Provides a no-op fit and a minimal metadata payload; encode/decode remain
     abstract to be implemented by subclasses.
+
+    - Configuration
+      - No additional configuration beyond subclass parameters.
+
+    - Behavior
+      - fit is a no-op and returns self.
+      - get_metadata returns the encoder type name.
+
+    - Usage Notes
+      - Use for encoders that are fully specified at construction time.
     """
 
     def fit(self, data: Iterable[Any]) -> "StatelessEncoder":
@@ -83,6 +117,16 @@ class FittedEncoder(BaseEncoder):
     Subclasses should populate necessary statistics during fit(), then set
     is_fitted to True. encode/decode implementations should call _ensure_fitted()
     to guard against use prior to fitting.
+
+    - Configuration
+      - is_fitted: Boolean flag indicating fitted state.
+
+    - Behavior
+      - Enforces fitted state before encode/decode.
+      - Provides helper to mark the encoder as fitted.
+
+    - Usage Notes
+      - Call fit before encoding or decoding values.
     """
 
     def __init__(self) -> None:

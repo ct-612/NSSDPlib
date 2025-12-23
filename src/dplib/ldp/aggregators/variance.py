@@ -3,6 +3,19 @@ Variance estimator for continuous LDP reports.
 
 Supports optional noise-variance subtraction when provided, and records both observed
 and de-noised estimates for downstream use.
+
+Responsibilities
+  - Compute sample variance from encoded numeric reports.
+  - Optionally subtract a known noise variance.
+  - Provide metadata describing variance adjustment behavior.
+
+Usage Context
+  - Use for continuous LDP mechanisms that report numeric values.
+  - Intended for server-side aggregation of LDPReport batches.
+
+Limitations
+  - Variance is set to zero for a single report.
+  - Noise variance subtraction is a simple approximation.
 """
 # 说明：针对连续型 LDP 报告估计观测方差并在可用时减去噪声方差以得到去噪方差估计。
 # 职责：
@@ -21,7 +34,20 @@ from dplib.ldp.types import Estimate, LDPReport
 
 
 class VarianceAggregator(StatelessAggregator):
-    """Aggregate numeric LDP reports by computing (optionally de-noised) sample variance."""
+    """
+    Aggregate numeric LDP reports by computing optional de-noised sample variance.
+
+    - Configuration
+      - clip_range: Optional clip range recorded in metadata.
+      - noise_variance: Optional noise variance used for variance correction.
+
+    - Behavior
+      - Computes sample variance and optionally subtracts noise variance.
+      - Records whether noise adjustment was applied.
+
+    - Usage Notes
+      - Expects encoded values to be numeric.
+    """
 
     def __init__(self, clip_range: Optional[Tuple[float, float]] = None, noise_variance: Optional[float] = None):
         # 初始化方差聚合器，记录可选的截断区间以及用于后续去噪的噪声方差配置

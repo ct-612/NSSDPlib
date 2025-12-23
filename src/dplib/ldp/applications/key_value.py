@@ -1,13 +1,18 @@
 """
 Key-value telemetry pipeline for LDP.
 
-Responsibilities:
-    * report key frequencies with categorical GRR
-    * optionally report numeric values with local Laplace noise
-    * aggregate key frequency and value mean estimates on the server
+Responsibilities
+  - Report key frequencies with categorical GRR.
+  - Optionally report numeric values with local Laplace noise.
+  - Aggregate key frequency and value mean estimates on the server.
 
-Notes:
-    Value estimation currently returns overall mean only; per-key value statistics can be added later.
+Usage Context
+  - Use for key-value telemetry under local DP.
+  - Intended for end-to-end client/aggregator pipelines.
+
+Limitations
+  - Value estimation returns overall mean only.
+  - Per-key value statistics are not implemented.
 """
 # 说明：封装 key-value 遥测的 LDP 端到端应用。
 # 职责：
@@ -35,7 +40,21 @@ from dplib.ldp.types import Estimate, LDPReport
 
 @dataclass
 class KeyValueClientConfig:
-    """Client-side configuration for key-value telemetry."""
+    """
+    Client-side configuration for key-value telemetry.
+
+    - Configuration
+      - epsilon_key: Privacy budget for key perturbation.
+      - epsilon_value: Optional privacy budget for value perturbation.
+      - categories: Optional list of key categories.
+      - value_clip_range: Optional clipping range for numeric values.
+
+    - Behavior
+      - Validates epsilon values and clipping bounds.
+
+    - Usage Notes
+      - value_clip_range is required when epsilon_value is set.
+    """
 
     epsilon_key: float
     epsilon_value: Optional[float] = None
@@ -55,7 +74,19 @@ class KeyValueClientConfig:
 
 @dataclass
 class KeyValueServerConfig:
-    """Server-side configuration for key-value telemetry."""
+    """
+    Server-side configuration for key-value telemetry.
+
+    - Configuration
+      - estimate_key_frequency: Whether to estimate key frequencies.
+      - estimate_value_mean: Whether to estimate value mean.
+
+    - Behavior
+      - Validates that at least one estimator is enabled.
+
+    - Usage Notes
+      - Enable value mean estimation only when value reports are collected.
+    """
 
     estimate_key_frequency: bool = True
     estimate_value_mean: bool = False
@@ -67,7 +98,20 @@ class KeyValueServerConfig:
 
 
 class KeyValueAggregator(BaseAggregator):
-    """Aggregate key frequency and value mean estimates."""
+    """
+    Aggregate key frequency and value mean estimates.
+
+    - Configuration
+      - frequency_aggregator: Aggregator for key frequencies.
+      - mean_aggregator: Aggregator for value means.
+
+    - Behavior
+      - Splits reports by metric and aggregates each group.
+      - Returns a combined estimate with per-metric metadata.
+
+    - Usage Notes
+      - Expects reports to carry a "metric" tag in metadata.
+    """
 
     def __init__(self, frequency_aggregator: Optional[FrequencyAggregator] = None, mean_aggregator: Optional[MeanAggregator] = None) -> None:
         # 保存 key 与 value 的聚合器配置
@@ -133,12 +177,16 @@ class KeyValueApplication(BaseLDPApplication):
     """
     End-to-end key-value telemetry application.
 
-    Notes:
-        Value estimation currently returns overall mean only.
+    - Configuration
+      - client_config: Client configuration for key and value reporting.
+      - server_config: Server configuration for aggregation.
 
-    TODO:
-        * add per-key value statistics with joint encoding strategies
-        * decide whether to expose encoder fit helpers or accept pre-fitted encoder injection with validation rules
+    - Behavior
+      - Builds a client that reports keys and optional values.
+      - Builds a server-side aggregator for key frequencies and value mean.
+
+    - Usage Notes
+      - Value reporting requires epsilon_value and value_clip_range.
     """
 
     def __init__(self, client_config: KeyValueClientConfig, server_config: Optional[KeyValueServerConfig] = None) -> None:

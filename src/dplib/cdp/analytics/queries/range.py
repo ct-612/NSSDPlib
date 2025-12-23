@@ -1,10 +1,18 @@
 """
 Privacy-preserving range query utilities built on noisy prefix sums.
 
-Responsibilities:
-    * build DP prefix sums for bounded numeric arrays
-    * answer arbitrary index ranges using a single noisy prefix table
-    * support sum/count/mean via metric selection
+Responsibilities
+  - Build DP prefix sums for bounded numeric arrays.
+  - Answer arbitrary index ranges using a single noisy prefix table.
+  - Support sum/count/mean via metric selection.
+
+Usage Context
+  - Use to answer multiple range queries with one noisy prefix table.
+  - Designed for bounded numeric inputs with contribution limits.
+
+Limitations
+  - Requires valid range indices using Python slicing semantics.
+  - Mean results are stabilized by a minimum noisy count.
 """
 # 说明：基于带噪前缀和实现差分隐私区间查询的工具模块。
 # 职责：
@@ -28,7 +36,24 @@ Range = Tuple[int, int]
 
 
 class PrivateRangeQuery:
-    """Release DP protected range queries (sum/count/mean) via noisy prefixes."""
+    """
+    Release DP protected range queries (sum/count/mean) via noisy prefixes.
+
+    - Configuration
+      - epsilon: Privacy budget used for calibrating the prefix mechanism.
+      - bounds: Lower and upper bounds applied to inputs.
+      - mechanism: Optional calibrated mechanism override.
+      - max_contribution: Per-entity contribution bound for sensitivity.
+      - metric: Default metric for queries ("sum", "count", or "mean").
+      - min_count: Lower bound for stabilizing noisy mean denominators.
+
+    - Behavior
+      - Builds noisy prefix sums and answers ranges by subtraction.
+      - Supports mean by combining noisy sum and noisy count prefixes.
+
+    - Usage Notes
+      - Provide a calibrated mechanism to override default construction.
+    """
 
     def __init__(
         self,

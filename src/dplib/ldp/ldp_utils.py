@@ -1,4 +1,19 @@
-"""LDP-focused utility helpers for hash families, bit operations, and parameter validation."""
+"""
+LDP-focused utility helpers for hash families, bit operations, and parameter validation.
+
+Responsibilities
+  - Provide hashing helpers and independent hash families.
+  - Offer bit-vector creation and inspection utilities.
+  - Validate probabilities and epsilon for local DP helpers.
+
+Usage Context
+  - Use in LDP encoders, mechanisms, and aggregators that require hashing or bit vectors.
+  - Intended for small, reusable utilities within the LDP subsystem.
+
+Limitations
+  - Hashing utilities depend on optional xxhash or mmh3 availability.
+  - Bit-vector helpers fall back to Python lists when bitarray is unavailable.
+"""
 # 说明：为 LDP 子系统提供哈希族构造、比特向量操作与参数校验等通用工具函数。
 # 职责：
 # - 封装基于 xxhash 或 mmh3 的哈希落桶逻辑并支持构造独立哈希函数族
@@ -44,8 +59,8 @@ def hash_to_range(value: Union[str, bytes], seed: int, num_buckets: int) -> int:
     Hash value into [0, num_buckets) using xxhash (preferred) or mmh3 as fallback.
 
     Raises:
-        ValueError: if num_buckets <= 0.
-        ImportError: if neither xxhash nor mmh3 is available.
+        - ParamValidationError: if num_buckets <= 0.
+        - ImportError: if neither xxhash nor mmh3 is available.
     """
     # 使用可用的哈希库将输入 value 映射到 [0, num_buckets) 区间，并根据 seed 控制哈希族
     if num_buckets <= 0:

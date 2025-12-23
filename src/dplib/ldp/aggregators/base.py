@@ -1,4 +1,19 @@
-"""Base abstractions for server-side LDP aggregators."""
+"""
+Base abstractions for server-side LDP aggregators.
+
+Responsibilities
+  - Define the aggregator interface for server-side LDP reports.
+  - Standardize metadata and reset behavior across implementations.
+  - Provide a stateless aggregator base for simple implementations.
+
+Usage Context
+  - Use as the base for aggregators consuming LDPReport batches.
+  - Intended for server-side aggregation in LDP workflows.
+
+Limitations
+  - Aggregators operate on encoded reports, not raw values.
+  - Base classes do not implement aggregation logic.
+"""
 # 说明：聚合器在服务端消费 LDPReport 列表并输出 Estimate，不负责解码原始值，仅基于encoded 值与机制参数做统计估计。
 # 职责：
 # - 定义服务端 LDP 聚合器的抽象接口与最小行为契约
@@ -20,6 +35,16 @@ class BaseAggregator(ABC):
     Aggregators take a batch of LDPReport objects and produce an Estimate. They
     may maintain internal state (e.g., running counters) and can be reset when
     reused across rounds.
+
+    - Configuration
+      - No base configuration; subclasses define parameters.
+
+    - Behavior
+      - Consumes a batch of LDPReport objects and returns an Estimate.
+      - Exposes metadata and supports optional reset of state.
+
+    - Usage Notes
+      - Subclasses implement aggregation logic for specific mechanisms.
     """
 
     @abstractmethod
@@ -41,7 +66,18 @@ class BaseAggregator(ABC):
 
 
 class StatelessAggregator(BaseAggregator):
-    """Aggregator with no persistent state; reset is a no-op."""
+    """
+    Aggregator with no persistent state; reset is a no-op.
+
+    - Configuration
+      - No persistent configuration beyond subclass parameters.
+
+    - Behavior
+      - Provides minimal metadata and no-op reset.
+
+    - Usage Notes
+      - Use for aggregators that compute outputs from a single batch.
+    """
 
     def aggregate(self, reports: Sequence[LDPReport]) -> Estimate:  # pragma: no cover - abstract passthrough
         # 无状态聚合器的子类仍需实现具体聚合算法，仅不在实例上保留跨轮次状态

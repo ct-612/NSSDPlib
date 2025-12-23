@@ -1,10 +1,18 @@
 """
 Gaussian copula based DP synthetic data generator (MVP).
 
-Responsibilities:
-    * estimate DP marginals for continuous/discrete features
-    * fit a DP-noised covariance matrix in latent Gaussian space
-    * sample via multivariate normal and inverse-CDF reconstruction
+Responsibilities
+  - Estimate DP marginals for continuous features.
+  - Fit a DP-noised covariance matrix in latent Gaussian space.
+  - Sample via multivariate normal and inverse-CDF reconstruction.
+
+Usage Context
+  - Use for mixed continuous/discrete data with mapping-based records.
+  - Designed for MVP workflows with Gaussian copula structure.
+
+Limitations
+  - Discrete feature probabilities are estimated without DP noise.
+  - Only Gaussian copula is supported.
 """
 # 说明：基于高斯 Copula 的差分隐私合成数据生成器骨架，实现基础接口与简单近似算法。
 # 职责：
@@ -29,7 +37,27 @@ from dplib.cdp.mechanisms.laplace import LaplaceMechanism
 
 
 class CopulaGenerator(SyntheticDataGenerator):
-    """DP Gaussian copula generator."""
+    """
+    DP Gaussian copula generator.
+
+    - Configuration
+      - domain: Mapping of field names to domains.
+      - epsilon: Privacy budget for covariance and marginal estimation.
+      - delta: Optional delta parameter for approximate DP.
+      - copula_type: Copula family identifier; only "gaussian" is supported.
+      - continuous_features: Optional explicit list of continuous fields.
+      - discrete_features: Optional explicit list of discrete fields.
+      - num_bins: Number of bins used for continuous marginal histograms.
+      - mechanism_cov: Mechanism or name used for covariance noise.
+      - mechanism_marginal: Mechanism or name used for marginal noise.
+
+    - Behavior
+      - Fits DP marginals for continuous features and a noisy covariance.
+      - Samples continuous features via Gaussian copula and discrete features by frequency.
+
+    - Usage Notes
+      - Discrete features are sampled independently from estimated frequencies.
+    """
     # 基于高斯 Copula 的差分隐私合成生成器实现
 
     method = "copula"

@@ -1,5 +1,18 @@
 """
 Global sensitivity helpers for common CDP queries (wrapping core data layer).
+
+Responsibilities
+  - Expose global sensitivity helpers for common aggregate queries.
+  - Normalize parameter interfaces for CDP components.
+  - Provide presets mapping for sensitivity function names.
+
+Usage Context
+  - Use when configuring CDP mechanisms with sensitivity bounds.
+  - Wraps core data-layer sensitivity utilities.
+
+Limitations
+  - Assumes bounded domains where required by the underlying helpers.
+  - Provides only global sensitivity, not local or smooth variants.
 """
 # 说明：为常见中心差分隐私查询提供基于核心数据层的全局敏感度便捷封装。
 # 职责：

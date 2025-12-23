@@ -3,6 +3,19 @@ Noise calibrator utilities based on sensitivity and privacy budget.
 
 Provides common calibration formulas for Laplace and Gaussian mechanisms,
 plus a thin dispatcher for mechanism-aware calibration.
+
+Responsibilities
+  - Provide calibration formulas for common CDP mechanisms.
+  - Validate epsilon, delta, and sensitivity inputs.
+  - Dispatch calibration by mechanism name and return parameter values.
+
+Usage Context
+  - Use to compute noise parameters before mechanism calibration.
+  - Intended for lightweight integration in CDP pipelines.
+
+Limitations
+  - Uses the standard 1.25 constant for Gaussian calibration.
+  - Supports only a predefined set of mechanism identifiers.
 """
 # 说明：基于查询敏感度与隐私预算为常见 CDP 机制计算噪声参数的校准工具。
 # 职责：

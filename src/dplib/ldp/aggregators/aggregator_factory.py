@@ -1,4 +1,19 @@
-"""Factory and registry utilities for LDP aggregators."""
+"""
+Factory and registry utilities for LDP aggregators.
+
+Responsibilities
+  - Maintain a registry mapping names to aggregator classes.
+  - Provide helpers to register, resolve, and instantiate aggregators.
+  - Expose a simple factory wrapper for configuration-driven creation.
+
+Usage Context
+  - Use to construct aggregators by name from configuration.
+  - Intended for wiring aggregators in LDP pipelines.
+
+Limitations
+  - Only registered aggregators can be instantiated.
+  - Does not validate aggregator-specific kwargs.
+"""
 # 说明：提供聚合器的注册与按名称创建能力，便于通过配置选择聚合策略。
 # 职责：
 # - 维护从字符串标识到聚合器实现类的注册表，支持运行时扩展
@@ -46,7 +61,18 @@ def create_aggregator(name: str, **kwargs: Any) -> BaseAggregator:
 
 
 class AggregatorFactory:
-    """Convenience wrapper mirroring the function-based factory helpers."""
+    """
+    Convenience wrapper mirroring the function-based factory helpers.
+
+    - Configuration
+      - No instance configuration; exposes static helper methods.
+
+    - Behavior
+      - Registers, resolves, and instantiates aggregators by name.
+
+    - Usage Notes
+      - Use when a class-based factory interface is preferred.
+    """
 
     @staticmethod
     def register(name: str, cls: Type[BaseAggregator]) -> None:

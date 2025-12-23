@@ -1,4 +1,19 @@
-"""RAPPOR mechanism for LDP (simplified single-stage reporting)."""
+"""
+Simplified RAPPOR-style mechanism for bit-vector inputs under LDP.
+
+Responsibilities
+  - Configure bit-flip probabilities based on epsilon.
+  - Apply independent per-bit randomized response.
+  - Preserve input container type in the output.
+
+Usage Context
+  - Use for bit-vector reports produced by Bloom filters or unary encoding.
+  - Intended for local perturbation of binary feature vectors.
+
+Limitations
+  - Implements a single-stage randomized response variant.
+  - Assumes input values are binary indicators.
+"""
 # 说明：实现简化单阶段 RAPPOR 本地差分隐私机制，对比特向量执行按位二元随机响应。
 # 职责：
 # - 基于 epsilon 或显式给定参数配置 RAPPOR 的 p/q 概率
@@ -20,12 +35,23 @@ from dplib.core.utils.param_validation import ParamValidationError
 
 class RAPPORMechanism(BaseLDPMechanism):
     """
-    Simplified RAPPOR-style bit flipping.
+    Simplified RAPPOR-style per-bit randomized response.
 
-    Uses binary randomized response per bit with parameters (p, q):
-      - bit=1 -> report 1 w.p. p
-      - bit=0 -> report 1 w.p. q
-    Defaults choose the symmetric RR instantiation derived from epsilon.
+    - Configuration
+      - epsilon: Privacy budget used to derive default probabilities.
+      - p: Optional probability to keep a 1 as 1.
+      - q: Optional probability to flip a 0 to 1.
+      - identifier: Optional stable identifier for reports and serialization.
+      - rng: Optional random generator used for sampling.
+      - name: Optional human-readable name override.
+
+    - Behavior
+      - Applies binary randomized response independently per bit.
+      - Supports numpy arrays, bitarray-like objects, and Python sequences.
+
+    - Usage Notes
+      - Defaults for p and q are derived from epsilon.
+      - Input values should be 0/1 indicators.
     """
 
     def __init__(

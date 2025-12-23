@@ -1,10 +1,18 @@
 """
 Query engine orchestrating DP analytics with optional accounting.
 
-Responsibilities:
-    * provide a unified execution entry for built-in queries
-    * support simple query pipelines (with optional carry-forward input)
-    * hook into PrivacyAccountant for spend recording
+Responsibilities
+  - Provide a unified execution entry for built-in queries.
+  - Support simple query pipelines with optional carry-forward input.
+  - Hook into PrivacyAccountant for spend recording.
+
+Usage Context
+  - Use when dispatching named DP queries with shared accounting.
+  - Supports built-in query handlers and custom registrations.
+
+Limitations
+  - Assumes handlers return results paired with (epsilon, delta) spend.
+  - Does not enforce specific accounting policies beyond recording events.
 """
 # 说明：为内置差分隐私查询提供统一执行入口并可选接入隐私会计进行预算记录。
 # 职责：
@@ -31,7 +39,19 @@ Handler = Callable[[Iterable[Any], Dict[str, Any]], Tuple[Any, Tuple[float, floa
 
 
 class QueryEngine:
-    """Lightweight dispatcher for analytics queries with optional accounting."""
+    """
+    Lightweight dispatcher for analytics queries with optional accounting.
+
+    - Configuration
+      - accountant: Optional PrivacyAccountant used to record spend events.
+
+    - Behavior
+      - Dispatches named queries and records privacy spend when configured.
+      - Supports pipelines with optional carry-forward inputs.
+
+    - Usage Notes
+      - Register custom handlers to extend built-in query support.
+    """
 
     def __init__(self, *, accountant: Optional[PrivacyAccountant] = None):
         # 初始化查询引擎并构建内置查询名到处理器的注册表，可选挂载 PrivacyAccountant

@@ -4,6 +4,19 @@ Basic composition helpers for central differential privacy.
 This module wraps the generic core composition rules with CDP-friendly
 shortcuts and adds a few engineering conveniences such as repeated
 mechanism scaling, post-processing invariance, and group privacy lifting.
+
+Responsibilities
+  - Provide sequential and parallel composition helpers for CDP events.
+  - Offer convenience utilities such as repetition and group privacy lifting.
+  - Expose post-processing invariance helpers with metadata annotation.
+
+Usage Context
+  - Use for common CDP composition patterns in analytics pipelines.
+  - Intended as a lightweight wrapper around core composition rules.
+
+Limitations
+  - Uses linear scaling for repeated mechanisms and group privacy.
+  - Assumes events are normalized via core composition utilities.
 """
 # 说明：围绕中心差分隐私的基础组合定理提供便捷封装和工程化辅助工具。
 # 职责：

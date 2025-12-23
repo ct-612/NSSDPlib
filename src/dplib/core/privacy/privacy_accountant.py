@@ -1,8 +1,16 @@
 """
-Privacy budget tracking and accounting helpers.
+Privacy budget tracking and accounting helpers for differential privacy.
 
-Provides an accountant that records DP spending events, enforces global
-(ε, δ) budgets, and exposes serialisable audit metadata for audit/reporting.
+Responsibilities
+  - Record spending events and accumulate (epsilon, delta) totals.
+  - Enforce optional global budgets with configurable tolerance.
+  - Emit structured audit metadata for reporting and serialization.
+
+Usage Context
+  - Used by workflows that track cumulative privacy loss across operations.
+
+Limitations
+  - Accounting is based on declared allocations and model conversions, not execution traces.
 """
 # 说明：隐私预算记账与管理工具，负责在库内统一跟踪与约束 (ε, δ) 花费。
 # 职责：
@@ -23,12 +31,23 @@ from dplib.core.utils.param_validation import ParamValidationError
 
 
 class BudgetExceededError(MechanismError):
-    """Raised when an allocation would exceed the configured privacy budget."""
+    """
+    Error raised when an allocation would exceed the configured privacy budget.
+
+    - Configuration
+      - No additional fields beyond the base exception message.
+    
+    - Behavior
+      - Raised before mutating accountant state when a spend would exceed limits.
+    
+    - Usage Notes
+      - Catch to handle budget violations and prevent further spending.
+    """
     # 当一次分配将导致总花费超过预算上限时抛出
 
 
 def _validate_budget_value(value: float, label: str) -> float:
-    """Ensure epsilon/delta components are finite and non-negative."""
+    """Ensure epsilon/delta components are finite and non-negative by coercing to float and validating bounds."""
     # 将输入转为 float，并确保非负；用于 epsilon/delta 的基础校验
     try:
         numeric = float(value)
@@ -43,7 +62,19 @@ def _validate_budget_value(value: float, label: str) -> float:
 
 @dataclass(frozen=True)
 class PrivacyBudget:
-    """Simple container for epsilon/delta pairs."""
+    """
+    Immutable container for epsilon/delta budget pairs.
+
+    - Configuration
+      - epsilon and delta are stored as non-negative floats.
+    
+    - Behavior
+      - Supports addition and subtraction with clamping at zero.
+      - Provides a dictionary representation for serialization.
+    
+    - Usage Notes
+      - Use to represent totals, spending, or remaining budget.
+    """
     # 不可变的预算容器；支持加减与字典导出
 
     epsilon: float = 0.0
@@ -72,7 +103,18 @@ class PrivacyBudget:
 
 @dataclass(frozen=True)
 class PrivacyEvent:
-    """Record for a single privacy allocation."""
+    """
+    Record describing a single privacy allocation and its audit metadata.
+
+    - Configuration
+      - Stores epsilon/delta along with optional model, mechanism, and parameters.
+    
+    - Behavior
+      - Provides a JSON-friendly dictionary snapshot of the event.
+    
+    - Usage Notes
+      - Use for logging, reporting, and reconstructing spending history.
+    """
     # 单次隐私花费事件记录：包含 ε/δ、可选描述、元数据、隐私模型标识、机制、参数、等价 CDP 参数与审计报告列表
 
     epsilon: float
@@ -102,7 +144,19 @@ class PrivacyEvent:
 
 
 class PrivacyAccountant:
-    """Track cumulative privacy usage and guard against exceeding allocations."""
+    """
+    Track cumulative privacy usage and guard against exceeding allocations.
+
+    - Configuration
+      - Optional total budget, tolerance slack, and a display name.
+    
+    - Behavior
+      - Records events, enforces budget limits, and exposes spent/remaining totals.
+      - Supports serialization for audit and persistence.
+    
+    - Usage Notes
+      - Use to accumulate privacy spending across multiple operations.
+    """
     # 记账器：维护总预算、累计花费、事件列表，并提供权限检查与序列化
 
     def __init__(
@@ -156,13 +210,13 @@ class PrivacyAccountant:
     # --------------------------------------------------------------------- queries
     @property
     def spent(self) -> PrivacyBudget:
-        """Return the cumulative spending so far."""
+        """Return the cumulative spending so far as an immutable PrivacyBudget."""
         # 返回当前累计花费（不可变对象）
         return self._spent
 
     @property
     def remaining(self) -> Optional[PrivacyBudget]:
-        """Return remaining budget when bounded, otherwise None."""
+        """Return remaining budget when bounded, otherwise None for unbounded totals."""
         # 有界预算时返回剩余额度；无界返回 None
         if self.total_budget is None:
             return None
@@ -170,12 +224,12 @@ class PrivacyAccountant:
 
     @property
     def events(self) -> Tuple[PrivacyEvent, ...]:
-        """Expose immutable history of recorded events."""
+        """Expose immutable history of recorded events for audit and inspection."""
         # 以元组形式暴露事件历史，防止外部修改
         return tuple(self._events)
 
     def can_allocate(self, epsilon: float, delta: float = 0.0) -> bool:
-        """Check availability without mutating internal state."""
+        """Check availability without mutating internal state or recording events."""
         # 只做可用性检查，不改变内部状态；包含参数合法性校验
         try:
             epsilon = _validate_budget_value(epsilon, "epsilon")
@@ -208,10 +262,10 @@ class PrivacyAccountant:
         Record a privacy-spending event and update cumulative totals.
 
         Responsibilities:
-            * normalize various model/guarantee specifications into a concrete (ε, δ)
-            * enforce that the new spend does not exceed the configured budget
-            * create a structured PrivacyEvent for logging/auditing
-            * update internal cumulative spending counters
+            - normalize various model/guarantee specifications into a concrete (epsilon, delta)
+            - enforce that the new spend does not exceed the configured budget
+            - create a structured PrivacyEvent for logging/auditing
+            - update internal cumulative spending counters
         """
         # 隐私开销事件记录，流程：规范化输入 → 检查预算 → 记录事件 → 累加花费
 
@@ -283,7 +337,7 @@ class PrivacyAccountant:
         target_delta: Optional[float],
         rdp_order: Optional[float],
     ) -> Tuple[float, float, List[Dict[str, Any]]]:
-        """Normalise all provided privacy specifications to a single CDP allocation."""
+        """Normalise all provided privacy specifications to a single CDP allocation and audit payloads."""
         # 标准化隐私预算分配：将所有提供的隐私规格归一化为单一的 CDP 分配
         # - 接受显式 (ε, δ) 与一个或多个 ModelSpec / PrivacyGuarantee
         # - 对非 CDP 的规格统一调用 as_cdp(...) 折算到 (ε, δ)-DP
@@ -335,7 +389,7 @@ class PrivacyAccountant:
 
     # -------------------------------------------------------------- serialization
     def serialize(self) -> Dict[str, Any]:
-        """Return a JSON-friendly snapshot of the accountant state."""
+        """Return a JSON-friendly snapshot of the accountant state and recorded events."""
         # 导出可 JSON 化快照：名称、总预算、已花费、事件列表与容差
         return {
             "name": self.name,
@@ -347,7 +401,7 @@ class PrivacyAccountant:
 
     @classmethod
     def deserialize(cls, payload: Dict[str, Any]) -> "PrivacyAccountant":
-        """Recreate an accountant from serialized metadata."""
+        """Recreate an accountant from serialized metadata and event history."""
         # 从序列化数据重建记账器，包括总预算、已花费与事件历史
         total = payload.get("total_budget")
         accountant = cls(

@@ -3,6 +3,19 @@ Utility reporting for DP query outputs.
 
 Aggregates error metrics over multiple noisy outputs and exposes curve-friendly
 structures for downstream visualisation or notebooks.
+
+Responsibilities
+  - Aggregate error metrics across multiple noisy outputs.
+  - Define report and curve structures for utility summaries.
+  - Provide JSON and Markdown export helpers for reporting.
+
+Usage Context
+  - Use to evaluate utility across runs or mechanisms.
+  - Intended for notebooks, dashboards, or reporting pipelines.
+
+Limitations
+  - Assumes numeric inputs for error metric computation.
+  - Reports are derived from provided samples and do not resample.
 """
 # 说明：针对差分隐私查询结果的效用评估与报告工具，聚合误差指标并生成可视化友好的结构。
 # 职责：

@@ -1,10 +1,18 @@
 """
 Privacy-preserving histogram utilities.
 
-Responsibilities:
-    * compute histogram counts for provided bin edges
-    * apply vectorised DP noise calibrated to contribution limits
-    * preserve original bin edges for downstream consumers
+Responsibilities
+  - Compute histogram counts for provided bin edges.
+  - Apply vectorised DP noise calibrated to contribution limits.
+  - Preserve original bin edges for downstream consumers.
+
+Usage Context
+  - Use when releasing noisy histogram counts for numeric data.
+  - Designed for bin-based aggregation with bounded contributions.
+
+Limitations
+  - Requires calibrated mechanisms; defaults to a Laplace vector mechanism.
+  - Returns non-negative noisy counts and the original bin edges.
 """
 # 说明：基于向量化噪声机制对直方图计数进行差分隐私保护的查询工具。
 # 职责：
@@ -25,7 +33,22 @@ from dplib.cdp.mechanisms.vector import VectorMechanism
 
 
 class PrivateHistogramQuery:
-    """Release DP protected histogram counts."""
+    """
+    Release DP protected histogram counts.
+
+    - Configuration
+      - epsilon: Privacy budget used for the default vector mechanism.
+      - bins: Sorted numeric bin edges used for deterministic counting.
+      - mechanism: Optional calibrated mechanism to apply noise.
+      - max_contribution: Per-entity contribution bound for sensitivity.
+
+    - Behavior
+      - Computes deterministic histogram counts for the configured bins.
+      - Adds vector noise and clips the result to non-negative counts.
+
+    - Usage Notes
+      - Provide a calibrated vector mechanism to override defaults.
+    """
 
     def __init__(
         self,

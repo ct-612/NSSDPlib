@@ -1,4 +1,19 @@
-"""Generalised Randomised Response (k-ary GRR) for LDP."""
+"""
+Generalized randomized response for k-ary categorical domains under LDP.
+
+Responsibilities
+  - Configure a finite domain via categories or domain size.
+  - Compute response probabilities based on epsilon and domain size.
+  - Randomize categorical inputs with GRR semantics.
+
+Usage Context
+  - Use for categorical data where each value lies in a known finite set.
+  - Intended for local perturbation of single categorical reports.
+
+Limitations
+  - Requires either explicit categories or a domain size.
+  - Outputs are limited to the configured domain.
+"""
 # 说明：实现 k 元广义随机响应（GRR）的本地差分隐私机制，用于离散类别数据扰动。
 # 职责：
 # - 支持基于显式类别集合或 domain_size 的有限离散域建模
@@ -18,7 +33,26 @@ from dplib.core.utils.param_validation import ParamValidationError
 
 
 class GRRMechanism(BaseLDPMechanism):
-    """k-ary Generalised Randomised Response mechanism."""
+    """
+    k-ary generalized randomized response for categorical inputs.
+
+    - Configuration
+      - epsilon: Privacy budget controlling response bias.
+      - categories: Optional explicit category list defining the domain.
+      - domain_size: Domain size when categories are not provided.
+      - identifier: Optional stable identifier for reports and serialization.
+      - rng: Optional random generator used for sampling.
+      - name: Optional human-readable name override.
+
+    - Behavior
+      - Samples the true category with probability prob_true.
+      - Samples an alternative category uniformly with probability prob_false.
+      - Supports serialization of domain configuration and probabilities.
+
+    - Usage Notes
+      - Provide exactly one of categories or domain_size.
+      - Encoded inputs must refer to the configured domain.
+    """
 
     def __init__(
         self,

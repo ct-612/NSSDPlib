@@ -1,9 +1,17 @@
 """
 Light-weight registry mapping MechanismType to concrete implementations.
 
-Responsibilities:
-    * provide a single source of truth for mechanism lookups
-    * expose helpers to normalise identifiers and validate model support
+Responsibilities
+  - Provide a single source of truth for mechanism lookups.
+  - Expose helpers to normalise identifiers and validate model support.
+
+Usage Context
+  - Use when resolving mechanism identifiers to concrete classes.
+  - Intended to back factory helpers and model validation.
+
+Limitations
+  - Only includes mechanisms registered in MECHANISM_REGISTRY.
+  - Assumes MechanismType values align with available implementations.
 """
 # 说明：维护差分隐私 MechanismType 与具体机制实现类映射关系的轻量级注册表模块。
 # 职责：

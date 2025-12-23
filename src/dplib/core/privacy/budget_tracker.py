@@ -1,10 +1,16 @@
 """
 Budget tracking utilities for multi-tenant differential privacy workflows.
 
-Responsibilities:
-    * manage per-scope (task/user/session) privacy budgets via PrivacyAccountant
-    * expose remaining/consumed budgets for instrumentation
-    * trigger alert callbacks when configured thresholds are crossed
+Responsibilities
+  - Manage per-scope budgets using PrivacyAccountant instances.
+  - Expose remaining and consumed budgets for instrumentation.
+  - Trigger alert callbacks when configured thresholds are crossed.
+
+Usage Context
+  - Used to coordinate privacy budgets across tasks, users, or sessions.
+
+Limitations
+  - Tracks declared allocations and does not infer spending from mechanism execution.
 """
 # 说明：面向多租户/多作用域（任务/用户/会话）的隐私预算跟踪器。
 # 职责：
@@ -25,18 +31,51 @@ from .privacy_guarantee import PrivacyGuarantee
 
 
 class BudgetTrackerError(MechanismError):
-    """Base exception for budget tracker failures."""
+    """
+    Base exception for budget tracker failures.
+
+    - Configuration
+      - No additional fields beyond the base exception message.
+    
+    - Behavior
+      - Used as a common ancestor for tracker-specific errors.
+    
+    - Usage Notes
+      - Catch to handle all tracker-related failures uniformly.
+    """
     # 跟踪器相关错误的基类
 
 
 class ScopeNotRegisteredError(BudgetTrackerError):
-    """Raised when attempting to spend against an unknown scope."""
+    """
+    Error raised when attempting to spend against an unknown scope.
+
+    - Configuration
+      - No additional fields beyond the base exception message.
+    
+    - Behavior
+      - Raised when a scope key is not present in the tracker registry.
+    
+    - Usage Notes
+      - Catch to prompt registration or select a valid scope.
+    """
     # 在未注册的作用域上记录花费时抛出
 
 
 @dataclass(frozen=True)
 class TrackedScope:
-    """Identifier describing the logical budget namespace."""
+    """
+    Identifier describing the logical budget namespace.
+
+    - Configuration
+      - Consists of a non-empty kind and identifier string.
+    
+    - Behavior
+      - Validates inputs on construction.
+    
+    - Usage Notes
+      - Use as a key for per-scope budget tracking.
+    """
     # 作用域标识：由 kind（类型）与 identifier（唯一 ID）构成，作为预算命名空间键
 
     kind: str
@@ -52,7 +91,18 @@ class TrackedScope:
 
 @dataclass
 class BudgetAlert:
-    """Alert emitted when a scope crosses a configured threshold."""
+    """
+    Alert emitted when a scope crosses a configured threshold.
+
+    - Configuration
+      - Stores scope, threshold, ratio, and budget snapshots.
+    
+    - Behavior
+      - Serves as an immutable record of the alert condition.
+    
+    - Usage Notes
+      - Pass to alert handlers or logging sinks for monitoring.
+    """
     # 告警实体：记录触发阈值的作用域、阈值、当前占比、已花费/剩余与消息
 
     scope: TrackedScope
@@ -69,7 +119,18 @@ AlertHandler = Callable[[BudgetAlert], None]
 
 
 class BudgetTracker:
-    """Track privacy budgets across multiple scopes with alerting."""
+    """
+    Track privacy budgets across multiple scopes with alerting.
+
+    - Configuration
+      - Optional thresholds and a handler for alert callbacks.
+    
+    - Behavior
+      - Registers scopes, records spending, and emits alerts on threshold crossings.
+    
+    - Usage Notes
+      - Use to manage budgets across tasks, users, or sessions.
+    """
     # 多作用域预算跟踪器：注册作用域 → 记录花费 → 自动评估并触发阈值告警
 
     def __init__(
@@ -111,7 +172,7 @@ class BudgetTracker:
         total_delta: float = 0.0,
         slack: float = 1e-12,
     ) -> TrackedScope:
-        """Register a new budget scope backed by a PrivacyAccountant."""
+        """Register a new budget scope backed by a PrivacyAccountant and return its scope key."""
         # 注册新作用域并创建对应的 PrivacyAccountant；初始化已触发阈值集合
         scope = TrackedScope(kind, identifier)
         accountant = PrivacyAccountant(
@@ -126,30 +187,30 @@ class BudgetTracker:
 
     # ------------------------------------------------------------------ queries
     def scopes(self) -> Tuple[TrackedScope, ...]:
-        """Return all registered scopes."""
+        """Return all registered scopes as an immutable tuple."""
         # 返回当前已注册的所有作用域（不可变视图）
         return tuple(self._accounts.keys())
 
     def get_accountant(self, scope: TrackedScope) -> PrivacyAccountant:
-        """Return the accountant associated with `scope`."""
+        """Return the accountant associated with `scope` or raise if not registered."""
         # 获取作用域对应的记账器，若未注册则报错
         if scope not in self._accounts:
             raise ScopeNotRegisteredError(f"scope {scope} not registered")
         return self._accounts[scope]
 
     def remaining(self, scope: TrackedScope) -> Optional[PrivacyBudget]:
-        """Convenience wrapper around the underlying accountant."""
+        """Convenience wrapper around the underlying accountant to get remaining budget."""
         # 便捷获取作用域剩余预算
         return self.get_accountant(scope).remaining
 
     def spent(self, scope: TrackedScope) -> PrivacyBudget:
-        """Return the total spent budget for the scope."""
+        """Return the total spent budget for the scope from its accountant."""
         # 便捷获取作用域累计花费
         return self.get_accountant(scope).spent
 
     @property
     def alerts(self) -> Tuple[BudgetAlert, ...]:
-        """Immutable copy of emitted alerts."""
+        """Immutable copy of emitted alerts for inspection or logging."""
         # 返回历史告警的不可变副本
         return tuple(self._alerts)
 
@@ -169,7 +230,7 @@ class BudgetTracker:
         target_delta: Optional[float] = None,
         rdp_order: Optional[float] = None,
     ) -> PrivacyEvent:
-        """Record spending for the provided scope."""
+        """Record spending for the provided scope and evaluate alert thresholds."""
         # 记录指定作用域的花费事件，并在必要时触发阈值告警
         accountant = self.get_accountant(scope)
         event = accountant.add_event(
@@ -223,7 +284,7 @@ class BudgetTracker:
 
     # ------------------------------------------------------------------ serialization
     def serialize(self) -> Dict[str, Any]:
-        """Return JSON-friendly representation of the tracker state."""
+        """Return JSON-friendly representation of the tracker state and alert history."""
         # 导出跟踪器当前状态：阈值列表、历史告警、各作用域的记账器快照与已触发阈值
         return {
             "thresholds": list(self._thresholds),

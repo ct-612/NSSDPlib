@@ -3,6 +3,19 @@ Serialization helpers for models and configuration.
 
 Provides JSON helpers with optional masking and basic versioned payloads
 to ease backwards compatibility.
+
+Responsibilities
+  - Provide JSON serialization helpers with optional masking.
+  - Support versioned payload wrappers for compatibility.
+  - Normalize dataclass and to_dict objects for encoding.
+
+Usage Context
+  - Use when serializing configuration or lightweight report data.
+  - Intended for JSON round-trips with optional version metadata.
+
+Limitations
+  - Does not validate schema or enforce strict typing.
+  - Version handling is a simple wrapper, not a migration system.
 """
 # 说明：序列化辅助工具，统一 JSON 编解码行为并内置简单的版本封装。
 # 职责：

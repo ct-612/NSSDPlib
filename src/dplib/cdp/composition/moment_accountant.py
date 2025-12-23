@@ -1,9 +1,22 @@
 """
 Lightweight moments accountant for multi-step DP composition.
 
-Tracks cumulative (α, ε)-RDP values across steps and converts to the
-tightest (ε, δ)-DP guarantee by minimising over provided orders. Designed
-to serve iterative algorithms（如 DP-SGD）或多轮查询的精确会计。
+Tracks cumulative (alpha, epsilon)-RDP values across steps and converts to the
+tightest (epsilon, delta)-DP guarantee by minimising over provided orders.
+Designed to serve iterative algorithms or multi-round queries.
+
+Responsibilities
+  - Track cumulative RDP at multiple orders across steps.
+  - Convert accumulated RDP to the tightest (epsilon, delta)-DP bound.
+  - Provide reset and query helpers for accounting workflows.
+
+Usage Context
+  - Use for iterative mechanisms such as DP-SGD or repeated queries.
+  - Intended for lightweight in-memory accounting.
+
+Limitations
+  - Requires a fixed set of tracked RDP orders.
+  - Uses a simple min-over-orders conversion for epsilon.
 """
 # 说明：用于多步差分隐私组合的轻量级矩会计工具基于 RDP 累积推导最优 (ε, δ)-DP 保证。
 # 职责：
@@ -23,9 +36,16 @@ from dplib.core.utils.param_validation import ParamValidationError, ensure, ensu
 @dataclass
 class MomentAccountant:
     """
-    Tracks cumulative RDP at multiple orders and returns the best (ε, δ)-DP.
+    Tracks cumulative RDP at multiple orders and returns the best (epsilon, delta)-DP.
 
-    orders: sequence of α values to track and search over.
+    - Configuration
+      - orders: Sequence of α values to track and search over.
+
+    - Behavior
+      - Accumulates RDP contributions and returns the minimum epsilon at a given delta.
+
+    - Usage Notes
+      - Provide a custom order list to align with upstream analysis.
     """
 
     orders: Tuple[float, ...]
@@ -70,7 +90,7 @@ class MomentAccountant:
 
     def get_epsilon(self, delta: float) -> float:
         """
-        Convert accumulated RDP to the tightest (ε, δ)-DP by minimising over orders.
+        Convert accumulated RDP to the tightest (epsilon, delta)-DP by minimising over orders.
         """
         # 在给定 δ 下遍历所有阶数通过 rdp_to_cdp 转换并取最小 ε 作为最优界
         ensure_type(delta, (int, float), label="delta")

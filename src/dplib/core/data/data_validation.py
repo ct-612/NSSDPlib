@@ -1,10 +1,21 @@
 """
 Data validation helpers shared across datasets and analytics.
+These helpers define schemas and validate mapping-based records
+against domain constraints and missing-value rules.
 
-Responsibilities:
-    * schema definitions with required/optional fields
-    * missing value detection and coercion helpers
-    * configurable strategies for handling validation errors
+Responsibilities
+  - Define schema and field descriptors for required, optional, and nullable inputs.
+  - Validate records against schema constraints and domain rules.
+  - Provide missing-value counting utilities for required fields.
+
+Usage Context
+  - Use before downstream processing to validate mapping-like records.
+  - Intended to work with domain objects that enforce value constraints.
+
+Limitations
+  - Validation operates on explicit schemas and does not infer fields from data.
+  - Missing-value detection treats only None and empty strings as missing.
+  - Imputation relies on field defaults or a caller-supplied callback.
 """
 # 说明：通用数据校验辅助工具。
 # 职责：
@@ -28,7 +39,17 @@ from dplib.core.utils.param_validation import ensure, ensure_type, ParamValidati
 
 
 class ValidationStrategy:
-    """Enumeration of simple validation strategies."""
+    """Enumeration of validation strategies used during schema validation.
+
+    - Configuration
+      - Values are string identifiers consumed by validators.
+
+    - Behavior
+      - Determines whether missing or invalid fields raise errors, drop records, or trigger imputation.
+
+    - Usage Notes
+      - Use the class attributes as constants rather than instantiating the class.
+    """
     # 校验策略枚举：
     # - RAISE：遇到错误直接抛出异常
     # - DROP：丢弃当前记录
@@ -41,7 +62,21 @@ class ValidationStrategy:
 
 @dataclass
 class SchemaField:
-    """Describe a single field inside a schema."""
+    """Describe a single field inside a schema definition.
+
+    - Configuration
+      - name: Field name used in record mappings.
+      - domain: Domain object that validates values for the field.
+      - required: Whether the field must be present in each record.
+      - allow_null: Whether None is accepted when the field is present.
+      - default: Value used for imputation when configured.
+    
+    - Behavior
+      - Field metadata guides record validation and optional imputation.
+    
+    - Usage Notes
+      - Defaults are applied only when the validation strategy allows imputation.
+    """
     # 单个字段的模式描述：
     # - name：字段名
     # - domain：字段所属域（负责值的校验/编码/解码）
@@ -58,7 +93,18 @@ class SchemaField:
 
 @dataclass
 class Schema:
-    """Collection of schema fields keyed by name."""
+    """Container for schema fields used to validate record mappings.
+
+    - Configuration
+      - fields: Ordered sequence of SchemaField definitions.
+    
+    - Behavior
+      - Provides a name-to-field mapping for lookup.
+      - Validates that fields and domains are of expected types at initialization.
+    
+    - Usage Notes
+      - Field order is preserved in the input sequence for validator iteration.
+    """
     # 模式对象：由多个 SchemaField 组成
 
     fields: Sequence[SchemaField]
@@ -76,12 +122,36 @@ class Schema:
 
 
 class DataValidationError(ValueError):
-    """Raised when validation cannot be satisfied (schema-level issues)."""
+    """Error raised when validation cannot be satisfied at the schema level.
+
+    - Configuration
+      - message: Description of the unmet validation requirement.
+    
+    - Behavior
+      - Raised when imputation is required but no default or imputer is available.
+    
+    - Usage Notes
+      - Indicates unrecoverable validation failures rather than record-level drops.
+    """
     # 校验无法满足（如无法插补）时抛出的（模式级异常）
 
 
 class SchemaValidator:
-    """Validate records against a schema and optional strategy."""
+    """Validate records against a schema with a configurable error-handling strategy.
+
+    - Configuration
+      - schema: Schema describing expected fields and domains.
+      - on_error: Validation strategy controlling error handling for missing or invalid fields.
+      - imputer: Optional callback used to supply values when imputation is needed.
+    
+    - Behavior
+      - Returns validated mappings with domain-validated values when successful.
+      - Raises ParamValidationError, drops records, or imputes values based on the selected strategy.
+      - Uses field defaults when imputing and no imputer is provided; otherwise raises DataValidationError.
+    
+    - Usage Notes
+      - Accepts mapping-like records and preserves any extra keys present in the input.
+    """
     # 模式校验器：按 Schema 和 校验策略 对记录进行逐字段校验与标准化
 
     def __init__(

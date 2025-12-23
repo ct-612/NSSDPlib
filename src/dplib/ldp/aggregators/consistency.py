@@ -1,4 +1,19 @@
-"""Post-processing utilities to enforce basic consistency on vector-like estimates."""
+"""
+Post-processing utilities to enforce basic consistency on vector-like estimates.
+
+Responsibilities
+  - Provide non-negativity, normalization, and simplex projection helpers.
+  - Offer monotonicity enforcement for ordered estimates.
+  - Wrap aggregators to post-process selected metric outputs.
+
+Usage Context
+  - Use to post-process vector estimates such as frequencies.
+  - Intended for consistency fixes that do not change privacy guarantees.
+
+Limitations
+  - Only applies to numpy array outputs for selected metrics.
+  - Post-processing is configuration-driven and does not infer constraints.
+"""
 # 说明：提供针对向量型估计输出的后处理工具与聚合器包装器，用于在不影响隐私保证的前提下修正数值不一致问题。
 # 职责：
 # - 提供非负裁剪、归一化、simplex 投影与单调性约束等基础向量后处理函数
@@ -101,6 +116,26 @@ class ConsistencyPostProcessor(StatelessAggregator):
     By default, only "frequency" metrics are post-processed. When strict_metrics=True,
     the wrapper will raise ParamValidationError if the inner aggregator produces a
     metric outside apply_to_metrics to surface configuration mismatches early.
+
+    - Configuration
+      - inner_aggregator: Aggregator whose outputs are post-processed.
+      - apply_to_metrics: Metric names to which post-processing applies.
+      - strict_metrics: Whether to error on metrics outside apply_to_metrics.
+      - non_negative: Whether to clip negative values to zero.
+      - normalize: Whether to normalize vectors to sum to one.
+      - use_simplex: Whether to project onto a probability simplex.
+      - monotonic: Whether to enforce monotonicity.
+      - monotonic_increasing: Direction for monotonic enforcement when enabled.
+      - simplex_target_sum: Target sum for simplex projection.
+      - simplex_axis: Axis along which to project when using batched arrays.
+      - simplex_clip_tolerance: Pre-clip tolerance for small negative values.
+
+    - Behavior
+      - Applies selected consistency operators to supported metric outputs.
+      - Preserves other estimates and metadata from the inner aggregator.
+
+    - Usage Notes
+      - Use for post-processing only; it does not alter privacy guarantees.
     """
     # 默认执行非负与归一化，可选 simplex 投影与单调约束。
 

@@ -1,10 +1,18 @@
 """
 Factory helpers to instantiate and calibrate mechanisms from registry identifiers.
 
-Responsibilities:
-    * normalise identifiers (string/enum) via the registry
-    * construct mechanisms with supported init args
-    * calibrate with provided sensitivity/delta and mechanism-specific kwargs
+Responsibilities
+  - Normalise identifiers (string/enum) via the registry.
+  - Construct mechanisms with supported init arguments.
+  - Calibrate with provided sensitivity/delta and mechanism-specific kwargs.
+
+Usage Context
+  - Use when creating mechanisms by name or registry identifier.
+  - Supports passing an existing mechanism instance for calibration.
+
+Limitations
+  - Relies on registry metadata for model support.
+  - Filters kwargs to supported constructor/calibration signatures.
 """
 # 说明：根据注册表标识符创建并校准差分隐私机制实例的工厂辅助函数。
 # 职责：

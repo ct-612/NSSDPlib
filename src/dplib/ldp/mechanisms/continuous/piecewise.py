@@ -1,4 +1,19 @@
-"""Placeholder for the piecewise LDP mechanism (Kairouz et al.)."""
+"""
+Piecewise LDP mechanism placeholder for bounded scalar inputs.
+
+Responsibilities
+  - Provide a compatible LDP mechanism interface for piecewise perturbation.
+  - Clip inputs to the interval [-1, 1] before randomization.
+  - Emit bounded outputs suitable for downstream aggregation.
+
+Usage Context
+  - Use as a stand-in when an approximate piecewise mechanism is acceptable.
+  - Intended for normalized scalar inputs in [-1, 1].
+
+Limitations
+  - Implements a simplified approximation of the piecewise mechanism.
+  - Does not sample from the exact distribution described in the literature.
+"""
 # 说明：基于 Kairouz 等人的 piecewise 连续型 LDP 机制（近似占位实现），用于对区间内实值数据添加局部噪声。
 # 职责：
 # - 提供兼容 BaseLDPMechanism 的连续型 LDP 机制骨架
@@ -17,9 +32,21 @@ from dplib.ldp.types import EncodedValue
 
 class PiecewiseMechanism(BaseLDPMechanism):
     """
-    Piecewise mechanism for continuous LDP (approximate implementation).
+    Approximate piecewise mechanism for bounded scalar inputs.
 
-    TODO: Implement exact sampling following Kairouz et al.'s construction.
+    - Configuration
+      - epsilon: Privacy budget controlling the perturbation scale.
+      - identifier: Optional stable identifier for reports and serialization.
+      - rng: Optional random generator used for sampling.
+      - name: Optional human-readable name override.
+
+    - Behavior
+      - Clips inputs to [-1, 1] and adds scaled uniform noise.
+      - Clips the perturbed outputs back to [-1, 1].
+
+    - Usage Notes
+      - Inputs should be scaled to [-1, 1] before use.
+      - This implementation is an approximation, not the exact piecewise sampler.
     """
 
     def __init__(

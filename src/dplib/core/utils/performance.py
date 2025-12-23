@@ -1,5 +1,18 @@
 """
 Performance measurement helpers.
+
+Responsibilities
+  - Provide timing utilities for code blocks and callables.
+  - Offer basic benchmarking statistics for repeated runs.
+  - Expose lightweight memory profiling via tracemalloc.
+
+Usage Context
+  - Use for quick local profiling or regression checks.
+  - Intended for lightweight, in-process measurements.
+
+Limitations
+  - Not a substitute for full profiling suites.
+  - Results depend on system load and Python runtime variability.
 """
 # 说明：性能测量与基准测试工具集合，用于在库内部统一评估执行耗时与内存占用。
 # 职责：
@@ -18,7 +31,19 @@ from typing import Any, Callable, Dict, Iterable, List
 
 
 class Timer(ContextDecorator):
-    """Context manager for timing code blocks."""
+    """
+    Context manager for timing code blocks.
+
+    - Configuration
+      - No explicit configuration; timing starts on entry.
+
+    - Behavior
+      - Records start and end timestamps using a high-resolution clock.
+      - Exposes elapsed time after exiting the context.
+
+    - Usage Notes
+      - Use as a context manager or decorator via ContextDecorator.
+    """
     # 计时上下文管理器：进入时记录起始时间，退出时计算耗时（秒）
 
     def __enter__(self) -> "Timer":

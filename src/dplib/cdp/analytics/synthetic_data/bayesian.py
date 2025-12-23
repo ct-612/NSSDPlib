@@ -1,10 +1,18 @@
 """
 Bayesian network based DP synthetic data generator.
 
-Responsibilities:
-    * fit conditional probability tables (CPTs) with DP noise given a fixed structure
-    * support simple topological sampling to generate synthetic records
-    * provide placeholders for future structure learning strategies
+Responsibilities
+  - Fit conditional probability tables (CPTs) with DP noise for a fixed structure.
+  - Support topological sampling to generate synthetic records.
+  - Validate domain and structural inputs for discrete generators.
+
+Usage Context
+  - Use when a Bayesian network structure is provided by the caller.
+  - Intended for discrete domain data with mapping-based records.
+
+Limitations
+  - Structure learning is not implemented in this generator.
+  - Continuous domains are not supported for CPT construction.
 """
 # 说明：基于给定贝叶斯网络结构的差分隐私合成数据生成器（MVP），当前仅支持用户显式提供结构。
 # 职责：
@@ -28,7 +36,25 @@ from dplib.cdp.mechanisms.laplace import LaplaceMechanism
 
 
 class BayesianNetworkGenerator(SyntheticDataGenerator):
-    """Synthetic generator using DP conditional probability tables."""
+    """
+    Synthetic generator using DP conditional probability tables.
+
+    - Configuration
+      - domain: Mapping of field names to discrete domains.
+      - epsilon: Privacy budget for CPT estimation.
+      - delta: Optional delta parameter for approximate DP.
+      - structure: Sequence of (node, parents) tuples defining the network.
+      - max_parents: Maximum number of parents allowed per node.
+      - structure_learning: Placeholder option; only "none" is supported.
+      - mechanism: Mechanism instance or name used for count noise.
+
+    - Behavior
+      - Estimates CPTs with DP noise and samples records topologically.
+      - Records privacy spend after fitting.
+
+    - Usage Notes
+      - Provide an explicit structure; the generator does not infer one.
+    """
     # 基于 DP 条件概率表的贝叶斯网络合成数据生成器实现
 
     method = "bayesian"

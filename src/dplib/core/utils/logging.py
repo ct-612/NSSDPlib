@@ -1,5 +1,18 @@
 """
 Lightweight logging helpers with privacy-aware defaults.
+
+Responsibilities
+  - Provide a privacy-aware logging filter for sensitive fields.
+  - Configure logging with library defaults and optional overrides.
+  - Expose a helper for obtaining named loggers.
+
+Usage Context
+  - Use when initializing logging in library entry points.
+  - Intended to standardize logging behavior across modules.
+
+Limitations
+  - Applies masking only to configured attribute names.
+  - Uses basicConfig and does not manage advanced logging setups.
 """
 # 说明：轻量级日志工具，提供隐私友好的默认配置与统一的 logger 获取入口。
 # 职责：
@@ -20,7 +33,18 @@ from .config import get_config
 
 
 class PrivacyFilter(logging.Filter):
-    """Filter that strips sensitive fields from log records if configured."""
+    """
+    Filter that strips sensitive fields from log records if configured.
+
+    - Configuration
+      - Uses RuntimeConfig to determine whether masking is enabled.
+
+    - Behavior
+      - Replaces known sensitive attributes with a mask string.
+
+    - Usage Notes
+      - Attach to loggers or handlers to enforce masking.
+    """
     # 日志隐私过滤器：在启用掩码配置时，对约定字段名（如 user_id / pii / payload）进行统一脱敏处理
 
     def filter(self, record: logging.LogRecord) -> bool:

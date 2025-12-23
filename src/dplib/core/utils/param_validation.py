@@ -1,5 +1,18 @@
 """
 Reusable validation helpers and decorators.
+
+Responsibilities
+  - Provide a shared ParamValidationError type.
+  - Offer lightweight assertion and type-check helpers.
+  - Supply a decorator for argument validation and transformation.
+
+Usage Context
+  - Use for consistent parameter validation across the library.
+  - Intended for lightweight, explicit validation in public APIs.
+
+Limitations
+  - Validators rely on caller-provided logic and do not infer schemas.
+  - Type checks are shallow and do not validate nested structures.
 """
 # 说明：参数验证相关的辅助函数与装饰器，用于在库内部统一进行轻量级参数检查与转换。
 # 职责：
@@ -15,7 +28,18 @@ from typing import Any, Callable, Dict, Mapping, Tuple, Type
 
 
 class ParamValidationError(ValueError):
-    """Raised when parameter validation fails."""
+    """
+    Raised when parameter validation fails.
+
+    - Configuration
+      - No additional fields beyond the base exception message.
+
+    - Behavior
+      - Signals invalid or missing parameters in validation helpers.
+
+    - Usage Notes
+      - Used by ensure, ensure_type, and validate_arguments.
+    """
 
 
 def ensure(condition: bool, message: str, *, error: Type[Exception] = ParamValidationError) -> None:

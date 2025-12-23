@@ -1,10 +1,18 @@
 """
 Laplace mechanism for pure differential privacy.
 
-Responsibilities:
-    * calibrate Laplace scale from epsilon and sensitivity
-    * add Laplace noise to scalars, sequences, and arrays
-    * persist calibration metadata for reproducibility
+Responsibilities
+  - Calibrate Laplace scale from epsilon and sensitivity.
+  - Add Laplace noise to scalars, sequences, and arrays.
+  - Persist calibration metadata for reproducibility.
+
+Usage Context
+  - Use for (epsilon, 0)-DP with numeric inputs.
+  - Supports scalars and numpy-compatible arrays.
+
+Limitations
+  - Requires positive sensitivity and epsilon.
+  - Noise scale is fixed after calibration.
 """
 # 说明：实现纯 (ε, 0)-DP 的拉普拉斯机制。
 # 职责：
@@ -23,7 +31,22 @@ from dplib.core.utils.random import sample_noise
 
 
 class LaplaceMechanism(BaseMechanism):
-    """Pure (ε, 0)-DP Laplace mechanism."""
+    """
+    Pure (epsilon, 0)-DP Laplace mechanism.
+
+    - Configuration
+      - epsilon: Privacy budget for noise calibration.
+      - sensitivity: Global sensitivity of the query.
+      - rng: Optional RNG for noise sampling.
+      - name: Optional mechanism name override.
+
+    - Behavior
+      - Calibrates scale and injects i.i.d. Laplace noise.
+      - Serializes calibrated parameters for reproducibility.
+
+    - Usage Notes
+      - Call `calibrate` before `randomise`.
+    """
 
     def __init__(
         self,

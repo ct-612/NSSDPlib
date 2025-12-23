@@ -1,4 +1,19 @@
-"""Unary and fixed-length binary encoders for LDP bit-vector mechanisms."""
+"""
+Unary and fixed-length binary encoders for LDP bit-vector mechanisms.
+
+Responsibilities
+  - Encode integer indices into unary or fixed-length binary vectors.
+  - Decode unary and binary vectors back to integer indices.
+  - Provide metadata describing encoding configuration.
+
+Usage Context
+  - Use with bit-vector LDP mechanisms such as OUE or unary randomizers.
+  - Intended for deterministic encoding before perturbation.
+
+Limitations
+  - Unary decoding requires exactly one active bit.
+  - Binary encoding is limited by the configured bit width.
+"""
 # 说明：为 OUE / UnaryRandomizer / RAPPOR 等机制提供基础的 bit 向量编码，对整数索引进行 unary 或定长二进制表示的确定性映射。
 # 职责：
 # - 校验 unary 与二进制编码的长度参数并保证索引范围合法
@@ -18,7 +33,19 @@ from dplib.ldp.types import EncodedValue
 
 
 class UnaryEncoder(StatelessEncoder):
-    """Encode integer indices into unary 0/1 vectors and decode back."""
+    """
+    Encode integer indices into unary 0/1 vectors and decode back.
+
+    - Configuration
+      - length: Length of the unary vector.
+
+    - Behavior
+      - Encodes a single active bit at the given index.
+      - Decodes only when exactly one bit is active.
+
+    - Usage Notes
+      - Input values must be in the range [0, length).
+    """
     # 提供整数类别索引到 unary 向量的编码与解码能力，用于 UnaryRandomizer/OUE/RAPPOR 等 LDP 机制
 
     def __init__(self, length: int):
@@ -49,7 +76,19 @@ class UnaryEncoder(StatelessEncoder):
 
 
 class BinaryEncoder(StatelessEncoder):
-    """Encode integer values into fixed-length binary vectors (MSB-first)."""
+    """
+    Encode integer values into fixed-length binary vectors (MSB-first).
+
+    - Configuration
+      - num_bits: Bit width of the encoded representation.
+
+    - Behavior
+      - Encodes non-negative integers into big-endian bit vectors.
+      - Decodes bit vectors back to integer values.
+
+    - Usage Notes
+      - Values must fit within the configured bit width.
+    """
     # 支持将非负整数编码为固定长度的大端二进制向量并提供可逆解码
 
     def __init__(self, num_bits: int):

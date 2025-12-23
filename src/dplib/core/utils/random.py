@@ -1,10 +1,18 @@
 """
 Random number generation helpers.
 
-Responsibilities:
-    * centralise RNG creation and seeding
-    * offer reproducible splits for parallel workloads
-    * provide simple wrappers for noise sampling used by mechanisms/tests
+Responsibilities
+  - Centralize RNG creation and seeding.
+  - Provide reproducible splits for parallel workloads.
+  - Offer noise sampling helpers used by mechanisms and tests.
+
+Usage Context
+  - Use when a consistent RNG interface is needed across modules.
+  - Supports parallel-safe sampling via RNG splitting or pooling.
+
+Limitations
+  - Relies on numpy Generator behavior for reproducibility.
+  - Distribution support is limited to the implemented options.
 """
 # 说明：随机数生成与噪声采样辅助工具，用于在库中统一管理 RNG 的创建、复用与分配。
 # 职责：
@@ -66,7 +74,20 @@ def sample_noise(
 
 @dataclass
 class RNGPool:
-    """Manage a pool of RNGs for parallel-safe sampling."""
+    """
+    Manage a pool of RNGs for parallel-safe sampling.
+
+    - Configuration
+      - base_seed: Optional seed used to initialize the pool.
+      - pool_size: Number of generators maintained in the pool.
+
+    - Behavior
+      - Splits a base RNG into independent generators.
+      - Provides indexed access and full reseeding.
+
+    - Usage Notes
+      - Use when parallel tasks need independent RNG streams.
+    """
 
     base_seed: Optional[int] = None
     pool_size: int = 4

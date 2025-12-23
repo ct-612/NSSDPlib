@@ -1,9 +1,16 @@
 """
 Abstract base class for LDP applications.
 
-Responsibilities:
-    * define client/aggregator builder contracts for LDP pipelines
-    * provide name/config helpers for application introspection
+Responsibilities
+  - Define client and aggregator builder contracts for LDP pipelines.
+  - Provide name and configuration helpers for application introspection.
+
+Usage Context
+  - Use as a base for application-level LDP pipelines.
+  - Intended to connect client perturbation and server aggregation.
+
+Limitations
+  - Does not define encoder fitting or validation behavior.
 """
 # 说明：LDP applications 的抽象基类定义，约束端到端 pipeline 构建入口。
 # 职责：
@@ -28,9 +35,15 @@ class BaseLDPApplication(ABC):
     build_aggregator returns a server-side aggregator that converts LDPReport batches into Estimate.
     get_config can be overridden to expose epsilon, encoder, and mechanism configuration.
 
-    TODO:
-        * decide whether to expose encoder fit helpers at the application API
-        * decide whether to allow injecting pre-fitted encoders and define validation rules
+    - Configuration
+      - No base configuration; subclasses define parameters.
+
+    - Behavior
+      - Builds client-side perturbation and server-side aggregation components.
+      - Provides name and configuration helpers for introspection.
+
+    - Usage Notes
+      - Subclasses implement the concrete pipeline pieces.
     """
 
     @abstractmethod

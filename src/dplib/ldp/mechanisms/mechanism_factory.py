@@ -1,10 +1,18 @@
 """
 Factory helpers to instantiate LDP mechanisms from registry identifiers.
 
-Responsibilities:
-    * normalise identifiers (string/enum) via the registry
-    * construct mechanisms with supported init args
-    * optionally calibrate when required by subclasses
+Responsibilities
+  - Normalize identifiers and resolve mechanism classes via the registry.
+  - Filter constructor and calibration arguments by callable signatures.
+  - Optionally calibrate mechanisms after instantiation.
+
+Usage Context
+  - Use to build mechanisms from configuration without direct class references.
+  - Intended for application-level plumbing that selects mechanisms by name.
+
+Limitations
+  - Only parameters accepted by constructors or calibration hooks are passed.
+  - Does not override mechanism-specific validation logic.
 """
 # 说明：根据注册表标识构造本地差分隐私机制实例的工厂工具。
 # 职责：

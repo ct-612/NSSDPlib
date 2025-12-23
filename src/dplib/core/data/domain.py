@@ -1,10 +1,20 @@
 """
 Domain abstractions used throughout the data layer.
+These classes define value sets, validation, and optional encoding
+for schema and transformation workflows.
 
-Responsibilities:
-    * describe legal value ranges and canonical dtypes
-    * validate incoming values and provide optional mappings/encoders
-    * support discrete, continuous, and bucketised domains out of the box
+Responsibilities
+  - Define domain types that describe valid value sets and canonical dtypes.
+  - Validate input values and optionally map them to canonical encodings.
+  - Provide discrete, continuous, and bucketized domain implementations.
+
+Usage Context
+  - Used by schemas and validators to enforce field-level constraints.
+  - Supports normalization and validation before downstream processing.
+
+Limitations
+  - Domains validate only against declared constraints and do not infer them from data.
+  - Encoding and clamping behavior depends on the specific domain subtype.
 """
 # 说明：数据层通用“域（Domain）”抽象。
 # 职责：
@@ -20,13 +30,37 @@ from typing import Any, Iterable, List, Mapping, Optional, Sequence, Tuple, Unio
 
 
 class DomainError(ValueError):
-    """Raised when values fall outside of the declared domain."""
+    """Error raised when a value violates a domain constraint.
+
+    - Configuration
+      - message: Description of the offending value or constraint.
+    
+    - Behavior
+      - Indicates that a value or encoded index is outside the declared domain.
+    
+    - Usage Notes
+      - Raised by domain implementations and may be handled by higher-level validators.
+    """
     # 域相关错误：用于表示输入值不属于声明的域（取值范围）
 
 
 @dataclass(frozen=True)
 class DomainInfo:
-    """Lightweight descriptor used for logging and schema inspection."""
+    """Lightweight descriptor of a domain for logging and inspection.
+
+    - Configuration
+      - name: Human-readable domain identifier.
+      - dtype: Canonical dtype label for the domain.
+      - cardinality: Optional number of discrete values.
+      - bounds: Optional numeric lower and upper bounds.
+      - metadata: Optional mapping of additional descriptors.
+    
+    - Behavior
+      - Immutable container for domain characteristics.
+    
+    - Usage Notes
+      - Returned by ``describe`` implementations for external reporting.
+    """
     # 轻量级域描述：便于日志与模式（schema）检查展示
 
     name: str
@@ -37,7 +71,22 @@ class DomainInfo:
 
 
 class BaseDomain(ABC):
-    """Abstract base class for all domains."""
+    """Abstract base class for domain definitions.
+
+    - Configuration
+      - name: Optional identifier; defaults to the class name.
+      - dtype: Optional canonical dtype label; defaults to ``"object"``.
+      - metadata: Optional mapping of additional descriptors.
+    
+    - Behavior
+      - ``contains`` defines membership; ``validate`` returns encoded values or raises DomainError.
+      - ``encode`` and ``decode`` default to identity mappings unless overridden.
+      - ``clamp`` raises DomainError for values outside the domain unless overridden.
+      - ``describe`` returns a DomainInfo snapshot of name, dtype, and metadata.
+    
+    - Usage Notes
+      - Subclasses must implement ``contains`` and can override encoding or clamping behavior.
+    """
     # 所有域类型的抽象基类：统一名称、dtype、元数据与校验/编码接口
 
     def __init__(self, name: Optional[str] = None, dtype: Optional[str] = None, metadata: Optional[Mapping[str, Any]] = None):
@@ -93,7 +142,23 @@ class BaseDomain(ABC):
 
 
 class DiscreteDomain(BaseDomain):
-    """Domain backed by a finite set of categories."""
+    """Domain backed by a finite set of categories.
+
+    - Configuration
+      - categories: Sequence of category values; duplicates are ignored in input order.
+      - ordered: Whether the category order carries semantic meaning.
+      - name: Optional identifier; defaults to ``"DiscreteDomain"``.
+      - dtype: Optional dtype label; defaults to ``"category"``.
+      - metadata: Optional mapping of additional descriptors.
+    
+    - Behavior
+      - Membership is limited to the provided categories.
+      - Encodes categories as stable integer indices and decodes indices back to categories.
+      - ``describe`` reports cardinality and preserves the ordered flag in metadata.
+    
+    - Usage Notes
+      - Encoded indices range from 0 to ``cardinality - 1``.
+    """
     # 离散域：由有限类别集合支撑；提供类别<->索引的可逆编码
 
     def __init__(
@@ -144,7 +209,24 @@ class DiscreteDomain(BaseDomain):
 
 
 class ContinuousDomain(BaseDomain):
-    """Numeric domain defined by lower/upper bounds."""
+    """Numeric domain defined by optional lower and upper bounds.
+
+    - Configuration
+      - minimum: Optional lower bound.
+      - maximum: Optional upper bound.
+      - inclusive: Pair of booleans controlling left and right boundary inclusion.
+      - name: Optional identifier; defaults to ``"ContinuousDomain"``.
+      - dtype: Optional dtype label; defaults to ``"float64"``.
+      - metadata: Optional mapping of additional descriptors.
+    
+    - Behavior
+      - Membership checks require values convertible to float and respect inclusivity flags.
+      - ``clamp`` returns a float clipped to any provided bounds and may raise on conversion failure.
+      - ``describe`` reports bounds and inclusivity in metadata.
+    
+    - Usage Notes
+      - Use when continuous numeric inputs must be validated against fixed bounds.
+    """
     # 连续数值域：由上/下界与开闭区间标记定义，支持裁剪（clamp）
 
     def __init__(
@@ -206,7 +288,22 @@ class ContinuousDomain(BaseDomain):
 
 
 class BucketizedDomain(BaseDomain):
-    """Domain that maps numeric values into discrete buckets using edges."""
+    """Domain that maps numeric values into discrete buckets using edges.
+
+    - Configuration
+      - edges: Sorted ascending sequence of at least two numeric boundaries.
+      - right_inclusive: Controls how values equal to edges are assigned to buckets.
+      - name: Optional identifier; defaults to ``"BucketizedDomain"``.
+      - metadata: Optional mapping of additional descriptors.
+    
+    - Behavior
+      - Membership requires values within the overall edge range.
+      - Encodes values as bucket indices between consecutive edges and decodes indices to edge intervals.
+      - ``describe`` reports bounds, cardinality, and the right_inclusive flag.
+    
+    - Usage Notes
+      - Dtype is fixed to ``"bucket"`` for bucketized domains.
+    """
     # 分桶域：通过边界序列将数值映射为离散桶索引；支持二分查找编码与区间解码
 
     def __init__(

@@ -1,11 +1,16 @@
 """
 Core abstractions shared by every mechanism implementation.
 
-Responsibilities:
-    * common parameter validation and RNG management
-    * consistent calibration lifecycle
-    * serialization helpers
-    * purpose specific exceptions
+Responsibilities
+  - Define common parameter validation and RNG management helpers.
+  - Provide a consistent calibration lifecycle for mechanisms.
+  - Offer serialization helpers and shared exception types.
+
+Usage Context
+  - Base layer for concrete mechanisms that add noise or randomization.
+
+Limitations
+  - Does not implement mechanism-specific calibration or randomization logic.
 """
 # 说明：定义本库所有机制共享的抽象基类与通用工具。
 # 职责：
@@ -25,25 +30,69 @@ import numpy as np
 # ----------------------------------------------------------------- Exceptions
 # 机制相关异常类型：
 class MechanismError(Exception):
-    """Base exception for mechanism errors."""
+    """
+    Base exception for mechanism errors.
+
+    - Configuration
+      - No additional fields beyond the base exception message.
+    
+    - Behavior
+      - Serves as the root for mechanism-specific exceptions.
+    
+    - Usage Notes
+      - Catch to handle all mechanism-related failures uniformly.
+    """
 
 
 class ValidationError(MechanismError):
-    """Raised when input parameters are invalid."""
+    """
+    Error raised when input parameters are invalid.
+
+    - Configuration
+      - No additional fields beyond the base exception message.
+    
+    - Behavior
+      - Raised on validation failures for inputs or configuration.
+    
+    - Usage Notes
+      - Catch to provide user feedback on invalid parameters.
+    """
 
 
 class CalibrationError(MechanismError):
-    """Raised when calibration fails or is inconsistent."""
+    """
+    Error raised when calibration fails or is inconsistent.
+
+    - Configuration
+      - No additional fields beyond the base exception message.
+    
+    - Behavior
+      - Indicates calibration could not be completed successfully.
+    
+    - Usage Notes
+      - Catch to handle calibration errors before randomization.
+    """
 
 
 class NotCalibratedError(MechanismError):
-    """Raised when an operation requires prior calibration."""
+    """
+    Error raised when an operation requires prior calibration.
+
+    - Configuration
+      - No additional fields beyond the base exception message.
+    
+    - Behavior
+      - Raised when operations are invoked before calibrate.
+    
+    - Usage Notes
+      - Catch to prompt a calibration step.
+    """
 
 
 # -------------------------------------------------------------- Helper for RNG
 # 统一的随机数生成器工厂：支持 None、现成的 Generator、或任意可播种对象
 def _make_rng(seed: Optional[Any]) -> np.random.Generator:
-    """Create a fresh numpy Generator from diverse seed types."""
+    """Create a fresh numpy Generator from diverse seed types, including None and prebuilt Generators."""
     if seed is None:
         return np.random.default_rng()
     if isinstance(seed, np.random.Generator):
@@ -58,7 +107,19 @@ def _make_rng(seed: Optional[Any]) -> np.random.Generator:
 #  - 提供序列化/反序列化与 JSON 辅助
 #  - 提供数值输入的类型与形状规整工具
 class BaseMechanism(ABC):
-    """Abstract base class for all mechanisms."""
+    """
+    Abstract base class for all mechanisms.
+
+    - Configuration
+      - Stores epsilon, delta, name, RNG, and calibration state.
+    
+    - Behavior
+      - Validates parameters, manages calibration lifecycle, and provides helpers.
+      - Exposes serialization and deserialization utilities for state snapshots.
+    
+    - Usage Notes
+      - Subclasses implement calibration and randomization logic.
+    """
 
     def __init__(
         self,
@@ -128,21 +189,21 @@ class BaseMechanism(ABC):
     @abstractmethod
     # 由子类决定如何将 ε、δ、敏感度映射到内部噪声参数
     def _calibrate_parameters(self, *, sensitivity: Optional[float], **kwargs: Any) -> None:
-        """Subclasses implement their own calibration logic."""
+        """Subclasses implement their own calibration logic using epsilon, delta, and sensitivity."""
 
     @abstractmethod
     # 由子类实现具体的噪声添加逻辑
     def randomise(self, value: Any) -> Any:
-        """Add mechanism specific noise to the provided value."""
+        """Add mechanism specific noise to the provided value according to the calibrated parameters."""
 
     # 语义别名，便于更自然的 API 使用
     def add_noise(self, value: Any) -> Any:
-        """Alias for randomise."""
+        """Alias for randomise to provide a more descriptive API name."""
         return self.randomise(value)
 
     # 清空校准标志，但不触碰具体机制内部参数（如已计算的 p/q 或尺度）
     def reset_calibration(self) -> None:
-        """Reset calibrated flag without touching mechanism specific parameters."""
+        """Reset calibrated flag without touching mechanism specific parameters or RNG state."""
         self._calibrated = False
 
     @property
@@ -152,7 +213,7 @@ class BaseMechanism(ABC):
     # ----------------------------------------------------------- Serialization
     # 生成可 JSON 化的状态快照；子类可在此基础上扩展特定字段（如 domain、p、q）
     def serialize(self) -> Dict[str, Any]:
-        """Return a JSON serialisable snapshot of the mechanism."""
+        """Return a JSON serialisable snapshot of the mechanism metadata and calibration state."""
         return {
             "class": f"{self.__class__.__module__}.{self.__class__.__qualname__}",
             "mechanism": self.mechanism_id,
@@ -180,7 +241,7 @@ class BaseMechanism(ABC):
         return instance
 
     def to_json(self) -> str:
-        """Serialize to JSON string."""
+        """Serialize to a JSON string using the built-in snapshot representation."""
         return json.dumps(self.serialize(), default=str)
 
     @classmethod
@@ -196,12 +257,12 @@ class BaseMechanism(ABC):
 
     # 重置 RNG，使同一 seed 可复现实验；与 serialize/deserialize 配合用于行为一致性测试
     def reseed(self, seed: Optional[Any]) -> None:
-        """Replace RNG with a new generator constructed from `seed`."""
+        """Replace RNG with a new generator constructed from `seed` for reproducible runs."""
         self._rng = _make_rng(seed)
 
     @property
     def mechanism_id(self) -> str:
-        """Stable identifier used in serialization/pipelines."""
+        """Stable identifier used in serialization and pipeline metadata."""
         name = self.__class__.__name__
         lowered = name.lower()
         suffix = "mechanism"

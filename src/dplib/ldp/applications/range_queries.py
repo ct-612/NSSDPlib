@@ -1,13 +1,18 @@
 """
 Range query pipeline for numeric data under LDP.
 
-Responsibilities:
-    * build client-side clipping and local Laplace perturbation
-    * build server-side mean and quantile estimators for numeric summaries
+Responsibilities
+  - Build client-side clipping and local Laplace perturbation.
+  - Build server-side mean and quantile estimators for numeric summaries.
+  - Provide an end-to-end numeric query application.
 
-Notes:
-    The current implementation only supports Laplace noise; 
-    bucket-based range counts can be added later.
+Usage Context
+  - Use for numeric range summaries under local DP.
+  - Intended for end-to-end client/aggregator pipelines.
+
+Limitations
+  - Only Laplace noise is supported in the current implementation.
+  - Bucket-based range counts are not implemented.
 """
 # 说明：封装数值型数据的区间统计与均值分位数估计的 LDP 端到端应用。
 # 职责：
@@ -41,7 +46,20 @@ def _laplace_noise_stats(epsilon: float, clip_range: Tuple[float, float]) -> Tup
 
 @dataclass
 class RangeQueriesClientConfig:
-    """Client-side configuration for range queries."""
+    """
+    Client-side configuration for range queries.
+
+    - Configuration
+      - epsilon: Privacy budget for local perturbation.
+      - clip_range: Tuple specifying min and max clipping bounds.
+      - mechanism: Mechanism identifier; currently only "laplace".
+
+    - Behavior
+      - Validates epsilon, clip range, and mechanism identifiers.
+
+    - Usage Notes
+      - clip_range must satisfy min < max.
+    """
 
     epsilon: float
     clip_range: Tuple[float, float]
@@ -61,7 +79,19 @@ class RangeQueriesClientConfig:
 
 @dataclass
 class RangeQueriesServerConfig:
-    """Server-side configuration for range queries."""
+    """
+    Server-side configuration for range queries.
+
+    - Configuration
+      - estimate_mean: Whether to compute a mean estimate.
+      - estimate_quantiles: Optional quantiles to estimate.
+
+    - Behavior
+      - Validates that at least one estimator is enabled.
+
+    - Usage Notes
+      - Quantiles are computed over encoded values.
+    """
 
     estimate_mean: bool = True
     estimate_quantiles: Optional[Sequence[float]] = None
@@ -75,7 +105,20 @@ class RangeQueriesServerConfig:
 
 
 class RangeQueriesAggregator(BaseAggregator):
-    """Aggregate numeric reports into mean and quantile estimates."""
+    """
+    Aggregate numeric reports into mean and quantile estimates.
+
+    - Configuration
+      - mean_aggregator: Optional mean aggregator instance.
+      - quantile_aggregator: Optional quantile aggregator instance.
+
+    - Behavior
+      - Aggregates mean and quantile estimates in a single output.
+      - Returns combined metadata for each estimator.
+
+    - Usage Notes
+      - Expects numeric encoded values in reports.
+    """
 
     def __init__(self, mean_aggregator: Optional[MeanAggregator] = None, quantile_aggregator: Optional[QuantileAggregator] = None) -> None:
         # 组合均值与分位数聚合器用于一次性输出多种统计量
@@ -130,13 +173,16 @@ class RangeQueriesApplication(BaseLDPApplication):
     """
     End-to-end range query application for numeric data.
 
-    Notes:
-        The current implementation only supports Laplace noise.
+    - Configuration
+      - client_config: Client configuration for clipping and perturbation.
+      - server_config: Server configuration for aggregation.
 
-    TODO:
-        * add Gaussian, Duchi, and piecewise mechanisms
-        * add bucket-based range-count estimators
-        * decide whether to expose encoder fit helpers or accept pre-fitted encoder injection with validation rules
+    - Behavior
+      - Builds a client that clips values and applies local Laplace noise.
+      - Builds a server-side aggregator for mean and optional quantiles.
+
+    - Usage Notes
+      - Quantile estimation uses noise parameters derived from the client config.
     """
 
     def __init__(self, client_config: RangeQueriesClientConfig, server_config: Optional[RangeQueriesServerConfig] = None) -> None:

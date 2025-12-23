@@ -1,4 +1,19 @@
-"""Optimised Unary Encoding (OUE) mechanism for LDP."""
+"""
+Optimized unary encoding mechanism for bit-vector inputs under LDP.
+
+Responsibilities
+  - Configure unary randomized response probabilities based on epsilon.
+  - Randomize each bit independently according to OUE parameters.
+  - Preserve input container type when returning perturbed output.
+
+Usage Context
+  - Use for bit-vector reports such as unary-encoded categories.
+  - Intended for local perturbation of vectorized discrete data.
+
+Limitations
+  - Assumes input values are binary indicators.
+  - Does not enforce a specific vector length.
+"""
 # 说明：实现基于优化一元编码（OUE）的本地差分隐私机制，对比特向量执行独立随机翻转以满足 LDP 约束。
 # 职责：
 # - 基于 epsilon 或显式给定参数配置 OUE 的 p/q 概率
@@ -19,7 +34,25 @@ from dplib.core.utils.param_validation import ParamValidationError
 
 
 class OUEMechanism(BaseLDPMechanism):
-    """Optimised Unary Encoding mechanism."""
+    """
+    Optimized unary encoding for independent bit perturbation.
+
+    - Configuration
+      - epsilon: Privacy budget used to derive default probabilities.
+      - p: Optional probability to keep a 1 as 1.
+      - q: Optional probability to flip a 0 to 1.
+      - identifier: Optional stable identifier for reports and serialization.
+      - rng: Optional random generator used for sampling.
+      - name: Optional human-readable name override.
+
+    - Behavior
+      - Flips each input bit independently using p and q.
+      - Supports numpy arrays, bitarray-like objects, and Python sequences.
+
+    - Usage Notes
+      - When p or q are not provided, defaults are derived from epsilon.
+      - Input values should be 0/1 indicators.
+    """
 
     def __init__(
         self,

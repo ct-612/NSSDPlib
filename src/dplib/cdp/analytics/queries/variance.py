@@ -1,10 +1,18 @@
 """
 Privacy-preserving variance query utilities.
 
-Responsibilities:
-    * compute variance from noisy sum/sum-of-squares/count with clipping
-    * stabilise denominators when noisy counts approach zero
-    * expose configurable epsilon splits for calibration
+Responsibilities
+  - Compute variance from noisy sum, sum-of-squares, and count with clipping.
+  - Stabilise denominators when noisy counts approach zero.
+  - Expose configurable epsilon splits for calibration.
+
+Usage Context
+  - Use to release a noisy variance estimate for bounded numeric data.
+  - Composes multiple private queries under a shared budget.
+
+Limitations
+  - Requires non-empty inputs and finite numeric bounds.
+  - Variance estimates are clipped to a feasible upper bound.
 """
 # 说明：用于在有界数值范围内基于噪声化 sum/sum-of-squares/count 估计差分隐私方差的查询工具。
 # 职责：
@@ -26,7 +34,28 @@ from .sum import PrivateSumQuery
 
 
 class PrivateVarianceQuery:
-    """Release DP protected variance estimates."""
+    """
+    Release DP protected variance estimates.
+
+    - Configuration
+      - epsilon: Total privacy budget for the composed query.
+      - bounds: Lower and upper bounds applied to inputs.
+      - ddof: Delta degrees of freedom used in variance adjustment.
+      - sum_epsilon: Optional budget for the sum query.
+      - squares_epsilon: Optional budget for the sum-of-squares query.
+      - count_epsilon: Optional budget for the count query.
+      - sum_query: Optional preconfigured sum query override.
+      - squares_query: Optional preconfigured sum-of-squares query override.
+      - count_query: Optional preconfigured count query override.
+      - min_count: Lower bound for stabilizing noisy counts.
+
+    - Behavior
+      - Clips inputs and combines noisy sums to compute variance.
+      - Applies ddof correction and bounds the result.
+
+    - Usage Notes
+      - Provide custom queries to control calibration or accounting.
+    """
 
     def __init__(
         self,

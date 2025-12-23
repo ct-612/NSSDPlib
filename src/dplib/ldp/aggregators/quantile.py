@@ -1,10 +1,20 @@
 """
-Quantile estimator for continuous LDP reports.
+Aggregates empirical quantiles from numeric locally differentially private (LDP) reports.
+Returns an Estimate object with point estimates for the requested quantile levels.
 
-Supports optional noise-aware adjustment when a noise model is provided via metadata
-or constructor parameters. For supported noise types (gaussian, laplace), applies a
-closed-form shift to debias quantile estimates; otherwise falls back to observed
-quantiles and records the available noise metadata.
+Responsibilities
+  - Compute empirical quantiles over encoded numeric report values.
+  - Optionally apply bias corrections when supported noise parameters are available.
+  - Record noise configuration and adjustment status in returned metadata.
+
+Usage Context
+  - Intended for post-collection aggregation after local privatization has produced reports.
+  - Expects numeric encoded values and does not validate privacy guarantees.
+
+Limitations
+  - Noise adjustment is supported only for Laplace and Gaussian models.
+  - Gaussian adjustment requires SciPy; otherwise raw quantiles are returned.
+  - Noise metadata is inferred only from the first report when not provided explicitly.
 """
 # 说明：针对连续型 LDP 报告的分位数估计器，支持在给定噪声模型时对分位数做去噪修正。
 # 职责：
@@ -24,7 +34,25 @@ from dplib.ldp.types import Estimate, LDPReport
 
 
 class QuantileAggregator(StatelessAggregator):
-    """Estimate specified quantiles from numeric LDP reports."""
+    """
+    Estimate specified quantiles from numeric ``LDPReport`` values with optional noise adjustment.
+
+    - Configuration
+      - quantiles: Sequence of quantile probabilities to estimate in the returned order.
+      - method: Identifier for the quantile estimation method.
+      - noise_std: Optional standard deviation of the additive noise model.
+      - noise_type: Optional noise model name such as ``"laplace"`` or ``"gaussian"``.
+
+    - Behavior
+      - Computes empirical quantiles over the report ``encoded`` values.
+      - Applies bias corrections for Laplace or Gaussian noise when supported parameters are available.
+      - Returns unadjusted quantiles when noise parameters are missing or unsupported and records the reason in metadata.
+      - If ``noise_std`` is not provided, attempts to resolve ``noise_std`` and ``noise_type`` from the first report's metadata.
+
+    - Usage Notes
+      - The instance stores configuration but maintains no per-call state for independent batches.
+      - Gaussian adjustment requires SciPy to be installed.
+    """
 
     def __init__(
         self,

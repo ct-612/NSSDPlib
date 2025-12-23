@@ -1,4 +1,19 @@
-"""Numerical discretisation encoder for LDP pipelines."""
+"""
+Numerical discretisation encoder for LDP pipelines.
+
+Responsibilities
+  - Discretize numeric values into bucket indices.
+  - Support uniform or quantile-based bucket edges.
+  - Provide decoding to representative bucket values.
+
+Usage Context
+  - Use when numeric values must be mapped to categorical indices.
+  - Intended for deterministic encoding before local mechanisms.
+
+Limitations
+  - Quantile edges depend on the fitted data distribution.
+  - Zero-width buckets may occur and are handled by fallback logic.
+"""
 # 说明：为连续/数值型输入提供离散化桶索引编码，输出整数桶索引，可与 GRR/unary/hashing 等机制配合使用。
 # 职责：
 # - 根据均匀或分位数策略将连续数值映射到离散桶索引
@@ -20,9 +35,17 @@ class NumericalBucketsEncoder(FittedEncoder):
     """
     Discretise numeric values into bucket indices using uniform or quantile-based bins.
 
-    - strategy="uniform": equally spaced edges over [min, max] (or clip_range).
-    - strategy="quantile": empirical quantile edges to balance counts; falls back
-      to uniform if quantiles collapse into zero-width buckets.
+    - Configuration
+      - num_buckets: Number of discrete buckets.
+      - strategy: "uniform" or "quantile" edge construction.
+      - clip_range: Optional range used for clipping and edge computation.
+
+    - Behavior
+      - Fits bucket edges and encodes values to integer indices.
+      - Decodes indices to representative bucket centers.
+
+    - Usage Notes
+      - Call fit to compute edges before encoding values.
     """
 
     def __init__(

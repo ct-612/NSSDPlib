@@ -1,10 +1,18 @@
 """
 Vector-valued mechanism applying element-wise noise.
 
-Responsibilities:
-    * calibrate per-dimension noise using L1/L2 sensitivity
-    * support Laplace (pure DP) or Gaussian (approximate DP) noise
-    * preserve input shape for numpy arrays and Python sequences
+Responsibilities
+  - Calibrate per-dimension noise using L1/L2 sensitivity.
+  - Support Laplace (pure DP) or Gaussian (approximate DP) noise.
+  - Preserve input shape for numpy arrays and Python sequences.
+
+Usage Context
+  - Use for vector-valued queries where per-coordinate noise is sufficient.
+  - Supports scalars, sequences, and numpy arrays.
+
+Limitations
+  - Gaussian mode requires delta in (0, 1).
+  - Uses simple per-coordinate noise without correlation structure.
 """
 # 说明：向量值机制。
 # 职责：
@@ -24,7 +32,25 @@ from dplib.core.utils.random import sample_noise
 
 
 class VectorMechanism(BaseMechanism):
-    """Vector-valued mechanism with configurable noise distribution."""
+    """
+    Vector-valued mechanism with configurable noise distribution.
+
+    - Configuration
+      - epsilon: Privacy budget for noise calibration.
+      - delta: Optional delta for Gaussian noise.
+      - sensitivity: Global sensitivity for the vector query.
+      - distribution: "laplace" or "gaussian".
+      - norm: Sensitivity norm label ("l1" or "l2").
+      - rng: Optional RNG for noise sampling.
+      - name: Optional mechanism name override.
+
+    - Behavior
+      - Calibrates scale or sigma based on distribution and delta.
+      - Adds independent noise to each coordinate.
+
+    - Usage Notes
+      - Call `calibrate` before `randomise`.
+    """
 
     def __init__(
         self,

@@ -1,10 +1,18 @@
 """
 Privacy-preserving COUNT query utilities.
 
-Responsibilities:
-    * accept arbitrary iterable data sources with optional predicates
-    * default to Laplace noise calibrated for unit sensitivity
-    * provide deterministic hooks for custom mechanisms (e.g., Gaussian)
+Responsibilities
+  - Accept arbitrary iterable data sources with optional predicates.
+  - Default to Laplace noise calibrated for unit sensitivity.
+  - Allow custom calibrated mechanisms to be supplied for noise generation.
+
+Usage Context
+  - Use to compute a noisy count from an in-memory iterable.
+  - Intended for record-level contribution with unit sensitivity.
+
+Limitations
+  - Requires a calibrated mechanism; uses Laplace when none is provided.
+  - Operates on materialized iterables and returns a float count.
 """
 # 说明：针对任意可迭代数据源提供带 Laplace 噪声的计数查询工具。
 # 职责：
@@ -27,7 +35,21 @@ Predicate = Callable[[Any], bool]  # 谓词类型：接收元素，返回布尔�
 
 
 class PrivateCountQuery:
-    """Release DP protected counts for arbitrary iterables."""
+    """
+    Release DP protected counts for arbitrary iterables.
+
+    - Configuration
+      - epsilon: Privacy budget used when constructing a default mechanism.
+      - mechanism: Optional calibrated mechanism to apply noise.
+      - predicate: Optional filter applied before counting.
+
+    - Behavior
+      - Materializes inputs to count records deterministically.
+      - Adds noise using the configured mechanism and returns a float.
+
+    - Usage Notes
+      - Provide a calibrated mechanism to override the default Laplace mechanism.
+    """
 
     def __init__(
         self,

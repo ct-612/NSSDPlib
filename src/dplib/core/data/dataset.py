@@ -1,10 +1,19 @@
 """
 Dataset abstractions shared by analytics, mechanisms, and sensitivity tools.
+These utilities normalize access to record-style data and lightweight
+metadata across different parts of the library.
 
-Responsibilities:
-    * wrap heterogeneous data sources (records, numpy arrays, iterables)
-    * provide indexing, slicing, batching, and metadata inspection
-    * expose simple loaders, in-memory caches, and mapping helpers
+Responsibilities
+  - Wrap heterogeneous data sources as a consistent dataset interface.
+  - Provide indexing, slicing, batching, and metadata inspection utilities.
+  - Expose simple loaders, in-memory caching, and mapping helpers.
+
+Usage Context
+  - Used by components that need iterable, indexable access to records.
+  - Supports both eager materialization and lazy loading of data.
+
+Limitations
+  - Focuses on in-memory or loader-backed data, not external storage engines.
 """
 # 说明：概述 Dataset 抽象的作用域与职责，适用于分析（analytics）、机制（mechanisms）及灵敏度工具（sensitivity tools）等上层组件的通用数据访问。
 # 职责：
@@ -26,13 +35,33 @@ Loader = Callable[[], Iterable[DataRecord]]
 
 
 class DatasetError(RuntimeError):
-    """Raised when dataset operations fail."""
+    """Exception type for dataset-related failures.
+
+    - Configuration
+      - Describes failures tied to dataset inputs or invariants.
+
+    - Behavior
+      - Raised when required data sources are missing or input constraints fail.
+
+    - Usage Notes
+      - Use for errors such as invalid split fractions or incompatible schemas.
+    """
     # 数据集相关操作失败时抛出的异常（格式不一致、缺少数据源等）
 
 
 @dataclass
 class DatasetMetadata:
-    """Basic metadata container used by the dataset abstraction."""
+    """Container for dataset metadata fields.
+
+    - Configuration
+      - Stores a name, format string, optional description, and extras mapping.
+
+    - Behavior
+      - Provides a stable structure for metadata without affecting data content.
+
+    - Usage Notes
+      - Intended for labeling datasets and carrying lightweight context.
+    """
     # 数据集元数据：名称、格式、描述与附加信息（不影响数据内容）
 
     name: str = "Dataset"
@@ -51,7 +80,17 @@ class DatasetMetadata:
 
 
 class Dataset:
-    """In-memory dataset wrapper with convenience helpers."""
+    """In-memory dataset wrapper with convenience helpers.
+
+    - Configuration
+      - Accepts an iterable of records or a loader, optional metadata, and cache.
+
+    - Behavior
+      - Materializes data as needed, supports indexing, batching, and mapping.
+
+    - Usage Notes
+      - Designed for small to moderate datasets held or cached in memory.
+    """
     # 数据集封装器：统一封装多种数据源（立即给定或惰性加载），提供索引/切片/分批/映射等工具
 
     def __init__(

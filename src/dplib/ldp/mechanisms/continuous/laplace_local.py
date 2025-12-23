@@ -1,4 +1,19 @@
-"""Local Laplace mechanism for bounded real values under LDP."""
+"""
+Local Laplace mechanism for bounded real values under LDP.
+
+Responsibilities
+  - Clip inputs to a bounded interval before perturbation.
+  - Add Laplace noise calibrated to epsilon and interval width.
+  - Serialize clip range and noise scale for reproducibility.
+
+Usage Context
+  - Use for numeric values with a known bounded range.
+  - Intended for local perturbation of scalar or array inputs.
+
+Limitations
+  - Requires a valid clip_range with a < b.
+  - Assumes the clipping range captures the intended domain.
+"""
 # 说明：在有界区间内为实值数据添加拉普拉斯噪声的本地差分隐私机制。
 # 职责：
 # - 校验并存储输入裁剪区间 clip_range 与基于 epsilon 的噪声尺度 scale
@@ -17,7 +32,24 @@ from dplib.core.utils.param_validation import ParamValidationError
 
 
 class LocalLaplaceMechanism(BaseLDPMechanism):
-    """Adds Laplace noise to clipped values in [a, b] with scale (b-a)/epsilon."""
+    """
+    Add Laplace noise to values clipped to a bounded range.
+
+    - Configuration
+      - epsilon: Privacy budget controlling the Laplace scale.
+      - clip_range: Tuple (a, b) defining the clipping interval.
+      - identifier: Optional stable identifier for reports and serialization.
+      - rng: Optional random generator used for sampling.
+      - name: Optional human-readable name override.
+
+    - Behavior
+      - Clips inputs to [a, b] and adds Laplace noise with scale (b - a) / epsilon.
+      - Supports scalar values and numpy arrays.
+
+    - Usage Notes
+      - clip_range must satisfy a < b.
+      - Input values are clipped before noise is added.
+    """
 
     def __init__(
         self,

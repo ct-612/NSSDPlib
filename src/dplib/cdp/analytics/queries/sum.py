@@ -1,10 +1,18 @@
 """
 Privacy-preserving SUM query utilities.
 
-Responsibilities:
-    * enforce numeric bounds to guarantee global sensitivity
-    * default to Laplace noise calibrated from epsilon and (upper-lower)
-    * operate on scalars, Python iterables, or numpy arrays
+Responsibilities
+  - Enforce numeric bounds to guarantee global sensitivity.
+  - Default to Laplace noise calibrated from epsilon and bounds span.
+  - Operate on scalars, Python iterables, or numpy arrays.
+
+Usage Context
+  - Use to release a noisy sum for bounded numeric data.
+  - Supports simple privacy accounting through calibrated mechanisms.
+
+Limitations
+  - Requires finite numeric bounds with lower < upper.
+  - Returns a float even when inputs are integer-like.
 """
 # 说明：在有界数值范围内对求和结果添加噪声以满足差分隐私需求的查询工具。
 # 职责：
@@ -25,7 +33,21 @@ from dplib.cdp.mechanisms.laplace import LaplaceMechanism
 
 
 class PrivateSumQuery:
-    """Release DP protected sums for bounded numeric sequences."""
+    """
+    Release DP protected sums for bounded numeric sequences.
+
+    - Configuration
+      - epsilon: Privacy budget for the default Laplace mechanism.
+      - bounds: Lower and upper bounds used for clipping and sensitivity.
+      - mechanism: Optional calibrated mechanism override.
+
+    - Behavior
+      - Clips inputs to bounds and computes a noisy sum.
+      - Uses a calibrated mechanism to add noise to the true sum.
+
+    - Usage Notes
+      - Provide a calibrated mechanism to override defaults.
+    """
 
     def __init__(
         self,

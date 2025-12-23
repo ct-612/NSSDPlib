@@ -1,10 +1,18 @@
 """
 Privacy-preserving MEAN query utilities.
 
-Responsibilities:
-    * reuse DP sum/count queries with configurable budget splits
-    * clip numeric data to user-provided bounds before aggregation
-    * stabilise outputs when noisy counts approach zero
+Responsibilities
+  - Reuse DP sum/count queries with configurable budget splits.
+  - Clip numeric data to user-provided bounds before aggregation.
+  - Stabilise outputs when noisy counts approach zero.
+
+Usage Context
+  - Use to release a noisy mean for bounded numeric data.
+  - Composes private sum and count queries under a shared budget.
+
+Limitations
+  - Requires non-empty inputs and finite numeric bounds.
+  - Mean estimates are clipped to the provided bounds.
 """
 # 说明：通过复用差分隐私的求和与计数查询在有界数值范围内释放带噪声的均值估计。
 # 职责：
@@ -26,7 +34,25 @@ from .sum import PrivateSumQuery
 
 
 class PrivateMeanQuery:
-    """Release DP protected means via calibrated sum/count queries."""
+    """
+    Release DP protected means via calibrated sum/count queries.
+
+    - Configuration
+      - epsilon: Total privacy budget for the composed query.
+      - bounds: Lower and upper bounds applied to inputs.
+      - sum_epsilon: Optional budget for the sum query.
+      - count_epsilon: Optional budget for the count query.
+      - sum_query: Optional preconfigured sum query override.
+      - count_query: Optional preconfigured count query override.
+      - min_count: Lower bound for stabilizing noisy counts.
+
+    - Behavior
+      - Clips inputs to bounds, then combines noisy sum and count.
+      - Stabilizes the denominator and clips the mean to bounds.
+
+    - Usage Notes
+      - Provide custom queries to control calibration or accounting.
+    """
 
     def __init__(
         self,

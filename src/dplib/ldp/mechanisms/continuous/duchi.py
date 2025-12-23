@@ -1,4 +1,19 @@
-"""Duchi et al. mechanism for scalar inputs in [-1, 1] under LDP."""
+"""
+Duchi mechanism for bounded scalar inputs under LDP.
+
+Responsibilities
+  - Clip inputs to the interval [-1, 1].
+  - Randomize outputs to either -1 or 1 with input-dependent probabilities.
+  - Support scalar and array-valued inputs.
+
+Usage Context
+  - Use for normalized real values in the range [-1, 1].
+  - Intended for local perturbation with binary outputs.
+
+Limitations
+  - Outputs are restricted to -1 or 1.
+  - Inputs outside [-1, 1] are clipped.
+"""
 # 说明：在区间 [-1, 1] 上对标量或数组输入应用 Duchi 等人提出的本地差分隐私机制，将值编码为 ±1。
 # 职责：
 # - 按 Duchi 机制公式将输入 x ∈ [-1, 1] 映射为输出为 ±1 的线性概率分布
@@ -18,9 +33,21 @@ from dplib.ldp.types import EncodedValue
 
 class DuchiMechanism(BaseLDPMechanism):
     """
-    Basic Duchi mechanism: outputs ±1 with probability linear in input x ∈ [-1, 1].
+    Duchi mechanism for scalar inputs mapped to {-1, 1}.
 
-    p(out=1 | x) = (exp(eps) * (1 + x) + (1 - x)) / (2 * (exp(eps) + 1))
+    - Configuration
+      - epsilon: Privacy budget controlling the output probabilities.
+      - identifier: Optional stable identifier for reports and serialization.
+      - rng: Optional random generator used for sampling.
+      - name: Optional human-readable name override.
+
+    - Behavior
+      - Clips inputs to [-1, 1] and samples outputs in {-1, 1}.
+      - Uses probabilities linear in the clipped input value.
+
+    - Usage Notes
+      - Inputs should be scaled to [-1, 1] before use.
+      - Supports both scalar values and numpy arrays.
     """
 
     def __init__(

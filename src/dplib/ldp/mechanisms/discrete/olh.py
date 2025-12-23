@@ -1,4 +1,19 @@
-"""Optimised Local Hashing (OLH) mechanism for LDP."""
+"""
+Optimized local hashing mechanism for categorical domains under LDP.
+
+Responsibilities
+  - Hash categorical indices into a smaller hash range.
+  - Apply randomized response in hash space using epsilon.
+  - Expose configuration needed to reproduce hash mapping.
+
+Usage Context
+  - Use when the original categorical domain is large.
+  - Intended for local perturbation with hash-based aggregation.
+
+Limitations
+  - Hash collisions are inherent and can affect estimation.
+  - Requires a fixed domain size and hash range configuration.
+"""
 # 说明：实现基于优化局部哈希（OLH）的本地差分隐私机制，在哈希空间中执行 GRR 式扰动。
 # 职责：
 # - 基于给定离散域大小与哈希范围构造单个哈希函数并映射类别索引
@@ -19,7 +34,26 @@ from dplib.core.utils.param_validation import ParamValidationError
 
 
 class OLHMechanism(BaseLDPMechanism):
-    """Optimised Local Hashing with GRR-style perturbation in hash space."""
+    """
+    Optimized local hashing with GRR-style perturbation in hash space.
+
+    - Configuration
+      - epsilon: Privacy budget for randomized response in hash space.
+      - domain_size: Size of the original categorical domain.
+      - hash_range: Size of the hash domain.
+      - hash_seed: Seed used to derive the hash function.
+      - identifier: Optional stable identifier for reports and serialization.
+      - rng: Optional random generator used for sampling.
+      - name: Optional human-readable name override.
+
+    - Behavior
+      - Hashes input indices into the hash range.
+      - Returns the hashed value with probability p, otherwise a random alternative.
+
+    - Usage Notes
+      - Inputs must be integer indices in the range [0, domain_size).
+      - The hash range must be greater than 1.
+    """
 
     def __init__(
         self,

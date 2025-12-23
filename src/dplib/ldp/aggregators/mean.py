@@ -3,6 +3,19 @@ Mean estimator for continuous LDP reports.
 
 Computes sample mean and variance from noisy reports, with optional noise-variance
 subtraction when a known noise variance is provided.
+
+Responsibilities
+  - Compute sample mean and variance from encoded reports.
+  - Optionally subtract a known noise variance from the observed variance.
+  - Provide metadata describing aggregation inputs and assumptions.
+
+Usage Context
+  - Use for continuous LDP mechanisms that report numeric values.
+  - Intended for server-side aggregation of LDPReport batches.
+
+Limitations
+  - Variance estimate is set to None for a single report.
+  - Noise variance subtraction is a simple approximation.
 """
 # 说明：针对本地加噪的连续数值报告提供均值与方差估计，并在已知噪声方差时支持简单去噪。
 # 职责：
@@ -22,7 +35,20 @@ from dplib.ldp.types import Estimate, LDPReport
 
 
 class MeanAggregator(StatelessAggregator):
-    """Aggregate numeric LDP reports by computing sample mean and variance."""
+    """
+    Aggregate numeric LDP reports by computing sample mean and variance.
+
+    - Configuration
+      - clip_range: Optional clip range recorded in metadata.
+      - noise_variance: Optional noise variance used for variance correction.
+
+    - Behavior
+      - Computes mean and sample variance from encoded values.
+      - Optionally subtracts noise variance and clips to non-negative.
+
+    - Usage Notes
+      - Expects encoded values to be numeric.
+    """
 
     def __init__(self, clip_range: Optional[Tuple[float, float]] = None, noise_variance: Optional[float] = None):
         # 记录连续值的可选裁剪区间以及噪声方差先验，用于后续对观测方差进行近似去噪

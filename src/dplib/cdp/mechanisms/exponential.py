@@ -1,10 +1,18 @@
 """
 Exponential mechanism for pure differential privacy.
 
-Responsibilities:
-    * sample outputs proportionally to exp(epsilon * utility / (2 * sensitivity))
-    * support pre-computed utility scores or on-the-fly scoring functions
-    * persist recent sampling metadata for auditability
+Responsibilities
+  - Sample outputs proportional to exp(epsilon * utility / (2 * sensitivity)).
+  - Support pre-computed utility scores or on-the-fly scoring functions.
+  - Persist recent sampling metadata for auditability.
+
+Usage Context
+  - Use for discrete output selection based on utility scores.
+  - Supports mapping inputs, score pairs, or a utility function.
+
+Limitations
+  - Requires a non-empty candidate set for sampling.
+  - Assumes sensitivity is provided and positive.
 """
 # 说明：指数机制实现。
 # 职责：
@@ -25,7 +33,24 @@ UtilityFn = Callable[[Any, Any], float]
 
 
 class ExponentialMechanism(BaseMechanism):
-    """Pure-DP exponential mechanism."""
+    """
+    Pure-DP exponential mechanism.
+
+    - Configuration
+      - epsilon: Privacy budget for selection.
+      - sensitivity: Global sensitivity of the utility function.
+      - candidates: Optional default candidate set.
+      - utility_fn: Optional utility function used to score candidates.
+      - rng: Optional RNG for sampling.
+      - name: Optional mechanism name override.
+
+    - Behavior
+      - Converts utilities to a softmax distribution and samples a candidate.
+      - Stores last sampled candidates and probabilities for auditing.
+
+    - Usage Notes
+      - Provide `scores` or `utility_fn` to define candidate utilities.
+    """
 
     def __init__(
         self,

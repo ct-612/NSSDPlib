@@ -1,19 +1,18 @@
 """
 Factory helpers to register and construct LDP applications by name.
 
-Example:
-    app = create_application(
-        "heavy_hitters",
-        client_config=HeavyHittersClientConfig(epsilon=1.0, categories=["a", "b"]),
-        server_config=HeavyHittersServerConfig(top_k=5),
-    )
-    client = app.build_client()
-    aggregator = app.build_aggregator()
+Responsibilities
+  - Maintain a registry of application identifiers.
+  - Expose helpers to register, resolve, and instantiate applications.
+  - Pre-register built-in applications for convenience.
 
-Responsibilities:
-    * maintain a registry of application identifiers
-    * expose helpers to register, resolve, and instantiate applications
-    * pre-register built-in applications for convenience
+Usage Context
+  - Use to construct application instances by name in configuration-driven flows.
+  - Intended for wiring LDP applications in higher-level pipelines.
+
+Limitations
+  - Only registered applications can be instantiated.
+  - Does not validate application-specific constructor arguments.
 """
 # 说明：提供 LDP 应用的注册表与工厂入口。
 # 职责：
@@ -61,7 +60,18 @@ def create_application(name: str, **kwargs: Any) -> BaseLDPApplication:
 
 
 class ApplicationFactory:
-    """Class-based facade around the application registry."""
+    """
+    Class-based facade around the application registry.
+
+    - Configuration
+      - No instance configuration; exposes static helper methods.
+
+    - Behavior
+      - Registers, resolves, and instantiates applications by name.
+
+    - Usage Notes
+      - Use when a class-based factory interface is preferred.
+    """
 
     @staticmethod
     def register(name: str, cls: Type[BaseLDPApplication]) -> None:

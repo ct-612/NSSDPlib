@@ -4,6 +4,19 @@ Reference implementations of DP composition theorems for verification.
 This module is intentionally math-only (no PrivacyEvent wrappers) to
 serve property-based and numerical testing. It collects “authoritative”
 formulas so higher-level helpers can be validated against them.
+
+Responsibilities
+  - Provide reference formulas for composition and model conversion.
+  - Support property-based and numerical verification of helpers.
+  - Expose minimal utilities for comparing composition paths.
+
+Usage Context
+  - Use in tests or diagnostics to validate higher-level composition logic.
+  - Intended for math-only evaluation without PrivacyEvent wrappers.
+
+Limitations
+  - Does not integrate with accounting or event metadata.
+  - Focuses on reference bounds, not optimized composition.
 """
 # 说明：差分隐私组合定理的参考数学实现，用于测试验证。
 # 职责：

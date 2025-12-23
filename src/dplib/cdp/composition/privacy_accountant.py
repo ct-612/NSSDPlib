@@ -6,6 +6,19 @@ selector so callers can switch between basic, advanced, strong, RDP/zCDP,
 GDP, or “optimal fallback” accounting without re-implementing the
 formulas. It is intentionally light-weight and keeps inputs in terms of
 epsilon/delta pairs or metadata fields for alternative models.
+
+Responsibilities
+  - Provide strategy-based composition over normalized privacy events.
+  - Expose a CDP-focused API on top of the core PrivacyAccountant.
+  - Support alternative models via metadata-based extraction.
+
+Usage Context
+  - Use when selecting composition strategies for CDP analytics.
+  - Intended to wrap and extend the core accountant in pipelines.
+
+Limitations
+  - Strategy selection is limited to implemented composition helpers.
+  - Parallel composition uses a simplified wrapper implementation.
 """
 # 说明：为中心差分隐私提供可插拔组合策略的记账器封装层。
 # 职责：
@@ -54,10 +67,18 @@ class CDPPrivacyAccountant:
     """
     Strategy-aware accountant for central DP.
 
-    Responsibilities:
-        * normalise heterogeneous event inputs (tuple/dict/PrivacyEvent)
-        * compose using a chosen strategy (basic/advanced/strong/rdp/zcdp/gdp/optimal)
-        * record the composed (ε, δ) into the core PrivacyAccountant
+    - Configuration
+      - total_epsilon: Optional total epsilon budget for the core accountant.
+      - total_delta: Optional total delta budget for the core accountant.
+      - default_method: Default composition strategy used for compose calls.
+      - name: Optional name for the underlying accountant.
+
+    - Behavior
+      - Normalises heterogeneous event inputs.
+      - Composes using the selected strategy and records results.
+
+    - Usage Notes
+      - Provide metadata fields for RDP/zCDP/GDP compositions when required.
     """
 
     def __init__(

@@ -1,10 +1,18 @@
 """
 Synthetic data generator abstractions.
 
-Responsibilities:
-    * provide a unified entry-point for DP synthetic data methods
-    * manage common configuration, RNG plumbing, and privacy accounting hooks
-    * expose `fit` / `sample` lifecycle plus serialisation helpers
+Responsibilities
+  - Provide a unified entry-point for DP synthetic data methods.
+  - Manage common configuration, RNG plumbing, and privacy accounting hooks.
+  - Expose `fit` / `sample` lifecycle plus serialisation helpers.
+
+Usage Context
+  - Use as the base layer for synthetic data generators in CDP workflows.
+  - Intended for generators that support dataset fitting and sampling.
+
+Limitations
+  - Concrete generation behavior is implemented by subclasses.
+  - Budget tracking integration depends on attached accountant/tracker.
 """
 # 说明：差分隐私合成数据生成器的抽象基类与配置结构，统一 fit/sample 接口、随机数与隐私记账挂钩。
 # 职责：
@@ -41,7 +49,23 @@ TGenerator = TypeVar("TGenerator", bound="SyntheticDataGenerator")
 
 @dataclass
 class SyntheticGeneratorConfig:
-    """Lightweight configuration container for synthetic data generators."""
+    """
+    Lightweight configuration container for synthetic data generators.
+
+    - Configuration
+      - method: Generator method identifier used for factory selection.
+      - epsilon: Privacy budget for the generator.
+      - delta: Optional delta parameter for approximate DP.
+      - seed: Optional seed used for RNG initialization.
+      - privacy_model: Privacy model label for reporting.
+      - extra: Free-form method-specific configuration mapping.
+
+    - Behavior
+      - Provides conversion to and from JSON-friendly dictionaries.
+
+    - Usage Notes
+      - Use to persist generator settings and reconstruct instances.
+    """
 
     method: str
     epsilon: float
@@ -85,11 +109,30 @@ class SyntheticGeneratorConfig:
 
 class SyntheticDataGenerator(ABC):
     """
-    Abstract base class for DP synthetic data generators.
+    Abstract base class for DP synthetic data generators. Subclasses only
+    implement `_fit_internal` and `_sample_internal`; all common plumbing
+    (dataset normalisation, RNG, privacy accounting, config round-trips)
+    is handled here.
 
-    Subclasses only implement `_fit_internal` and `_sample_internal`; all
-    common plumbing (dataset normalisation, RNG, privacy accounting, config
-    round-trips) is handled here.
+    - Configuration
+      - domain: Domain or mapping of domains describing dataset fields.
+      - epsilon: Privacy budget for training or sampling.
+      - delta: Optional delta parameter for approximate DP.
+      - privacy_model: Privacy model label for reporting.
+      - accountant: Optional CDP privacy accountant for spend tracking.
+      - budget_tracker: Optional budget tracker for scoped spends.
+      - budget_scope: Optional scope identifier for budget tracking.
+      - rng: Optional RNG for reproducible sampling.
+      - seed: Optional seed used when RNG is not provided.
+      - metadata: Optional metadata included in exported configs.
+
+    - Behavior
+      - Normalizes input data into Dataset and delegates to subclass hooks.
+      - Provides sampling and optional wrapping into Dataset outputs.
+      - Records privacy spend when an accountant or tracker is attached.
+
+    - Usage Notes
+      - Subclasses must implement fitting and sampling internals.
     """
 
     method: str = "base"

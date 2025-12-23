@@ -1,4 +1,19 @@
-"""Local Gaussian mechanism for bounded real values under LDP."""
+"""
+Local Gaussian mechanism for bounded real values under LDP.
+
+Responsibilities
+  - Clip inputs to a bounded interval before perturbation.
+  - Add Gaussian noise calibrated to epsilon, delta, and interval width.
+  - Serialize clip range and noise scale for reproducibility.
+
+Usage Context
+  - Use for numeric values with a known bounded range.
+  - Intended for local perturbation when delta is specified.
+
+Limitations
+  - Requires a valid clip_range with a < b.
+  - Requires delta in (0, 1) for calibration.
+"""
 # 说明：实现对有界实值数据添加高斯噪声的本地差分隐私机制。
 # 职责：
 # - 校验并存储输入的裁剪区间 clip_range 以及满足 (epsilon, delta)-DP 的噪声尺度 sigma
@@ -19,10 +34,23 @@ from dplib.core.utils.param_validation import ParamValidationError
 
 class LocalGaussianMechanism(BaseLDPMechanism):
     """
-    Adds Gaussian noise to clipped values in [a, b] to satisfy (epsilon, delta)-differential privacy.
+    Add Gaussian noise to values clipped to a bounded range.
 
-    The amount of noise (sigma) is calibrated using the standard formula for the Gaussian mechanism,
-    requiring both epsilon and delta to be specified.
+    - Configuration
+      - epsilon: Privacy budget controlling the noise scale.
+      - delta: Probability of privacy failure used in calibration.
+      - clip_range: Tuple (a, b) defining the clipping interval.
+      - identifier: Optional stable identifier for reports and serialization.
+      - rng: Optional random generator used for sampling.
+      - name: Optional human-readable name override.
+
+    - Behavior
+      - Clips inputs to [a, b] and adds Gaussian noise with calibrated sigma.
+      - Supports scalar values and numpy arrays.
+
+    - Usage Notes
+      - clip_range must satisfy a < b.
+      - delta must be in the open interval (0, 1).
     """
 
     def __init__(
