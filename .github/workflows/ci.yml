@@ -75,7 +75,7 @@ jobs:
       # 按矩阵安装项目（可编辑）与测试依赖
       - name: Install project (${{ matrix.module }})
         run: |
-          pip install -e ".[${{ matrix.module }}]"
+          pip install -e ".[${{ matrix.module }},dev]"
           pip install pytest pytest-cov
 
       # 设置 PYTHONPATH 以支持 src/ 布局直接导入
