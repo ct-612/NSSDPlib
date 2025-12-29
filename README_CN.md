@@ -31,21 +31,28 @@ NSSDPlib 采用可选依赖管理，以保持安装轻量化。
 pip install -e ".[core,cdp,ldp]"
 ```
 
-### 2. 全量安装 (开发与机器学习)
-包含机器学习 (ML) 组件及开发测试工具：
+### 2. 标准安装（不含 ML 重依赖）
+包含除 ML 重依赖（torch/tf）以外的全部模块及开发测试工具：
 
 ```bash
-pip install -e ".[all]"
+pip install -e ".[standard]"
 ```
 
-### 3. 最小化安装
+### 3. 全量安装（含 ML 后端）
+包含 torch/tf 等重依赖：
+
+```bash
+pip install -e ".[full]"
+```
+
+### 4. 最小化安装
 仅包含核心抽象与数据工具：
 
 ```bash
 pip install -e ".[core]"
 ```
 
-### 4. 本地初始化
+### 5. 本地初始化
 
 ```bash
 git clone https://github.com/ct-612/NSSDPlib.git

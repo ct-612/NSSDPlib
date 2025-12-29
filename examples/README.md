@@ -20,7 +20,8 @@ Install the library with the necessary extras:
 - **CDP Only**: `pip install -e ".[cdp]"`
 - **CDP+ML**: `pip install -e ".[cdp,ml]"`
 - **LDP Only**: `pip install -e ".[ldp]"`
-- **All Features**: `pip install -e ".[all]"`
+- **Standard (no torch/tf)**: `pip install -e ".[standard]"`
+- **Full (torch/tf backends)**: `pip install -e ".[full]"`
 
 ### Running a Single Example
 

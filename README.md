@@ -31,21 +31,28 @@ For most users working with privacy statistics and local privacy applications:
 pip install -e ".[core,cdp,ldp]"
 ```
 
-### 2. Full Installation (Development & ML)
-Includes Machine Learning components (if available) and development tools:
+### 2. Standard Installation (No Heavy ML Dependencies)
+Includes all modules and development tools except heavy ML backends (torch/tf):
 
 ```bash
-pip install -e ".[all]"
+pip install -e ".[standard]"
 ```
 
-### 3. Minimal Installation
+### 3. Full Installation (With ML Backends)
+Includes torch/tf and other heavyweight ML backends:
+
+```bash
+pip install -e ".[full]"
+```
+
+### 4. Minimal Installation
 Only core abstractions and data utilities:
 
 ```bash
 pip install -e ".[core]"
 ```
 
-### 4. Local Development Setup
+### 5. Local Development Setup
 
 ```bash
 git clone https://github.com/ct-612/NSSDPlib.git

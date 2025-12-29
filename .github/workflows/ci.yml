@@ -8,6 +8,9 @@ on:
     branches: [main, master]
   pull_request:
     branches: [main, master]
+  workflow_dispatch:
+  # schedule:
+  #   - cron: "0 3 * * *" # 每日 3 点运行一次（可选）
 
 jobs:
   # ---------------- 静态检查与类型检查 ----------------
@@ -55,7 +58,7 @@ jobs:
       fail-fast: false  # 某一矩阵分项失败不影响其他分项继续
       matrix:
         python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]  # 运行环境覆盖
-        module: ["core", "cdp", "ldp", "all"]                    # 可选安装的 extras
+        module: ["core", "cdp", "ldp", "standard"]               # 可选安装的 extras
 
     steps:
       # 拉取代码
@@ -86,15 +89,49 @@ jobs:
       - name: Run pytest
         run: |
           TEST_PATH="tests/"
-          if [[ "${{ matrix.module }}" != "all" ]]; then
+          if [[ "${{ matrix.module }}" != "standard" ]]; then
             TEST_PATH="tests/unit/test_${{ matrix.module }}"
           fi
           pytest --maxfail=1 --disable-warnings -q $TEST_PATH
 
-      # 覆盖率：只在 Python 3.11 且安装 all extras 时生成，节省 CI 时间
-      - name: Coverage (py3.11 + all)
-        if: matrix.python-version == '3.11' && matrix.module == 'all'
+      # 覆盖率：只在 Python 3.11 且安装 standard extras 时生成，节省 CI 时间
+      - name: Coverage (py3.11 + standard)
+        if: matrix.python-version == '3.11' && matrix.module == 'standard'
         run: pytest --cov=src/dplib --cov-report=xml --cov-report=term-missing tests/
+
+  # ---------------- ML 后端测试（可选：夜间/手动） ----------------
+  ml-backends:
+    name: ml-backend (py3.11, ${{ matrix.backend }})
+    runs-on: ubuntu-latest
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        backend: ["ml-torch", "ml-tf"]
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: Upgrade pip
+        run: python -m pip install --upgrade pip
+
+      - name: Install project (standard + ${{ matrix.backend }})
+        run: |
+          pip install -e ".[standard,${{ matrix.backend }}]"
+          pip install pytest pytest-cov
+
+      - name: Export PYTHONPATH
+        run: echo "PYTHONPATH=${{ github.workspace }}/src:\$PYTHONPATH" >> $GITHUB_ENV
+
+      - name: Run pytest
+        run: pytest --maxfail=1 --disable-warnings -q tests/
 
   # ---------------- 依赖安全扫描（Safety） ----------------
   safety:

@@ -349,7 +349,7 @@
 
 ### 文件级拆解（Stage 4 · packaging）
 
-- `4B-01 pyproject.toml`（Owner：Build Engineer｜状态：🟡 进行中）：已声明 `dplib-core/cdp/ldp/all` extras 与构建后端，需补充版本管理与自动化校验。
+- `4B-01 pyproject.toml`（Owner：Build Engineer｜状态：🟡 进行中）：已声明 `core/cdp/ldp/standard/full` extras 与构建后端，需补充版本管理与自动化校验。
 - `4B-02 setup.cfg`（Owner：Build Engineer｜状态：🟡 进行中）：已包含 metadata、extras、pytest 配置，仍需完善 entry points/发布信息。
 - `4B-03 MANIFEST.in`（Owner：Build Engineer｜状态：🟡 进行中）：已覆盖 README/LICENSE/docs/examples/notebooks/tests，后续需压测体积并接入 CI。
 - `4B-04 LICENSE`（Owner：Dev Lead｜状态：✅ 已完成）：MIT 许可文件存在并随包分发。
