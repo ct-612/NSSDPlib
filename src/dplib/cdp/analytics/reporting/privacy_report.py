@@ -198,8 +198,9 @@ class PrivacyReport:
         self.timeline.clear()
         eps = 0.0
         dlt = 0.0
-        remaining_eps = self.remaining.epsilon if self.remaining else None
-        remaining_dlt = self.remaining.delta if self.remaining else None
+        total = self.total_budget
+        remaining_eps = None if total is None or total.epsilon is None else float(total.epsilon)
+        remaining_dlt = None if total is None or total.delta is None else float(total.delta)
         for idx, event in enumerate(self.events):
             eps += event.epsilon
             dlt += event.delta
