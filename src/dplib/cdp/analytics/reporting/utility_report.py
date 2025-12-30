@@ -1,34 +1,36 @@
 """
 Utility reporting for DP query outputs.
 
-Aggregates error metrics over multiple noisy outputs and exposes curve-friendly
-structures for downstream visualisation or notebooks.
+Aggregates error metrics over noisy outputs, provides curve data, and can render
+summary charts for reports.
 
 Responsibilities
-  - Aggregate error metrics across multiple noisy outputs.
-  - Define report and curve structures for utility summaries.
-  - Provide JSON and Markdown export helpers for reporting.
+  - Aggregate error metrics and per-query summaries from DP samples.
+  - Provide utility curve data and PNG rendering helpers.
+  - Export report data to JSON and Markdown.
 
 Usage Context
-  - Use to evaluate utility across runs or mechanisms.
-  - Intended for notebooks, dashboards, or reporting pipelines.
+  - Use to compare utility across epsilon settings, queries, or mechanisms.
+  - Intended for notebooks, dashboards, and reporting pipelines.
 
 Limitations
   - Assumes numeric inputs for error metric computation.
   - Reports are derived from provided samples and do not resample.
+  - Rendering relies on matplotlib for PNG output.
 """
-# 说明：针对差分隐私查询结果的效用评估与报告工具，聚合误差指标并生成可视化友好的结构。
+# 说明：面向差分隐私查询效用评估与报告输出，聚合误差指标并支持曲线渲染。
 # 职责：
-# - 描述 DP 查询误差评估所需的核心指标与记录结构
-# - 对多次噪声输出进行误差统计聚合并生成全局与按查询的摘要
-# - 提供误差随 epsilon 变化的曲线数据以及 JSON/Markdown 导出接口
+# - 定义误差/记录/曲线/报告数据结构并汇总样本统计
+# - 提供按 epsilon 的误差曲线与偏差/方差对比曲线 PNG 输出
+# - 提供 JSON/Markdown 导出与查询级汇总
 
 from __future__ import annotations
 
 import json
 import math
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Mapping, Optional, Sequence
+from pathlib import Path
+from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple, Union
 
 import numpy as np
 
@@ -316,6 +318,299 @@ class UtilityReport:
             )
         )
         return curves
+
+    # ------------------------------------------------------------------ charts
+    # 使用曲线数据绘制 PNG，便于在报告中比较误差趋势
+    def render_error_vs_epsilon_png(
+        self,
+        path: Union[str, Path],
+        *,
+        metric: str = "mse",
+        query_id: Optional[str] = None,
+        mechanism: Optional[str] = None,
+        title: Optional[str] = None,
+        dpi: int = 150,
+        figsize: Tuple[float, float] = (8.0, 4.0),
+        label_fontsize: int = 10,
+        tick_label_fontsize: int = 9,
+        y_tick_step: Optional[float] = None,
+    ) -> Path:
+        """Render error-vs-epsilon curves into a PNG file."""
+        # 依据指定误差指标绘制随 epsilon 变化的曲线图，支持按查询或机制过滤
+        # 从统计曲线接口获取数据并进行基础校验
+        curves = self.get_error_vs_epsilon(metric, query_id=query_id, mechanism=mechanism)
+        ensure(len(curves) > 0, "no error curves available to render")
+
+        # 延迟导入 matplotlib，没有显示环境时使用 Agg 后端
+        import sys
+        import matplotlib
+
+        if "matplotlib.pyplot" not in sys.modules:
+            try:
+                matplotlib.use("Agg")
+            except Exception:
+                pass
+        import matplotlib.pyplot as plt
+
+        fig, ax = plt.subplots(figsize=figsize)
+        for curve in curves:
+            ax.plot(curve.x, curve.y, marker="o", markersize=2, label=curve.label)
+        ax.set_xlabel(curves[0].x_label, fontsize=label_fontsize)
+        ax.set_ylabel(curves[0].y_label, fontsize=label_fontsize)
+        ax.set_title(title or f"{metric} vs epsilon")
+        if len(curves) > 1:
+            ax.legend()
+        ax.tick_params(axis="both", labelsize=tick_label_fontsize)
+        if y_tick_step is not None:
+            from matplotlib.ticker import MultipleLocator
+
+            ax.yaxis.set_major_locator(MultipleLocator(y_tick_step))
+
+        # 输出路径由调用方控制，确保目录存在
+        fig.tight_layout()
+        out_path = Path(path)
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        fig.savefig(out_path, dpi=dpi)
+        plt.close(fig)
+        return out_path
+
+    def render_metrics_vs_epsilon_png(
+        self,
+        path: Union[str, Path],
+        *,
+        query_id: str,
+        mechanism: Optional[str] = None,
+        metrics: Optional[Sequence[str]] = None,
+        title: Optional[str] = None,
+        normalize: bool = True,
+        dpi: int = 150,
+        figsize: Tuple[float, float] = (9.0, 4.5),
+        label_fontsize: int = 10,
+        tick_label_fontsize: int = 9,
+        y_tick_step: Optional[float] = None,
+    ) -> Path:
+        """Render multiple error metrics vs epsilon in a single PNG chart.
+
+        When normalize=True, each metric is scaled by its max absolute value to keep lines visible.
+        """
+        # 组织要绘制的指标列表并逐项构造误差曲线
+        metric_list = metrics or ("mse", "mae", "rmse", "bias", "variance")
+        ensure(len(metric_list) > 0, "metrics must be non-empty")
+        curves: List[Tuple[str, UtilityCurve]] = []
+        for metric in metric_list:
+            metric_curves = self.get_error_vs_epsilon(metric, query_id=query_id, mechanism=mechanism)
+            if metric_curves:
+                curves.append((metric, metric_curves[0]))
+        ensure(len(curves) > 0, "no metric curves available to render")
+
+        plot_curves: List[Tuple[str, str, Sequence[float], Sequence[float]]] = []
+        for metric, curve in curves:
+            if normalize:
+                # 归一化到自身量级，避免尺度差导致曲线不可见
+                values = np.asarray(curve.y, dtype=float)
+                scale = float(np.max(np.abs(values))) if values.size else 0.0
+                scaled = values if scale <= 0 else values / scale
+                plot_curves.append((metric, f"{metric} (norm)", curve.x, scaled.tolist()))
+            else:
+                plot_curves.append((metric, metric, curve.x, list(curve.y)))
+
+        # 延迟导入 matplotlib，避免可选依赖在模块加载期报错
+        import sys
+        import matplotlib
+
+        if "matplotlib.pyplot" not in sys.modules:
+            try:
+                matplotlib.use("Agg")
+            except Exception:
+                pass
+        import matplotlib.pyplot as plt
+
+        fig, ax = plt.subplots(figsize=figsize)
+        plotted = []
+        for label_text, legend_label, x_vals, y_vals in plot_curves:
+            line = ax.plot(x_vals, y_vals, marker="o", markersize=2, label=legend_label)[0]
+            plotted.append((label_text, line, x_vals, y_vals))
+        ax.set_xlabel(curves[0][1].x_label, fontsize=label_fontsize)
+        ax.set_ylabel("normalized metric" if normalize else "metric", fontsize=label_fontsize)
+        chart_title = title or f"metrics vs epsilon (query={query_id})"
+        ax.set_title(chart_title)
+        ax.legend()
+        ax.tick_params(axis="both", labelsize=tick_label_fontsize)
+        if normalize:
+            ax.set_ylim(-1.0, 1.0)
+            ax.axhline(0.0, color="#666666", linestyle="--", linewidth=0.8, alpha=0.6)
+        if y_tick_step is not None:
+            from matplotlib.ticker import MultipleLocator
+
+            ax.yaxis.set_major_locator(MultipleLocator(y_tick_step))
+
+        # 在折线末端标注指标名称，减少图例遮挡导致的误判
+        for idx, (label_text, line, x_vals, y_vals) in enumerate(plotted):
+            if not x_vals:
+                continue
+            y_offset = (idx % 3 - 1) * 6
+            ax.annotate(
+                label_text,
+                (x_vals[-1], y_vals[-1]),
+                xytext=(4, y_offset),
+                textcoords="offset points",
+                color=line.get_color(),
+                fontsize=8,
+                ha="left",
+                va="center",
+            )
+
+        # 保存 PNG 并关闭资源，避免绘图句柄泄漏
+        fig.tight_layout()
+        out_path = Path(path)
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        fig.savefig(out_path, dpi=dpi)
+        plt.close(fig)
+        return out_path
+
+    def render_metrics_vs_epsilon_grid_png(
+        self,
+        path: Union[str, Path],
+        *,
+        query_ids: Sequence[str],
+        mechanism: Optional[str] = None,
+        metrics: Optional[Sequence[str]] = None,
+        title: Optional[str] = None,
+        normalize: bool = True,
+        dpi: int = 150,
+        figsize: Optional[Tuple[float, float]] = None,
+        label_fontsize: int = 9,
+        tick_label_fontsize: int = 8,
+        y_tick_step: Optional[float] = None,
+    ) -> Path:
+        """Render multiple query charts into a single PNG."""
+        # 为多个查询绘制误差指标随 epsilon 变化的子图网格，便于横向对比
+        ensure(len(query_ids) > 0, "query_ids must be non-empty")
+        metric_list = metrics or ("mse", "mae", "rmse", "bias", "variance")
+        ensure(len(metric_list) > 0, "metrics must be non-empty")
+
+        import sys
+        import matplotlib
+
+        if "matplotlib.pyplot" not in sys.modules:
+            try:
+                matplotlib.use("Agg")
+            except Exception:
+                pass
+        import matplotlib.pyplot as plt
+
+        nrows = len(query_ids)
+        if figsize is None:
+            figsize = (9.0, 3.6 * nrows)
+        fig, axes = plt.subplots(nrows=nrows, ncols=1, figsize=figsize, sharex=True)
+        if nrows == 1:
+            axes = [axes]
+
+        for ax, query_id in zip(axes, query_ids):
+            plot_curves: List[Tuple[str, Sequence[float], Sequence[float]]] = []
+            for metric in metric_list:
+                metric_curves = self.get_error_vs_epsilon(metric, query_id=query_id, mechanism=mechanism)
+                if not metric_curves:
+                    continue
+                curve = metric_curves[0]
+                y_vals = np.asarray(curve.y, dtype=float)
+                if normalize:
+                    scale = float(np.max(np.abs(y_vals))) if y_vals.size else 0.0
+                    if scale > 0:
+                        y_vals = y_vals / scale
+                plot_curves.append((metric, list(curve.x), y_vals.tolist()))
+            ensure(len(plot_curves) > 0, f"no metric curves available for query_id={query_id}")
+
+            plotted = []
+            for metric, x_vals, y_vals in plot_curves:
+                legend = f"{metric} (norm)" if normalize else metric
+                line = ax.plot(x_vals, y_vals, marker="o", markersize=2, label=legend)[0]
+                plotted.append((metric, line, x_vals, y_vals))
+            ax.set_ylabel("normalized metric" if normalize else "metric", fontsize=label_fontsize)
+            ax.set_title(f"query={query_id}", fontsize=label_fontsize)
+            ax.legend(fontsize=max(label_fontsize - 1, 7))
+            ax.tick_params(axis="both", labelsize=tick_label_fontsize)
+            if normalize:
+                ax.set_ylim(-1.0, 1.0)
+                ax.axhline(0.0, color="#666666", linestyle="--", linewidth=0.8, alpha=0.6)
+            if y_tick_step is not None:
+                from matplotlib.ticker import MultipleLocator
+
+                ax.yaxis.set_major_locator(MultipleLocator(y_tick_step))
+
+            for idx, (metric, line, x_vals, y_vals) in enumerate(plotted):
+                if not x_vals:
+                    continue
+                y_offset = (idx % 3 - 1) * 6
+                ax.annotate(
+                    metric,
+                    (x_vals[-1], y_vals[-1]),
+                    xytext=(4, y_offset),
+                    textcoords="offset points",
+                    color=line.get_color(),
+                    fontsize=8,
+                    ha="left",
+                    va="center",
+                )
+
+        axes[-1].set_xlabel("epsilon", fontsize=label_fontsize)
+        if title:
+            fig.suptitle(title, fontsize=label_fontsize + 1)
+        fig.tight_layout()
+        out_path = Path(path)
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        fig.savefig(out_path, dpi=dpi)
+        plt.close(fig)
+        return out_path
+
+    def render_bias_variance_tradeoff_png(
+        self,
+        query_id: str,
+        path: Union[str, Path],
+        *,
+        title: Optional[str] = None,
+        dpi: int = 150,
+        figsize: Tuple[float, float] = (8.0, 4.0),
+        label_fontsize: int = 10,
+        tick_label_fontsize: int = 9,
+        y_tick_step: Optional[float] = None,
+    ) -> Path:
+        """Render bias/variance tradeoff curves into a PNG file."""
+        # 基于 bias/variance 曲线绘制比较线，直观展示机制权衡
+        curves = self.get_bias_variance_tradeoff(query_id=query_id)
+        ensure(len(curves) > 0, "no bias/variance curves available to render")
+
+        # 延迟导入 matplotlib，避免可选依赖在模块加载期报错
+        import sys
+        import matplotlib
+
+        if "matplotlib.pyplot" not in sys.modules:
+            try:
+                matplotlib.use("Agg")
+            except Exception:
+                pass
+        import matplotlib.pyplot as plt
+
+        fig, ax = plt.subplots(figsize=figsize)
+        for curve in curves:
+            ax.plot(curve.x, curve.y, marker="o", markersize=2, label=curve.label)
+        ax.set_xlabel(curves[0].x_label, fontsize=label_fontsize)
+        ax.set_ylabel("metric", fontsize=label_fontsize)
+        ax.set_title(title or f"bias/variance vs epsilon ({query_id})")
+        ax.legend()
+        ax.tick_params(axis="both", labelsize=tick_label_fontsize)
+        if y_tick_step is not None:
+            from matplotlib.ticker import MultipleLocator
+
+            ax.yaxis.set_major_locator(MultipleLocator(y_tick_step))
+
+        # 保存 PNG 并关闭资源，避免绘图句柄泄漏
+        fig.tight_layout()
+        out_path = Path(path)
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        fig.savefig(out_path, dpi=dpi)
+        plt.close(fig)
+        return out_path
 
     # ------------------------------------------------------------------ exports
     # 将报告导出为字典、JSON 或 Markdown 表格，方便日志记录与文档展示

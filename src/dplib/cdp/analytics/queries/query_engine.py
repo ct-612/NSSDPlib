@@ -121,7 +121,8 @@ class QueryEngine:
         predicate = params.get("predicate")
         mechanism = params.get("mechanism")
         query = PrivateCountQuery(epsilon=epsilon, mechanism=mechanism, predicate=predicate)
-        return query.evaluate(data), (query.epsilon, 0.0)
+        delta = self._resolve_delta(params, mechanism)
+        return query.evaluate(data), (query.epsilon, delta)
 
     def _run_sum(self, data: Iterable[Any], params: Dict[str, Any]) -> Tuple[Any, Tuple[float, float]]:
         # 构造带边界与可选机制的求和查询并记录纯 ε 消耗
@@ -129,7 +130,8 @@ class QueryEngine:
         bounds = self._require_param(params, "bounds")
         mechanism = params.get("mechanism")
         query = PrivateSumQuery(epsilon=epsilon, bounds=bounds, mechanism=mechanism)
-        return query.evaluate(data), (query.epsilon, 0.0)
+        delta = self._resolve_delta(params, mechanism)
+        return query.evaluate(data), (query.epsilon, delta)
 
     def _run_mean(self, data: Iterable[Any], params: Dict[str, Any]) -> Tuple[Any, Tuple[float, float]]:
         # 构造均值查询支持自定义 ε 拆分与复用外部 sum/count 查询
@@ -144,7 +146,8 @@ class QueryEngine:
             count_query=params.get("count_query"),
             min_count=params.get("min_count", 1e-6),
         )
-        return query.evaluate(data), (query.epsilon, 0.0)
+        delta = self._resolve_delta(params, None)
+        return query.evaluate(data), (query.epsilon, delta)
 
     def _run_variance(self, data: Iterable[Any], params: Dict[str, Any]) -> Tuple[Any, Tuple[float, float]]:
         # 构造方差查询支持 ddof 配置与 sum/sum-of-squares/count 多路 ε 拆分
@@ -162,34 +165,39 @@ class QueryEngine:
             count_query=params.get("count_query"),
             min_count=params.get("min_count", 1e-6),
         )
-        return query.evaluate(data), (query.epsilon, 0.0)
+        delta = self._resolve_delta(params, None)
+        return query.evaluate(data), (query.epsilon, delta)
 
     def _run_histogram(self, data: Iterable[Any], params: Dict[str, Any]) -> Tuple[Any, Tuple[float, float]]:
         # 构造直方图查询支持最大贡献次数与自定义机制
         epsilon = self._require_param(params, "epsilon")
         bins = self._require_param(params, "bins")
+        mechanism = params.get("mechanism")
         query = PrivateHistogramQuery(
             epsilon=epsilon,
             bins=bins,
-            mechanism=params.get("mechanism"),
+            mechanism=mechanism,
             max_contribution=params.get("max_contribution", 1),
         )
-        return query.evaluate(data), (query.epsilon, 0.0)
+        delta = self._resolve_delta(params, mechanism)
+        return query.evaluate(data), (query.epsilon, delta)
 
     def _run_range(self, data: Iterable[Any], params: Dict[str, Any]) -> Tuple[Any, Tuple[float, float]]:
         # 构造区间查询（sum/count/mean），基于一次性噪声前缀表回答多个区间
         epsilon = self._require_param(params, "epsilon")
         bounds = self._require_param(params, "bounds")
         ranges = self._require_param(params, "ranges")
+        mechanism = params.get("mechanism")
         query = PrivateRangeQuery(
             epsilon=epsilon,
             bounds=bounds,
-            mechanism=params.get("mechanism"),
+            mechanism=mechanism,
             max_contribution=params.get("max_contribution", 1),
             metric=params.get("metric", "sum"),
             min_count=params.get("min_count", 1e-6),
         )
-        return query.evaluate(data, ranges=ranges), (query.epsilon, 0.0)
+        delta = self._resolve_delta(params, mechanism)
+        return query.evaluate(data, ranges=ranges), (query.epsilon, delta)
 
     # ----------------------------------------------------------- accounting utils
     def _require_param(self, params: Dict[str, Any], name: str) -> Any:
@@ -197,6 +205,22 @@ class QueryEngine:
         if name not in params:
             raise ParamValidationError(f"parameter '{name}' is required")
         return params[name]
+
+    def _resolve_delta(self, params: Dict[str, Any], mechanism: Optional[Any]) -> float:
+        # 从显式参数或机制实例推断 delta，用于会计记录
+        delta = params.get("delta")
+        if delta is None and mechanism is not None:
+            distribution = getattr(mechanism, "distribution", None)
+            if distribution is None or str(distribution).lower() == "gaussian":
+                delta = getattr(mechanism, "delta", None)
+        if delta is None:
+            return 0.0
+        try:
+            numeric = float(delta)
+        except (TypeError, ValueError) as exc:  # pragma: no cover - defensive
+            raise ParamValidationError("delta must be a non-negative number") from exc
+        ensure(numeric >= 0, "delta must be a non-negative number", error=ParamValidationError)
+        return numeric
 
     def _record_spend(self, query: str, spend: Tuple[float, float], *, metadata: Optional[Dict[str, Any]]) -> None:
         # 若存在 PrivacyAccountant 则将当前查询的 (ε, δ) 消耗记录为一个事件
