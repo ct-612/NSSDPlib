@@ -26,8 +26,8 @@ from typing import Any, Iterable, List, Optional, Sequence, Tuple
 
 import numpy as np
 
-from dplib.core.privacy.base_mechanism import BaseMechanism, ValidationError
-from dplib.core.utils.param_validation import ensure, ensure_type
+from dplib.core.privacy.base_mechanism import BaseMechanism
+from dplib.core.utils.param_validation import ParamValidationError, ensure, ensure_type
 from dplib.cdp.mechanisms.vector import VectorMechanism
 
 from .sum import PrivateSumQuery
@@ -75,18 +75,18 @@ class PrivateRangeQuery:
 
     @staticmethod
     def _validate_epsilon(epsilon: float) -> float:
-        # 校验并强制转换 epsilon 为正实数值，非法输入时抛出 ValidationError
+        # 校验并强制转换 epsilon 为正实数值，非法输入时抛出 ParamValidationError
         try:
             numeric = float(epsilon)
         except (TypeError, ValueError) as exc:  # pragma: no cover - defensive
-            raise ValidationError("epsilon must be a positive number for range queries") from exc
-        ensure(numeric > 0, "epsilon must be a positive number for range queries", error=ValidationError)
+            raise ParamValidationError("epsilon must be a positive number for range queries") from exc
+        ensure(numeric > 0, "epsilon must be a positive number for range queries", error=ParamValidationError)
         return numeric
 
     @staticmethod
     def _validate_contribution(max_contribution: int) -> int:
         # 校验单个用户对整个前缀序列的最大贡献次数必须为正并返回标准化整数值
-        ensure(max_contribution > 0, "max_contribution must be positive", error=ValidationError)
+        ensure(max_contribution > 0, "max_contribution must be positive", error=ParamValidationError)
         return int(max_contribution)
 
     @staticmethod
@@ -95,7 +95,7 @@ class PrivateRangeQuery:
         allowed = {"sum", "count", "mean"}
         lowered = metric.lower()
         if lowered not in allowed:
-            raise ValidationError(f"metric must be one of {allowed}")
+            raise ParamValidationError(f"metric must be one of {allowed}")
         return lowered
 
     def _prepare_mechanism(self, mechanism: Optional[BaseMechanism]) -> BaseMechanism:
@@ -164,9 +164,9 @@ class PrivateRangeQuery:
         # 校验每个区间的起止下标非负、end 不小于 start 且不超过整体长度并返回规范化区间元组
         validated: List[Range] = []
         for start, end in ranges:
-            ensure(start >= 0, "range start must be non-negative", error=ValidationError)
-            ensure(end >= start, "range end must be >= start", error=ValidationError)
-            ensure(end <= length, "range end out of bounds", error=ValidationError)
+            ensure(start >= 0, "range start must be non-negative", error=ParamValidationError)
+            ensure(end >= start, "range end must be >= start", error=ParamValidationError)
+            ensure(end <= length, "range end out of bounds", error=ParamValidationError)
             validated.append((int(start), int(end)))
         return tuple(validated)
 

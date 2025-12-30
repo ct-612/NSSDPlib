@@ -27,8 +27,8 @@ from typing import Any, Iterable, List, Optional, Sequence, Tuple
 import numpy as np
 
 from dplib.core.data.statistics import summation
-from dplib.core.privacy.base_mechanism import BaseMechanism, ValidationError
-from dplib.core.utils.param_validation import ensure, ensure_type
+from dplib.core.privacy.base_mechanism import BaseMechanism
+from dplib.core.utils.param_validation import ParamValidationError, ensure, ensure_type
 from dplib.cdp.mechanisms.laplace import LaplaceMechanism
 
 
@@ -65,24 +65,24 @@ class PrivateSumQuery:
 
     @staticmethod
     def _validate_epsilon(epsilon: float) -> float:
-        # 将传入的 epsilon 转为浮点并要求其为正数否则抛出 ValidationError
+        # 将传入的 epsilon 转为浮点并要求其为正数否则抛出 ParamValidationError
         try:
             numeric = float(epsilon)
         except (TypeError, ValueError) as exc:  # pragma: no cover - defensive
-            raise ValidationError("epsilon must be a positive number for sum queries") from exc
-        ensure(numeric > 0, "epsilon must be a positive number for sum queries", error=ValidationError)
+            raise ParamValidationError("epsilon must be a positive number for sum queries") from exc
+        ensure(numeric > 0, "epsilon must be a positive number for sum queries", error=ParamValidationError)
         return numeric
 
     @staticmethod
     def _validate_bounds(bounds: Tuple[float, float]) -> Tuple[float, float]:
         # 校验 bounds 结构与数值类型并确保 lower < upper
         ensure_type(bounds, (tuple, list), label="bounds")
-        ensure(len(bounds) == 2, "bounds must be a (lower, upper) pair", error=ValidationError)
+        ensure(len(bounds) == 2, "bounds must be a (lower, upper) pair", error=ParamValidationError)
         try:
             lower, upper = float(bounds[0]), float(bounds[1])
         except (TypeError, ValueError) as exc:  # pragma: no cover - defensive
-            raise ValidationError("bounds must be numeric") from exc
-        ensure(lower < upper, "sum query bounds must satisfy lower < upper", error=ValidationError)
+            raise ParamValidationError("bounds must be numeric") from exc
+        ensure(lower < upper, "sum query bounds must satisfy lower < upper", error=ParamValidationError)
         return lower, upper
 
     def _prepare_mechanism(self, mechanism: Optional[BaseMechanism]) -> BaseMechanism:
@@ -95,14 +95,14 @@ class PrivateSumQuery:
             mech.calibrate()
             return mech
         ensure_type(mechanism, (BaseMechanism,), label="mechanism")
-        ensure(mechanism.calibrated, "provided mechanism must be calibrated before use", error=ValidationError)
+        ensure(mechanism.calibrated, "provided mechanism must be calibrated before use", error=ParamValidationError)
         return mechanism
 
     @staticmethod
     def _materialize_numeric(values: Any) -> List[float]:
         # 将多种输入形式统一转换为浮点列表并显式拒绝字符串类型
         if isinstance(values, (str, bytes)):
-            raise ValidationError("sum query input must be numeric and non-string")
+            raise ParamValidationError("sum query input must be numeric and non-string")
         try:
             iterable = values if isinstance(values, Sequence) or isinstance(values, np.ndarray) else list(values)  # type: ignore[arg-type]
         except TypeError:
@@ -113,7 +113,7 @@ class PrivateSumQuery:
             try:
                 numeric.append(float(value))
             except (TypeError, ValueError) as exc:  # pragma: no cover - defensive
-                raise ValidationError("sum query input must be numeric iterable") from exc
+                raise ParamValidationError("sum query input must be numeric iterable") from exc
         return numeric
 
     def _clip_values(self, values: List[float]) -> List[float]:

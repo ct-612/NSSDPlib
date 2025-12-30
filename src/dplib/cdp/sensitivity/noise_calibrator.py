@@ -41,7 +41,10 @@ def calibrate_laplace(epsilon: float, *, sensitivity: float) -> float:
     ensure(sensitivity >= 0, "sensitivity must be non-negative")
     if sensitivity == 0:
         return 0.0
-    return float(sensitivity) / float(epsilon)
+    scale = float(sensitivity) / float(epsilon)
+    if scale == 0.0:
+        return math.ulp(0.0)
+    return scale
 
 
 def calibrate_gaussian(epsilon: float, delta: float, *, sensitivity: float) -> float:
@@ -56,7 +59,10 @@ def calibrate_gaussian(epsilon: float, delta: float, *, sensitivity: float) -> f
     ensure(sensitivity >= 0, "sensitivity must be non-negative")
     if sensitivity == 0:
         return 0.0
-    return float(sensitivity) * math.sqrt(2.0 * math.log(1.25 / float(delta))) / float(epsilon)
+    sigma = float(sensitivity) * math.sqrt(2.0 * math.log(1.25 / float(delta))) / float(epsilon)
+    if sigma == 0.0:
+        return math.ulp(0.0)
+    return sigma
 
 
 def calibrate(

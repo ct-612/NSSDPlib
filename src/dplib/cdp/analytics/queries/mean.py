@@ -26,8 +26,7 @@ from typing import Any, Iterable, Optional, Sequence, Tuple
 
 import numpy as np
 
-from dplib.core.privacy.base_mechanism import ValidationError
-from dplib.core.utils.param_validation import ensure
+from dplib.core.utils.param_validation import ParamValidationError, ensure
 
 from .count import PrivateCountQuery
 from .sum import PrivateSumQuery
@@ -75,12 +74,12 @@ class PrivateMeanQuery:
 
     @staticmethod
     def _validate_epsilon(epsilon: float) -> float:
-        # 将传入的 epsilon 转为浮点并要求其为正数否则抛出 ValidationError
+        # 将传入的 epsilon 转为浮点并要求其为正数否则抛出 ParamValidationError
         try:
             numeric = float(epsilon)
         except (TypeError, ValueError) as exc:  # pragma: no cover - defensive
-            raise ValidationError("epsilon must be a positive number for mean queries") from exc
-        ensure(numeric > 0, "epsilon must be a positive number for mean queries", error=ValidationError)
+            raise ParamValidationError("epsilon must be a positive number for mean queries") from exc
+        ensure(numeric > 0, "epsilon must be a positive number for mean queries", error=ParamValidationError)
         return numeric
 
     def _resolve_sum_query(
@@ -92,7 +91,7 @@ class PrivateMeanQuery:
         if query is not None:
             return query
         eps = float(sum_epsilon) if sum_epsilon is not None else self.epsilon / 2.0
-        ensure(eps > 0, "sum_epsilon must be positive", error=ValidationError)
+        ensure(eps > 0, "sum_epsilon must be positive", error=ParamValidationError)
         return PrivateSumQuery(epsilon=eps, bounds=(self.lower, self.upper))
 
     def _resolve_count_query(
@@ -104,7 +103,7 @@ class PrivateMeanQuery:
         if query is not None:
             return query
         eps = float(count_epsilon) if count_epsilon is not None else self.epsilon / 2.0
-        ensure(eps > 0, "count_epsilon must be positive", error=ValidationError)
+        ensure(eps > 0, "count_epsilon must be positive", error=ParamValidationError)
         return PrivateCountQuery(epsilon=eps)
 
     @staticmethod
@@ -112,7 +111,7 @@ class PrivateMeanQuery:
         # 复用求和查询的数值归一化逻辑并确保非空输入
         numeric = PrivateSumQuery._materialize_numeric(values)
         if not numeric:
-            raise ValidationError("mean query requires at least one value")
+            raise ParamValidationError("mean query requires at least one value")
         return numeric
 
     def evaluate(self, values: Iterable[float]) -> float:

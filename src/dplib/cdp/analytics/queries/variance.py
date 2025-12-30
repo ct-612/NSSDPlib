@@ -26,8 +26,7 @@ from typing import Any, Iterable, List, Optional, Sequence, Tuple
 
 import numpy as np
 
-from dplib.core.privacy.base_mechanism import ValidationError
-from dplib.core.utils.param_validation import ensure
+from dplib.core.utils.param_validation import ParamValidationError, ensure
 
 from .count import PrivateCountQuery
 from .sum import PrivateSumQuery
@@ -75,7 +74,7 @@ class PrivateVarianceQuery:
         # 如未显式提供子查询则按 epsilon 等分构造 sum/count/sum-of-squares 三个子查询
         self.lower, self.upper = PrivateSumQuery._validate_bounds(bounds)
         self.epsilon = self._validate_epsilon(epsilon)
-        ensure(ddof >= 0, "ddof must be non-negative", error=ValidationError)
+        ensure(ddof >= 0, "ddof must be non-negative", error=ParamValidationError)
         self.ddof = int(ddof)
         self.min_count = float(max(min_count, 1e-12))
 
@@ -88,12 +87,12 @@ class PrivateVarianceQuery:
 
     @staticmethod
     def _validate_epsilon(epsilon: float) -> float:
-        # 将传入的 epsilon 转为浮点并要求其为正数否则抛出 ValidationError
+        # 将传入的 epsilon 转为浮点并要求其为正数否则抛出 ParamValidationError
         try:
             numeric = float(epsilon)
         except (TypeError, ValueError) as exc:  # pragma: no cover - defensive
-            raise ValidationError("epsilon must be a positive number for variance queries") from exc
-        ensure(numeric > 0, "epsilon must be a positive number for variance queries", error=ValidationError)
+            raise ParamValidationError("epsilon must be a positive number for variance queries") from exc
+        ensure(numeric > 0, "epsilon must be a positive number for variance queries", error=ParamValidationError)
         return numeric
 
     def _square_bounds(self) -> Tuple[float, float]:
@@ -113,7 +112,7 @@ class PrivateVarianceQuery:
         if query is not None:
             return query
         eps = float(sum_epsilon) if sum_epsilon is not None else default_eps
-        ensure(eps > 0, "sum_epsilon must be positive", error=ValidationError)
+        ensure(eps > 0, "sum_epsilon must be positive", error=ParamValidationError)
         return PrivateSumQuery(epsilon=eps, bounds=(self.lower, self.upper))
 
     def _resolve_squares_query(
@@ -127,7 +126,7 @@ class PrivateVarianceQuery:
         if query is not None:
             return query
         eps = float(squares_epsilon) if squares_epsilon is not None else default_eps
-        ensure(eps > 0, "squares_epsilon must be positive", error=ValidationError)
+        ensure(eps > 0, "squares_epsilon must be positive", error=ParamValidationError)
         return PrivateSumQuery(epsilon=eps, bounds=self._square_bounds())
 
     def _resolve_count_query(
@@ -141,7 +140,7 @@ class PrivateVarianceQuery:
         if query is not None:
             return query
         eps = float(count_epsilon) if count_epsilon is not None else default_eps
-        ensure(eps > 0, "count_epsilon must be positive", error=ValidationError)
+        ensure(eps > 0, "count_epsilon must be positive", error=ParamValidationError)
         return PrivateCountQuery(epsilon=eps)
 
     @staticmethod
@@ -149,7 +148,7 @@ class PrivateVarianceQuery:
         # 复用求和查询的数值归一化逻辑并确保非空输入
         numeric = PrivateSumQuery._materialize_numeric(values)
         if not numeric:
-            raise ValidationError("variance query requires at least one value")
+            raise ParamValidationError("variance query requires at least one value")
         return numeric
 
     def _variance_upper_bound(self, mean_estimate: Optional[float] = None) -> float:

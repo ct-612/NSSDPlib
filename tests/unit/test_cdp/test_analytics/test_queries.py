@@ -9,7 +9,7 @@ Unit tests for privacy-preserving analytics query primitives.
 # - 方差查询在带噪一阶与二阶矩、ddof 调整和上界裁剪下的实现逻辑
 # - 直方图查询对分箱计数向量加噪、非负截断以及分箱边界保持
 # - 区间查询在 sum/count/mean 度量下通过带噪前缀和回答多区间的行为
-# - 均值查询对空输入时抛出 ValidationError 的错误分支
+# - 均值查询对空输入时抛出 ParamValidationError 的错误分支
 
 from __future__ import annotations
 
@@ -26,7 +26,7 @@ from dplib.cdp.analytics.queries import (
 )
 from dplib.cdp.mechanisms.laplace import LaplaceMechanism
 from dplib.cdp.mechanisms.vector import VectorMechanism
-from dplib.core.privacy.base_mechanism import ValidationError
+from dplib.core.utils.param_validation import ParamValidationError
 
 
 def _laplace(seed: int, epsilon: float, sensitivity: float) -> LaplaceMechanism:
@@ -255,7 +255,7 @@ def test_private_range_query_mean_metric() -> None:
 
 
 def test_mean_query_rejects_empty_input() -> None:
-    # 确认均值查询在空输入时抛出 ValidationError 以避免未定义行为
+    # 确认均值查询在空输入时抛出 ParamValidationError 以避免未定义行为
     query = PrivateMeanQuery(epsilon=1.0, bounds=(0.0, 1.0))
-    with pytest.raises(ValidationError):
+    with pytest.raises(ParamValidationError):
         query.evaluate([])

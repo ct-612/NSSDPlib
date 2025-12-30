@@ -93,3 +93,12 @@ venv.bak/
 
 # output files
 _outputs/
+
+# test data
+tests/test_data/
+
+# followup documents
+docs/followup/
+
+# current documents
+docs/current/

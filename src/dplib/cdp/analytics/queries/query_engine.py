@@ -24,9 +24,8 @@ from __future__ import annotations
 
 from typing import Any, Callable, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple
 
-from dplib.core.privacy.base_mechanism import ValidationError
 from dplib.core.privacy.privacy_accountant import PrivacyAccountant
-from dplib.core.utils.param_validation import ensure
+from dplib.core.utils.param_validation import ParamValidationError, ensure
 
 from .count import PrivateCountQuery
 from .histogram import PrivateHistogramQuery
@@ -68,7 +67,7 @@ class QueryEngine:
     def register(self, name: str, handler: Handler) -> None:
         """Register a custom query handler."""
         # 允许外部按名称注册自定义查询处理器覆盖或扩展默认行为
-        ensure(name, "query name must be non-empty", error=ValidationError)
+        ensure(name, "query name must be non-empty", error=ParamValidationError)
         self._registry[name.lower()] = handler
 
     def execute(self, name: str, *, data: Iterable[Any], **kwargs: Any) -> Any:
@@ -80,7 +79,7 @@ class QueryEngine:
         # 按名称查找对应处理器执行单次查询并在有会计实例时记录隐私支出
         handler = self._registry.get(name.lower())
         if handler is None:
-            raise ValidationError(f"unknown query '{name}'")
+            raise ParamValidationError(f"unknown query '{name}'")
         metadata = kwargs.pop("accounting_metadata", None)
         result, spend = handler(data, kwargs)
         self._record_spend(name, spend, metadata=metadata)
@@ -107,7 +106,7 @@ class QueryEngine:
         for step in steps:
             query_name = step.get("query")
             if not query_name:
-                raise ValidationError("each pipeline step requires 'query'")
+                raise ParamValidationError("each pipeline step requires 'query'")
             params = {k: v for k, v in step.items() if k != "query"}
             result = self.execute(query_name, data=current, **params)
             results.append(result)
@@ -194,9 +193,9 @@ class QueryEngine:
 
     # ----------------------------------------------------------- accounting utils
     def _require_param(self, params: Dict[str, Any], name: str) -> Any:
-        # 从参数字典中提取必需字段，缺失时抛出统一的 ValidationError
+        # 从参数字典中提取必需字段，缺失时抛出统一的 ParamValidationError
         if name not in params:
-            raise ValidationError(f"parameter '{name}' is required")
+            raise ParamValidationError(f"parameter '{name}' is required")
         return params[name]
 
     def _record_spend(self, query: str, spend: Tuple[float, float], *, metadata: Optional[Dict[str, Any]]) -> None:

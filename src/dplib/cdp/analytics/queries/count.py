@@ -27,8 +27,8 @@ from typing import Any, Callable, Iterable, List, Optional
 import numpy as np
 
 from dplib.core.data.statistics import count as count_values
-from dplib.core.privacy.base_mechanism import BaseMechanism, ValidationError
-from dplib.core.utils.param_validation import ensure, ensure_type
+from dplib.core.privacy.base_mechanism import BaseMechanism
+from dplib.core.utils.param_validation import ParamValidationError, ensure, ensure_type
 from dplib.cdp.mechanisms.laplace import LaplaceMechanism
 
 Predicate = Callable[[Any], bool]  # 谓词类型：接收元素，返回布尔值
@@ -61,18 +61,18 @@ class PrivateCountQuery:
         # 校验 epsilon 与可选 predicate 并准备计数查询使用的噪声机制
         self.epsilon = self._validate_epsilon(epsilon)
         if predicate is not None:
-            ensure(callable(predicate), "predicate must be callable", error=ValidationError)
+            ensure(callable(predicate), "predicate must be callable", error=ParamValidationError)
         self.predicate = predicate
         self.mechanism = self._prepare_mechanism(mechanism)
 
     @staticmethod
     def _validate_epsilon(epsilon: float) -> float:
-        # 将传入的 epsilon 转为浮点并要求其为正数否则抛出 ValidationError
+        # 将传入的 epsilon 转为浮点并要求其为正数否则抛出 ParamValidationError
         try:
             numeric = float(epsilon)
         except (TypeError, ValueError) as exc:  # pragma: no cover - defensive
-            raise ValidationError("epsilon must be a positive number for count queries") from exc
-        ensure(numeric > 0, "epsilon must be a positive number for count queries", error=ValidationError)
+            raise ParamValidationError("epsilon must be a positive number for count queries") from exc
+        ensure(numeric > 0, "epsilon must be a positive number for count queries", error=ParamValidationError)
         return numeric
 
     def _prepare_mechanism(self, mechanism: Optional[BaseMechanism]) -> BaseMechanism:
@@ -82,18 +82,18 @@ class PrivateCountQuery:
             mech.calibrate()
             return mech
         ensure_type(mechanism, (BaseMechanism,), label="mechanism")
-        ensure(mechanism.calibrated, "provided mechanism must be calibrated before use", error=ValidationError)
+        ensure(mechanism.calibrated, "provided mechanism must be calibrated before use", error=ParamValidationError)
         return mechanism
 
     @staticmethod
     def _materialize_iterable(data: Any) -> List[Any]:
         # 将输入统一转换为列表并显式拒绝字符串类型或不可迭代对象
         if isinstance(data, (str, bytes)):
-            raise ValidationError("count query input must not be a string")
+            raise ParamValidationError("count query input must not be a string")
         try:
             iterable = data if isinstance(data, np.ndarray) or isinstance(data, list) else list(data)  # type: ignore[arg-type]
         except TypeError as exc:  # pragma: no cover - defensive
-            raise ValidationError("count query input must be iterable") from exc
+            raise ParamValidationError("count query input must be iterable") from exc
         return list(iterable)
 
     def _count(self, data: List[Any], predicate: Optional[Predicate]) -> int:
