@@ -195,4 +195,12 @@ EXAMPLES: List[ExampleMetadata] = [
         "optional_deps": [],
         "description": "End-to-end LDP pipeline with reporting and per-user accounting."
     },
+    {
+        "path": "end_to_end/40_dataset_smoke_cdp.py",
+        "extras": ["cdp"],
+        "tags": ["e2e", "cdp"],
+        "experimental": False,
+        "optional_deps": [],
+        "description": "Dataset-based CDP smoke pipeline with reporting."
+    },
 ]

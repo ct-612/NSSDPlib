@@ -129,7 +129,7 @@ class PrivateHistogramQuery:
 
 def _format_bin_labels(bins: Sequence[float]) -> List[str]:
     """Format bin edges into readable labels."""
-    # 最后一段右闭合以表达完整区间
+    # 将箱边格式化为区间标签，最后一段右闭合以表达完整区间
     labels: List[str] = []
     last_idx = len(bins) - 2
     for idx in range(len(bins) - 1):
@@ -167,11 +167,13 @@ def render_histogram_png(
     figsize: Tuple[float, float] = (8.0, 4.0),
     rotation: int = 45,
     fontsize: int = 7,
+    tick_label_fontsize: Optional[int] = None,
     y_tick_step: Optional[float] = None,
     xlabel: Optional[str] = None,
     ylabel: str = "count",
 ) -> Path:
     """Render histogram counts with bin labels and save to a PNG file."""
+    # 导入并使用 matplotlib 绘制柱状图，支持多种可选参数定制输出
     # 校验输入维度，确保计数与分箱数量一致
     bins_list = [float(edge) for edge in bins]
     if len(bins_list) < 2:
@@ -187,7 +189,9 @@ def render_histogram_png(
     fig, ax = plt.subplots(figsize=figsize)
     ax.bar(x, counts_list, color=color)
     ax.set_xticks(x)
-    ax.set_xticklabels(labels, rotation=rotation, ha="right", fontsize=fontsize)
+    tick_size = fontsize if tick_label_fontsize is None else tick_label_fontsize
+    ax.set_xticklabels(labels, rotation=rotation, ha="right", fontsize=tick_size)
+    ax.tick_params(axis="y", labelsize=tick_size)
     if xlabel:
         ax.set_xlabel(xlabel)
     if ylabel:
@@ -220,10 +224,12 @@ def render_histogram_compare_png(
     figsize: Tuple[float, float] = (10.0, 4.0),
     rotation: int = 45,
     fontsize: int = 7,
+    tick_label_fontsize: Optional[int] = None,
     y_tick_step: Optional[float] = None,
     ylabel: str = "count",
 ) -> Path:
     """Render a side-by-side comparison histogram and save to PNG."""
+    # 导入并使用 matplotlib 绘制并排柱状图以对比原始与 DP 结果
     # 校验输入维度，确保原始和噪声计数与分箱一致
     bins_list = [float(edge) for edge in bins]
     if len(bins_list) < 2:
@@ -242,10 +248,12 @@ def render_histogram_compare_png(
     ax.bar([pos - width / 2 for pos in x], raw_list, width=width, color=colors[0], label=labels[0])
     ax.bar([pos + width / 2 for pos in x], dp_list, width=width, color=colors[1], label=labels[1])
     ax.set_xticks(x)
-    ax.set_xticklabels(bin_labels, rotation=rotation, ha="right", fontsize=fontsize)
+    tick_size = fontsize if tick_label_fontsize is None else tick_label_fontsize
+    ax.set_xticklabels(bin_labels, rotation=rotation, ha="right", fontsize=tick_size)
     ax.set_title(title)
     ax.set_ylabel(ylabel)
     ax.legend()
+    ax.tick_params(axis="y", labelsize=tick_size)
     if y_tick_step is not None:
         from matplotlib.ticker import MultipleLocator
 
@@ -271,10 +279,12 @@ def render_histogram_triptych_png(
     figsize: Tuple[float, float] = (15.0, 4.0),
     rotation: int = 45,
     fontsize: int = 7,
+    tick_label_fontsize: Optional[int] = None,
     y_tick_step: Optional[float] = None,
     ylabel: str = "count",
 ) -> Path:
     """Render raw, DP, and comparison histograms into a single PNG file."""
+    # 将原始直方图、DP 直方图和对比直方图渲染到一张 PNG 文件中
     # 校验输入维度，确保原始与噪声计数与分箱一致
     bins_list = [float(edge) for edge in bins]
     if len(bins_list) < 2:
@@ -293,20 +303,24 @@ def render_histogram_triptych_png(
     axes[0].bar(x, raw_list, color=colors[0])
     axes[0].set_title(titles[0])
     axes[0].set_xticks(x)
-    axes[0].set_xticklabels(bin_labels, rotation=rotation, ha="right", fontsize=fontsize)
+    tick_size = fontsize if tick_label_fontsize is None else tick_label_fontsize
+    axes[0].set_xticklabels(bin_labels, rotation=rotation, ha="right", fontsize=tick_size)
     axes[0].set_ylabel(ylabel)
+    axes[0].tick_params(axis="y", labelsize=tick_size)
 
     axes[1].bar(x, dp_list, color=colors[1])
     axes[1].set_title(titles[1])
     axes[1].set_xticks(x)
-    axes[1].set_xticklabels(bin_labels, rotation=rotation, ha="right", fontsize=fontsize)
+    axes[1].set_xticklabels(bin_labels, rotation=rotation, ha="right", fontsize=tick_size)
+    axes[1].tick_params(axis="y", labelsize=tick_size)
 
     width = 0.4
     axes[2].bar([pos - width / 2 for pos in x], raw_list, width=width, color=colors[0], label=labels[0])
     axes[2].bar([pos + width / 2 for pos in x], dp_list, width=width, color=colors[1], label=labels[1])
     axes[2].set_title(titles[2])
     axes[2].set_xticks(x)
-    axes[2].set_xticklabels(bin_labels, rotation=rotation, ha="right", fontsize=fontsize)
+    axes[2].set_xticklabels(bin_labels, rotation=rotation, ha="right", fontsize=tick_size)
+    axes[2].tick_params(axis="y", labelsize=tick_size)
     axes[2].legend()
 
     if y_tick_step is not None:

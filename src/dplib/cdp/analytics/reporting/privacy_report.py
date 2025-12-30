@@ -7,7 +7,7 @@ annotations, and JSON/markdown serialisation helpers.
 Responsibilities
   - Define reporting records for events, snapshots, and annotations.
   - Aggregate accountant state into structured privacy reports.
-  - Provide JSON and Markdown export helpers for reporting.
+  - Provide JSON/Markdown exports and optional PNG curve rendering.
 
 Usage Context
   - Use with CDPPrivacyAccountant to summarize privacy spend.
@@ -15,19 +15,20 @@ Usage Context
 
 Limitations
   - Report content reflects accountant state at construction time.
-  - Exports are lightweight and do not include visualization assets.
+  - Rendering relies on matplotlib and does not provide interactive assets.
 """
-# 说明：围绕 CDP 分析场景提供轻量级隐私预算使用记录与报告生成功能。
+# 说明：围绕 CDP 分析场景提供轻量级隐私预算使用记录与报告生成工具。
 # 职责：
-# - 定义单次事件记录、预算快照与注释等结构化报告数据模型
-# - 从 CDPPrivacyAccountant 和 BudgetTracker 等组件聚合隐私预算使用情况
-# - 提供 JSON 和 Markdown 等导出接口支持后续展示与持久化集成
+# - 定义事件记录、预算快照与注释等结构化报告数据模型
+# - 聚合 CDPPrivacyAccountant/BudgetTracker 输出为可序列化报告
+# - 提供 JSON/Markdown 导出与预算曲线 PNG 渲染
 from __future__ import annotations
 
 import json
+from pathlib import Path
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Any, Dict, List, Mapping, Optional, Sequence
+from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple, Union
 
 from dplib.cdp.composition.privacy_accountant import CDPPrivacyAccountant
 from dplib.core.privacy import PrivacyGuarantee, PrivacyModel
@@ -277,6 +278,59 @@ class PrivacyReport:
         x = [snap.step for snap in self.timeline]
         y = [snap.cumulative_delta for snap in self.timeline]
         return {"x": x, "y": y, "label": "delta", "x_label": "step", "y_label": "cumulative_delta"}
+
+    def render_budget_curves_png(
+        self,
+        path: Union[str, Path],
+        *,
+        title: str = "Privacy Budget Curves",
+        dpi: int = 150,
+        figsize: Tuple[float, float] = (10.0, 4.0),
+        label_fontsize: int = 10,
+        tick_label_fontsize: int = 9,
+        y_tick_step: Optional[float] = None,
+    ) -> Path:
+        """Render epsilon/delta curves into a PNG for reporting."""
+        # 使用 get_epsilon_curve / get_delta_curve 的数据绘制折线图
+        eps_curve = self.get_epsilon_curve()
+        dlt_curve = self.get_delta_curve()
+
+        import sys
+        import matplotlib
+
+        if "matplotlib.pyplot" not in sys.modules:
+            try:
+                matplotlib.use("Agg")
+            except Exception:
+                pass
+        import matplotlib.pyplot as plt
+
+        fig, axes = plt.subplots(1, 2, figsize=figsize, sharex=True)
+        axes[0].plot(eps_curve["x"], eps_curve["y"], marker="o", markersize=2, color="#4C78A8")
+        axes[0].set_title(eps_curve["label"])
+        axes[0].set_xlabel(eps_curve["x_label"], fontsize=label_fontsize)
+        axes[0].set_ylabel(eps_curve["y_label"], fontsize=label_fontsize)
+        axes[0].tick_params(axis="both", labelsize=tick_label_fontsize)
+
+        axes[1].plot(dlt_curve["x"], dlt_curve["y"], marker="o", markersize=2, color="#F58518")
+        axes[1].set_title(dlt_curve["label"])
+        axes[1].set_xlabel(dlt_curve["x_label"], fontsize=label_fontsize)
+        axes[1].set_ylabel(dlt_curve["y_label"], fontsize=label_fontsize)
+        axes[1].tick_params(axis="both", labelsize=tick_label_fontsize)
+
+        if y_tick_step is not None:
+            from matplotlib.ticker import MultipleLocator
+
+            for ax in axes:
+                ax.yaxis.set_major_locator(MultipleLocator(y_tick_step))
+
+        fig.suptitle(title)
+        fig.tight_layout()
+        out_path = Path(path)
+        out_path.parent.mkdir(parents=True, exist_ok=True)
+        fig.savefig(out_path, dpi=dpi)
+        plt.close(fig)
+        return out_path
 
     def to_dict(self) -> Dict[str, Any]:
         # 将整个报告对象序列化为嵌套字典结构，便于 JSON 或持久化存储
