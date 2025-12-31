@@ -35,6 +35,7 @@ from .sum import PrivateSumQuery
 from .variance import PrivateVarianceQuery
 
 Handler = Callable[[Iterable[Any], Dict[str, Any]], Tuple[Any, Tuple[float, float]]]
+PostprocessHook = Callable[[str, Any, Dict[str, Any]], Any]
 
 
 class QueryEngine:
@@ -43,18 +44,26 @@ class QueryEngine:
 
     - Configuration
       - accountant: Optional PrivacyAccountant used to record spend events.
+      - postprocess: Optional hook to post-process query results.
 
     - Behavior
       - Dispatches named queries and records privacy spend when configured.
       - Supports pipelines with optional carry-forward inputs.
+      - Applies post-process hook when provided.
 
     - Usage Notes
       - Register custom handlers to extend built-in query support.
     """
 
-    def __init__(self, *, accountant: Optional[PrivacyAccountant] = None):
+    def __init__(
+        self,
+        *,
+        accountant: Optional[PrivacyAccountant] = None,
+        postprocess: Optional[PostprocessHook] = None,
+    ):
         # 初始化查询引擎并构建内置查询名到处理器的注册表，可选挂载 PrivacyAccountant
         self._accountant = accountant
+        self._postprocess = postprocess
         self._registry: Dict[str, Handler] = {
             "count": self._run_count,
             "sum": self._run_sum,
@@ -77,11 +86,17 @@ class QueryEngine:
         kwargs are forwarded to the registered handler.
         """
         # 按名称查找对应处理器执行单次查询并在有会计实例时记录隐私支出
-        handler = self._registry.get(name.lower())
+        query_key = name.lower()
+        handler = self._registry.get(query_key)
         if handler is None:
             raise ParamValidationError(f"unknown query '{name}'")
         metadata = kwargs.pop("accounting_metadata", None)
-        result, spend = handler(data, kwargs)
+        postprocess = kwargs.pop("postprocess", self._postprocess)
+        params = dict(kwargs)
+        result, spend = handler(data, params)
+        if postprocess is not None:
+            context = {"data": data, "params": dict(params), "spend": spend}
+            result = postprocess(query_key, result, context)
         self._record_spend(name, spend, metadata=metadata)
         return result
 

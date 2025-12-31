@@ -32,6 +32,12 @@ if str(src_root) not in sys.path:
 from examples._shared import cli, io
 from dplib.cdp.analytics.queries import QueryEngine, render_histogram_triptych_png
 from dplib.cdp.analytics.reporting import PrivacyReport, UtilityReport
+from dplib.cdp.analytics.postprocessing import (
+    postprocess_count,
+    postprocess_histogram,
+    postprocess_mean,
+    postprocess_sum,
+)
 from dplib.cdp.composition import CDPPrivacyAccountant
 from dplib.cdp.mechanisms import GaussianMechanism, VectorMechanism
 from dplib.cdp.sensitivity import count_bounds, histogram_bounds, sum_bounds
@@ -308,13 +314,24 @@ def main(argv=None):
     )
 
     # 后处理：裁剪范围/派生均值
-    dp_hi_count = min(max(dp_hi_count, 0.0), float(len(labels)))
-    safe_count = max(float(dp_total_count), 1.0)
-    dp_age_mean = dp_age_sum / safe_count
-    dp_age_mean = max(age_domain.minimum, min(age_domain.maximum, dp_age_mean))
+    total_count = float(len(labels))
+    dp_hi_count = postprocess_count(dp_hi_count, total_count=total_count)
+    dp_total_count = postprocess_count(dp_total_count, total_count=total_count)
+    dp_age_sum = postprocess_sum(
+        dp_age_sum,
+        bounds=(age_domain.minimum, age_domain.maximum),
+        count=dp_total_count,
+    )
+    dp_age_mean = postprocess_mean(
+        dp_age_sum,
+        dp_total_count,
+        bounds=(age_domain.minimum, age_domain.maximum),
+        min_count=1.0,
+    )
 
-    hist_total = float(sum(dp_hist_counts))
-    hist_prob = [count / max(hist_total, 1e-12) for count in dp_hist_counts]
+    hist_post = postprocess_histogram(dp_hist_counts, non_negative=True, normalize=True)
+    dp_hist_counts = hist_post.counts
+    hist_prob = hist_post.probabilities or []
 
     # 组装效用样本并生成效用报告
     utility_samples = []
